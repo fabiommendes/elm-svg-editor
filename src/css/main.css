@@ -1,0 +1,86 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+    --navbar-height: 4rem;
+    background: white;
+}
+
+.min-h-screen.with-navbar {
+    min-height: calc(100vh - var(--navbar-height));
+}
+
+.navbar {
+    padding-left: calc(45% - 16rem);
+    padding-right: calc(45% - 16rem);
+}
+
+.invisible {
+    opacity: 0;
+}
+
+.point-figure {
+    transition: 250ms fill;
+}
+
+.point-figure.selected-root {
+    fill: red;
+    /* filter: drop-shadow(3px 5px 2px rgb(0 0 0 / 0.4)); */
+    stroke: white;
+    stroke-width: 0.25;
+    stroke-opacity: 0.5;
+}
+
+.image-figure {}
+
+.image-figure.selected {}
+
+.line-figure {
+    fill: none;
+    stroke: black;
+    stroke-width: 0.25;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.line-figure.selected-figure {
+    stroke: red;
+}
+
+
+.line-figure .point {
+    fill: black;
+    stroke: black;
+    stroke-width: 0;
+    opacity: 0.25;
+    transition: 500ms opacity, stroke-width;
+}
+
+.line-figure.selected-figure .point {
+    fill: red;
+    stroke: red;
+    stroke-width: 0.25;
+    opacity: 0.5;
+}
+
+.line-figure.selected-figure .selected-point {
+    opacity: 1 !important;
+    stroke-width: 0.25;
+    stroke: white;
+    stroke-opacity: 0.5;
+
+}
+
+
+.line-figure .handle {
+    fill: black;
+}
+
+.text-figure {}
+
+.text-figure.selected {}
+
+.mark-figure {}
+
+.mark-figure.selected {}
