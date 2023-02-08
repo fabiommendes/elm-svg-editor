@@ -36,8 +36,16 @@ empty =
 fromList : List ( key, Label ) -> GroupData key
 fromList =
     let
-        reducer ( key, label ) dict =
-            Dict.update label (Maybe.map <| \ks -> uniquelyAddKey key ks) dict
+        updater k mks =
+            case mks of
+                Just ks ->
+                    Just (uniquelyAddKey k ks)
+
+                _ ->
+                    Just [ k ]
+
+        reducer ( key, label ) acc =
+            Dict.update label (updater key) acc
     in
     List.foldl reducer Dict.empty
 

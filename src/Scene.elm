@@ -240,7 +240,7 @@ updateGroups groups_ =
     L.modify data <|
         \inner ->
             { inner
-                | groups = groups_
+                | groups = groups_ 
                 , objects = Group.updateGroupInfo groups_ second.set inner.objects
             }
 

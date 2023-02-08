@@ -138,7 +138,8 @@ scene shapeDec =
 
         groups : Decoder (GroupData Key)
         groups =
-            field "groups" <| map Dict.fromList (keyValuePairs (list key))
+            field "groups" (keyValuePairs (list key))
+                |> map Dict.fromList
 
         initScene s scale translation bb =
             { s | scale = scale, translation = translation, bbox = bb }
@@ -161,11 +162,7 @@ scene shapeDec =
             List.foldl reducer scene_ (List.reverse figs)
                 |> Scene.groupMany (expand grps)
     in
-    map3
-        updateScene
-        (field "objects" <| list keyfig)
-        groups
-    <|
+    map3 updateScene (field "objects" <| list keyfig) groups <|
         (succeed (initScene <| Scene.init 0 0)
             |> required "scale" float
             |> required "translation" (map vector pair)
