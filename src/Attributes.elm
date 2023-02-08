@@ -75,8 +75,8 @@ classes name elem =
            )
 
 
-transform_ : Float -> Angle -> Vector -> Attribute msg
-transform_ scale angle translation =
+transformFrom : Float -> Angle -> Vector -> Attribute msg
+transformFrom scale angle translation =
     let
         ( x, y ) =
             fromVector translation
@@ -91,9 +91,9 @@ transform_ scale angle translation =
         )
 
 
-transform : Element a -> List (Attribute msg)
-transform fig =
-    [ transform_ fig.model.scale fig.model.rotation fig.model.translation ]
+transformElement : Element a -> Attribute msg
+transformElement fig =
+    transformFrom fig.model.scale fig.model.rotation fig.model.translation
 
 
 trans : String -> List Float -> String
@@ -103,9 +103,9 @@ trans st nums =
 
 rootFigure : String -> Element a -> List (Attribute (Msg a))
 rootFigure name fig =
-    List.concat
-        [ dragRoot fig
-        , classes name fig
-        , style fig
-        , transform fig
-        ]
+    transformElement fig
+        :: List.concat
+            [ dragRoot fig
+            , classes name fig
+            , style fig
+            ]

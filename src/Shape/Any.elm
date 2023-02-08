@@ -1,21 +1,35 @@
 module Shape.Any exposing
-    ( Any
-    , Element
-    , Figure
-    , Map
-    , Replace
-    , actionButtons
-    , andThen
-    , line
-    , map
-    , moveInside
-    , point
-    , view
+    ( Any(..), Element, Figure, Map, Replace
+    , line, point, text, image
+    , andThen, map, replace, moveInside
+    , actionButtons, view
     )
 
+{-|
+
+@docs Any, Element, Figure, Map, Replace
+
+
+## Constructors
+
+@docs line, point, text, image
+
+
+## Transforms
+
+@docs andThen, map, replace, moveInside
+
+
+## UI
+
+@docs actionButtons, view
+
+-}
+
+import Config exposing (ConfigParams)
 import Element
 import Figure
-import Geometry exposing (Vector)
+import Geometry as G exposing (Vector)
 import Html exposing (Html)
 import Lens exposing (data)
 import Msg exposing (Msg)
@@ -38,7 +52,7 @@ type alias Element =
 type Any
     = PointModel Point
     | LineModel Line
-    | TextModel String
+    | TextModel Text
     | ImageModel Image
 
 
@@ -62,9 +76,19 @@ point by =
     Figure.new (PointModel ()) |> Figure.move by
 
 
-line : Line -> Figure
+line : List ( Float, Float ) -> Figure
 line data =
-    Figure.new (LineModel data)
+    Figure.new (LineModel { vertices = List.map G.point data })
+
+
+image : Float -> String -> Figure
+image size href =
+    Figure.new (ImageModel { href = href, width = size })
+
+
+text : String -> Figure
+text src =
+    Figure.new (TextModel { content = src })
 
 
 andThen : Replace Any -> Any -> Any
@@ -115,12 +139,11 @@ moveInside sub by fig =
             fig
 
 
-view : Element -> Svg (Msg Any)
-view fig =
+view : ConfigParams -> Element -> Svg (Msg Any)
+view cfg fig =
     let
-        render : (Element.Element a -> Svg (Msg a)) -> (a -> Any) -> a -> Svg (Msg Any)
         render viewFn msg data =
-            viewFn (Element.map (\_ -> data) fig)
+            viewFn cfg (Element.map (\_ -> data) fig)
                 |> Svg.map (Msg.map msg)
     in
     case fig.model.data of

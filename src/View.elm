@@ -36,11 +36,16 @@ view cfg m =
         ]
         [ navbar
         , toolbar cfg m
-        , div [ class "max-w-xl m-auto" ]
-            [ main_ [] [ content cfg m ]
-            , selected
-                |> Maybe.unpack notSelectedContext (contextToolbar cfg m.scene)
-            ]
+        , div [ class "max-w-xl m-auto" ] <|
+            case m.error of
+                Just err ->
+                    [ pre [ HA.style "font-size" "0.7rem" ] [ text err ] ]
+
+                Nothing ->
+                    [ main_ [] [ content cfg m ]
+                    , selected
+                        |> Maybe.unpack notSelectedContext (contextToolbar cfg m.scene)
+                    ]
         ]
 
 
@@ -150,7 +155,8 @@ toolbar _ m =
         [ div [ class "p-2 flex max-w-2xl m-auto" ]
             [ div []
                 [ genericBtn [] I.add_circle
-                , genericBtn [] I.save_alt
+                , genericBtn [ onClick OnDownloadRequest ] I.save_alt
+                , genericBtn [ onClick OnUploadRequest ] I.file_open
                 ]
             , div [ class "flex-1 text-slate-300 text-right px-2" ] [ text "|" ]
             , div [ class "" ]
@@ -169,5 +175,5 @@ content cfg m =
         [ svg
             (SA.width "100%" :: Attributes.viewBox m.scene.bbox :: Attributes.touch ( -1, [] ))
             [ Scene.view cfg m.scene ]
-        , Ui.controls
+        , Ui.controls cfg
         ]

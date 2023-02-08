@@ -1,6 +1,7 @@
 module Editor exposing (..)
 
 import Config
+import Encode
 import Html exposing (Html)
 import Model
 import Msg
@@ -10,6 +11,7 @@ import Task
 import Types exposing (..)
 import Update
 import View
+import Decode
 
 
 type alias Model =
@@ -31,10 +33,10 @@ init =
 
 defaulConfig : Config
 defaulConfig =
-    Config.init Shape.Any.view
+    Config.init Shape.Any.view Encode.shape
         |> Config.withInnerMove Shape.Any.moveInside
         |> Config.withActionButtons Shape.Any.actionButtons
-
+        |> Config.withDecoder Decode.shape
 
 update : Config -> Msg -> Model -> ( Model, Cmd Msg )
 update =

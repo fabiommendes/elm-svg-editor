@@ -1,12 +1,14 @@
 module Scene exposing
     ( Scene
     , discard
+    , elements
     , get
     , getElement
     , getGroup
     , getGroupOf
     , getSelected
     , group
+    , groupMany
     , init
     , insert
     , insertMany
@@ -32,6 +34,7 @@ import Monocle.Common exposing (second)
 import Monocle.Lens as L exposing (Lens)
 import Msg exposing (Msg)
 import Svg as S
+import Svg.Attributes as SA
 import Types exposing (..)
 import Util exposing (flip)
 
@@ -107,6 +110,8 @@ getSelected scene =
             )
 
 
+{-| Return all elements in scene
+-}
 elements : Scene a -> List (Element a)
 elements scene =
     order.get scene |> List.filterMap (flip getElement scene)
@@ -221,6 +226,13 @@ group key label scene =
         |> flip updateGroups scene
 
 
+groupMany : Dict Key Label -> Scene a -> Scene a
+groupMany grps scene =
+    (Group.toList (groups.get scene) ++ Dict.toList grps)
+        |> Group.fromList
+        |> flip updateGroups scene
+
+
 {-| Update inner structure from groupings
 -}
 updateGroups : GroupData Key -> Scene a -> Scene a
@@ -244,14 +256,14 @@ moveLayer direction key =
     let
         run objs =
             case ( direction, objs ) of
-                ( Up, k1 :: k2 :: rest ) ->
+                ( Down, k1 :: k2 :: rest ) ->
                     if k2 == key then
                         k2 :: k1 :: rest
 
                     else
                         k1 :: (run <| k2 :: rest)
 
-                ( Down, k1 :: k2 :: rest ) ->
+                ( Up, k1 :: k2 :: rest ) ->
                     if k1 == key then
                         k2 :: k1 :: rest
 
@@ -266,10 +278,10 @@ moveLayer direction key =
 
 view : Config a -> Scene a -> S.Svg (Msg a)
 view cfg scene =
-    S.g []
+    S.g [ SA.class "scene" ]
         (elements scene
             |> List.filter (.model >> .visible)
-            |> List.map cfg.view
+            |> List.map (cfg.view cfg.params)
         )
 
 

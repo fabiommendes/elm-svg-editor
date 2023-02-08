@@ -4,6 +4,7 @@ import BaseTypes exposing (Direction)
 import Browser.Dom exposing (Element)
 import Draggable
 import Figure exposing (Figure)
+import File exposing (File)
 import Geometry exposing (BBox, Vector)
 import Types exposing (..)
 
@@ -23,6 +24,10 @@ type Msg a
     | OnGroupInclude Label Key
     | OnGroupOrderChange Direction Key
     | OnChangeViewBox Description (BBox -> BBox)
+    | OnDownloadRequest
+    | OnUploadRequest
+    | OnUploadCompleted File
+    | OnUploadProcessed String
 
 
 map : (a -> b) -> Msg a -> Msg b
@@ -69,3 +74,15 @@ map f msg =
 
         OnChangeViewBox label updater ->
             OnChangeViewBox label updater
+
+        OnDownloadRequest ->
+            OnDownloadRequest
+
+        OnUploadRequest ->
+            OnUploadRequest
+
+        OnUploadCompleted file ->
+            OnUploadCompleted file
+
+        OnUploadProcessed st ->
+            OnUploadProcessed st

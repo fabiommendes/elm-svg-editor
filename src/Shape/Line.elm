@@ -1,18 +1,19 @@
 module Shape.Line exposing (Line, actionButtons, movePoint, view)
 
 import Attributes as A
+import Config exposing (ConfigParams)
 import Element exposing (Element)
-import Geometry as G exposing (Point, Vector, fromLine, fromPoint, vector)
+import Geometry exposing (Point, Vector, fromPoint, point, vector)
 import Geometry.Svg as S
 import Html as H exposing (Html)
 import Html.Attributes as HA
 import Html.Events as HE
-import Lens exposing (data)
+import Lens exposing (..)
 import List.Extra as List
+import Monocle.Lens as L
 import Msg exposing (Msg(..))
 import Point2d
-import Polyline2d
-import Shape.Point exposing (viewPoint)
+import Shape.Point exposing (circle)
 import Svg as S exposing (Svg)
 import Svg.Attributes as SA
 import Types exposing (..)
@@ -21,16 +22,14 @@ import Vector2d
 
 
 type alias Line =
-    G.Line
+    { vertices : List Point }
 
 
 {-| Move the i-th internal point by the given displacement
 -}
 movePoint : Int -> Vector -> Line -> Line
-movePoint i displacement line =
-    Polyline2d.vertices line
-        |> List.updateAt i (Point2d.translateBy displacement)
-        |> Polyline2d.fromVertices
+movePoint i displacement =
+    L.modify vertices <| List.updateAt i (Point2d.translateBy displacement)
 
 
 {-| Add new point in the i-th position
@@ -39,7 +38,7 @@ addPoint : Int -> Line -> Line
 addPoint i line =
     let
         ( before, after ) =
-            Polyline2d.vertices line
+            line.vertices
                 |> pairsWithExtrapolation
                 |> List.splitAt i
 
@@ -54,22 +53,14 @@ addPoint i line =
                 _ ->
                     []
     in
-    (before_ ++ after_)
-        |> Polyline2d.fromVertices
+    vertices.set (before_ ++ after_) line
 
 
 {-| Remove the i-th point from line
 -}
 removePoint : Int -> Line -> Line
 removePoint i =
-    onVertices (List.removeAt i)
-
-
-onVertices : (List Point -> List Point) -> Line -> Line
-onVertices func line =
-    Polyline2d.vertices line
-        |> func
-        |> Polyline2d.fromVertices
+    L.modify vertices (List.removeAt i)
 
 
 pairsWithExtrapolation : List Point -> List ( Point, Point )
@@ -90,46 +81,40 @@ pairsWithExtrapolation vertices =
 
 {-| Render line
 -}
-view : Element Line -> Svg (Msg Line)
-view fig =
+view : ConfigParams -> Element Line -> Svg (Msg Line)
+view cfg elem =
     let
         subKey =
-            fig.subKey |> List.getAt 0 |> Maybe.withDefault 0
+            elem.subKey |> List.getAt 0 |> Maybe.withDefault -1
 
         makePoint i pt =
             let
-                radius =
-                    iff (i == subKey) 0.75 (iff (i == 0) 0.5 0.25)
-
                 classes =
-                    [ SA.class <| iff (i == subKey) "point selected-point" "point"
-                    , SA.class <| iff (i == 0) "handle" ""
-                    , SA.class <| "key-" ++ String.fromInt i
-                    ]
+                    SA.class (iff (i == subKey) "point selected-point" "point")
+                        :: SA.class ("key-" ++ String.fromInt i)
+                        :: A.transformElement elem
+                        :: A.dragChild [ i ] elem
             in
-            if i == 0 then
-                viewPoint radius pt (classes ++ A.dragRoot fig) []
+            circle cfg.pointRadius (fromPoint pt) (classes ++ A.dragChild [ i ] elem) []
 
-            else
-                viewPoint radius pt (classes ++ A.dragChild [ i ] fig) []
+        firstPoint =
+            Shape.Point.view cfg elem
 
         points =
-            fig.model.data
-                |> fromLine
-                |> List.indexedMap makePoint
+            firstPoint :: List.indexedMap makePoint elem.model.data.vertices
 
         groupLabel =
-            fig.group
+            elem.group
                 |> Maybe.map (\{ index } -> S.text_ [ SA.fontSize "1.5" ] [ S.text (String.fromInt index) ])
                 |> Maybe.withDefault (S.text "")
     in
     S.g
-        (List.concat
-            [ A.classes "line" fig
-            , A.transform fig
-            ]
+        (A.classes "line" elem ++ A.style elem)
+        (smoothLine [ A.transformElement elem, SA.class "background" ] elem.model.data
+            :: smoothLine [ A.transformElement elem ] elem.model.data
+            :: groupLabel
+            :: points
         )
-        (smoothLine (A.style fig) fig.model.data :: groupLabel :: points)
 
 
 actionButtons : Line -> Element Line -> List (Html (Msg Line))
@@ -151,18 +136,13 @@ actionButtons line fig =
     in
     [ H.button [ HA.class "btn", HE.onClick (action "add-point" addPoint) ] [ H.text "add point" ]
     , H.button [ HA.class "btn", HE.onClick (action "remove-point" removePoint) ] [ H.text "remove point" ]
-    , H.text <| "numpoints: " ++ String.fromInt (Polyline2d.vertices line |> List.length)
+    , H.text <| "numpoints: " ++ String.fromInt (List.length line.vertices + 1)
     ]
 
 
 smoothLine : List (S.Attribute msg) -> Line -> Svg msg
 smoothLine attrs line =
-    case Polyline2d.vertices line of
-        [] ->
-            S.text ""
-
-        origin :: rest ->
-            S.path (pathAttribute origin rest :: attrs) []
+    S.path (pathAttribute (point ( 0, 0 )) line.vertices :: attrs) []
 
 
 pathAttribute : Point -> List Point -> S.Attribute msg

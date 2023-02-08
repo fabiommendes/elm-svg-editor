@@ -1,9 +1,9 @@
 module Shape.Image exposing (Image, view)
 
-import Attributes
-import Msg exposing (Msg)
+import Attributes as A
+import Config exposing (ConfigParams)
 import Element exposing (Element)
-import Shape.Point exposing (viewPoint)
+import Msg exposing (Msg)
 import Svg as S exposing (Svg)
 import Svg.Attributes as SA
 import Types exposing (..)
@@ -11,12 +11,21 @@ import Types exposing (..)
 
 type alias Image =
     { href : String
+    , width : Float
     }
 
 
-view : Element Image -> Svg (Msg Image)
-view fig =
-    S.g (Attributes.dragRoot fig)
-        [ viewPoint 1 ( 0, 0 ) [] []
-        , S.text_ [ SA.fontSize "1.25" ] [ S.text fig.model.data.href ]
-        ]
+view : ConfigParams -> Element Image -> Svg (Msg Image)
+view _ elem =
+    let
+        attrs =
+            List.concat
+                [ [ SA.width (String.fromFloat elem.model.data.width)
+                  , SA.xlinkHref elem.model.data.href
+                  , A.transformElement elem
+                  ]
+                , A.dragRoot elem
+                , A.classes "image" elem
+                ]
+    in
+    S.image attrs []

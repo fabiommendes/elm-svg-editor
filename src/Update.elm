@@ -4,8 +4,15 @@ import BaseTypes exposing (Direction(..))
 import BoundingBox2d
 import Browser.Dom
 import Config exposing (Config)
+import Decode
 import Draggable
+import Encode
 import Figure
+import File
+import File.Download
+import File.Select
+import Json.Decode
+import Json.Encode
 import Length exposing (inMeters)
 import Lens exposing (bbox, scene)
 import Model exposing (Model)
@@ -123,3 +130,24 @@ update cfg msg_ m =
                         (Tuple.first (BoundingBox2d.dimensions bb))
             in
             return { m | scale = m.scale * growth, scene = scene }
+
+        OnDownloadRequest ->
+            let
+                data =
+                    Json.Encode.encode 2 (Encode.scene cfg.shapeEncoder m.scene)
+            in
+            ( m, File.Download.string "data.json" "application/json" data )
+
+        OnUploadRequest ->
+            ( m, File.Select.file [ "application/json" ] OnUploadCompleted )
+
+        OnUploadCompleted file ->
+            ( m, File.toString file |> Task.perform OnUploadProcessed )
+
+        OnUploadProcessed st ->
+            case Json.Decode.decodeString (Decode.scene cfg.shapeDecoder) st of
+                Ok scene ->
+                    return { m | scene = scene, error = Nothing }
+
+                Err err ->
+                    return { m | error = Just <| Json.Decode.errorToString err }

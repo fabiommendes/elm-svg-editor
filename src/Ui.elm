@@ -1,10 +1,12 @@
 module Ui exposing (..)
 
 import BoundingBox2d as BBox
+import Config exposing (Config)
 import Geometry exposing (vector)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
+import Html.Extra as Html
 import Length exposing (inMeters)
 import Material.Icons as I
 import Material.Icons.Types exposing (Coloring(..))
@@ -14,9 +16,20 @@ import Types exposing (..)
 
 {-| Zoom and pan controls
 -}
-controls : Html (Msg a)
-controls =
-    div [ class "relative" ] [ zoomButtons, panButtons ]
+controls : Config a -> Html (Msg a)
+controls cfg =
+    div [ class "relative" ]
+        [ if cfg.params.zoomControls then
+            zoomButtons
+
+          else
+            Html.nothing
+        , if cfg.params.panControls then
+            panButtons
+
+          else
+            Html.nothing
+        ]
 
 
 {-| Create buttons for zoom in and zoom out.

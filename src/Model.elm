@@ -9,6 +9,7 @@ type alias Model a =
     { scene : Scene.Scene a
     , scale : Float
     , drag : Draggable.State ( Key, SubKey )
+    , error : Maybe String
     }
 
 
@@ -17,4 +18,5 @@ init =
     { scene = Scene.init 20 20
     , drag = Draggable.init
     , scale = 0.1
+    , error = Nothing
     }

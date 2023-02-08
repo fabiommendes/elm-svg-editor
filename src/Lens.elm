@@ -108,6 +108,16 @@ groups =
     lens .groups (\x m -> { m | groups = x })
 
 
+params : Lens { a | params : b } b
+params =
+    lens .params (\x m -> { m | params = x })
+
+
+vertices : Lens { a | vertices : b } b
+vertices =
+    lens .vertices (\x m -> { m | vertices = x })
+
+
 ith : Int -> Optional (List a) a
 ith i =
     { getOption = List.getAt i

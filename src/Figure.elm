@@ -1,10 +1,10 @@
-module Figure exposing (Figure, addStyle, grow, map, move, new, rotate, setLabel)
+module Figure exposing (Figure, addStyle, grow, map, move, new, rotate, setLabel, visible, editable, draggable)
 
 {-| Generic figure utilities
 -}
 
 import Geometry exposing (Angle, Vector, angle, vector)
-import Lens exposing (..)
+import Lens as L exposing (..)
 import Monocle.Lens as L
 import Quantity as Q
 import Types exposing (..)
@@ -65,6 +65,21 @@ grow by =
 rotate : Angle -> Figure a -> Figure a
 rotate by fig =
     fig |> rotation.set (Q.sum [ fig.rotation, by ])
+
+
+visible : Bool -> Figure a -> Figure a
+visible =
+    L.visible.set
+
+
+draggable : Bool -> Figure a -> Figure a
+draggable =
+    L.draggable.set
+
+
+editable : Bool -> Figure a -> Figure a
+editable =
+    L.editable.set
 
 
 setLabel : Label -> Figure a -> Figure a
