@@ -37,6 +37,7 @@ defaulConfig =
         |> Config.withInnerMove Shape.Any.moveInside
         |> Config.withActionButtons Shape.Any.actionButtons
         |> Config.withDecoder Decode.shape
+        |> Config.withPanWithTouch False
 
 update : Config -> Msg -> Model -> ( Model, Cmd Msg )
 update =

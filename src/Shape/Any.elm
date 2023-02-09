@@ -3,6 +3,7 @@ module Shape.Any exposing
     , line, point, text, image
     , andThen, map, replace, moveInside
     , actionButtons, view
+    , mapId
     )
 
 {-|
@@ -34,7 +35,7 @@ import Html exposing (Html)
 import Lens exposing (data)
 import Msg exposing (Msg)
 import Shape.Image exposing (Image)
-import Shape.Line exposing (Line)
+import Shape.Line exposing (Fill(..), Line)
 import Shape.Point exposing (Point)
 import Shape.Text exposing (Text)
 import Svg exposing (Svg)
@@ -71,6 +72,14 @@ type alias Replace a =
     }
 
 
+mapId : Map
+mapId =
+    { line = identity
+    , text = identity
+    , image = identity
+    }
+
+
 point : Vector -> Figure
 point by =
     Figure.new (PointModel ()) |> Figure.move by
@@ -78,7 +87,7 @@ point by =
 
 line : List ( Float, Float ) -> Figure
 line data =
-    Figure.new (LineModel { vertices = List.map G.point data })
+    Figure.new (LineModel { vertices = List.map G.point data, duplicateLast = True, fill = Open })
 
 
 image : Float -> String -> Figure

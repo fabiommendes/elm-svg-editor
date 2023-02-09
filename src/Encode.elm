@@ -61,6 +61,7 @@ line obj =
     object
         [ ( "type", string "line" )
         , ( "vertices", list pair (obj.vertices |> List.map fromPoint) )
+        , ( "duplicate_last", bool obj.duplicateLast  )
         ]
 
 

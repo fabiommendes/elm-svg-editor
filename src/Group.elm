@@ -7,7 +7,7 @@ import List.Extra as List
 import Maybe.Extra as Maybe
 import Types exposing (..)
 import Util exposing (flip, iff)
-import Util.List exposing (bubbleDownAt, bubbleDownIf, bubbleUpAt, bubbleUpIf)
+import Util.List exposing (bubbleDownAt, bubbleDownWhen, bubbleUpAt, bubbleUpWhen)
 
 
 {-| Describe how elements are grouped together.
@@ -166,7 +166,7 @@ move dir key groups =
 
 moveAt : Label -> Direction -> comparable -> GroupData comparable -> GroupData comparable
 moveAt label dir key groups =
-    Dict.update label (Maybe.map <| iff (dir == Up) bubbleUpIf bubbleDownIf ((==) key)) groups
+    Dict.update label (Maybe.map <| iff (dir == Up) bubbleUpWhen bubbleDownWhen ((==) key)) groups
 
 
 uniquelyAddKey : key -> List key -> List key

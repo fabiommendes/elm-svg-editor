@@ -1,6 +1,6 @@
 module View exposing (..)
 
-import Attributes
+import Attributes as A
 import BaseTypes exposing (Direction(..))
 import Config exposing (Config)
 import Element exposing (Element)
@@ -171,9 +171,17 @@ toolbar _ m =
 
 content : Config a -> Model a -> Html (Msg a)
 content cfg m =
+    let
+        dragEvents =
+            if cfg.params.panWithTouch then
+                A.touch ( -1, [] )
+
+            else
+                []
+    in
     div [ class "container bg-slate-300", HA.id "editor-scene" ]
         [ svg
-            (SA.width "100%" :: Attributes.viewBox m.scene.bbox :: Attributes.touch ( -1, [] ))
+            (SA.width "100%" :: A.viewBox m.scene.bbox :: dragEvents)
             [ Scene.view cfg m.scene ]
         , Ui.controls cfg
         ]

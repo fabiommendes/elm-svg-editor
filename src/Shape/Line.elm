@@ -1,14 +1,24 @@
-module Shape.Line exposing (Line, actionButtons, movePoint, view)
+module Shape.Line exposing
+    ( Fill(..)
+    , Line
+    , actionButtons
+    , movePoint
+    , view
+    )
 
 import Attributes as A
 import Config exposing (ConfigParams)
+import Direction2d
 import Element exposing (Element)
-import Geometry exposing (Point, Vector, fromPoint, point, vector)
+import Figure exposing (move)
+import Geometry exposing (Point, Vector, angle, fromPoint, point, vector)
 import Geometry.Svg as S
 import Html as H exposing (Html)
 import Html.Attributes as HA
 import Html.Events as HE
+import Length exposing (meters)
 import Lens exposing (..)
+import LineSegment2d exposing (LineSegment2d)
 import List.Extra as List
 import Monocle.Lens as L
 import Msg exposing (Msg(..))
@@ -16,13 +26,24 @@ import Point2d
 import Shape.Point exposing (circle)
 import Svg as S exposing (Svg)
 import Svg.Attributes as SA
+import Svg.PathD as D
 import Types exposing (..)
-import Util exposing (iff)
+import Util exposing (flip, iff)
 import Vector2d
 
 
 type alias Line =
-    { vertices : List Point }
+    { vertices : List Point
+    , duplicateLast : Bool
+    , fill : Fill
+    }
+
+
+type Fill
+    = Open
+    | Closed
+    | Left
+    | Right
 
 
 {-| Move the i-th internal point by the given displacement
@@ -63,22 +84,6 @@ removePoint i =
     L.modify vertices (List.removeAt i)
 
 
-pairsWithExtrapolation : List Point -> List ( Point, Point )
-pairsWithExtrapolation vertices =
-    case vertices of
-        [ pt1, pt2 ] ->
-            [ ( pt1, pt2 ), ( pt2, pt2 |> Point2d.translateBy (Vector2d.from pt1 pt2) ) ]
-
-        pt1 :: pt2 :: rest ->
-            ( pt1, pt2 ) :: pairsWithExtrapolation (pt2 :: rest)
-
-        [ pt1 ] ->
-            [ ( pt1, pt1 |> Point2d.translateBy (vector ( 0, 0.5 )) ) ]
-
-        [] ->
-            []
-
-
 {-| Render line
 -}
 view : ConfigParams -> Element Line -> Svg (Msg Line)
@@ -89,32 +94,114 @@ view cfg elem =
 
         makePoint i pt =
             let
-                classes =
+                isLast =
+                    i == nPoints - 1 && elem.model.data.duplicateLast
+
+                elem_ =
+                    if isLast then
+                        L.modify model (move (vector (fromPoint pt))) elem
+
+                    else
+                        elem
+
+                attrs =
                     SA.class (iff (i == subKey) "point selected-point" "point")
                         :: SA.class ("key-" ++ String.fromInt i)
-                        :: A.transformElement elem
-                        :: A.dragChild [ i ] elem
+                        :: A.childPart [ i ] "line" elem_
             in
-            circle cfg.pointRadius (fromPoint pt) (classes ++ A.dragChild [ i ] elem) []
+            if isLast then
+                Shape.Point.viewAsPoint cfg elem.group elem.model.label elem.isSelected (SA.class "last-point" :: attrs) (point ( 0, 0 ))
+
+            else
+                circle cfg.pointRadius pt attrs []
 
         firstPoint =
             Shape.Point.view cfg elem
 
+        nPoints =
+            elem.model.data.vertices |> List.length
+
         points =
             firstPoint :: List.indexedMap makePoint elem.model.data.vertices
 
-        groupLabel =
-            elem.group
+        labels =
+            [ elem.group
                 |> Maybe.map (\{ index } -> S.text_ [ SA.fontSize "1.5" ] [ S.text (String.fromInt index) ])
                 |> Maybe.withDefault (S.text "")
+            ]
+
+        dAttribute =
+            SA.d (pathD elem.model.data.fill line)
+
+        transforms =
+            A.transformElement elem
+
+        line =
+            (point ( 0, 0 ) :: elem.model.data.vertices)
+                |> smooth
+                |> smooth
+                |> smooth
+
+        lines =
+            [ S.path [ SA.d (ghostLine 0.2 line), SA.filter "blur(0.050px) opacity(0.9)", transforms, SA.class "foreground" ] []
+            , S.path [ SA.d (ghostLine 0.4 line), SA.filter "blur(0.075px) opacity(0.7)", transforms, SA.class "foreground" ] []
+            , S.path [ SA.d (ghostLine 0.6 line), SA.filter "blur(0.100px) opacity(0.5)", transforms, SA.class "foreground" ] []
+            , S.path [ SA.d (ghostLine 0.8 line), SA.filter "blur(0.150px) opacity(0.3)", transforms, SA.class "foreground" ] []
+            , S.path [ SA.d (ghostLine 1.2 line), SA.filter "blur(0.250px) opacity(0.1)", transforms, SA.class "foreground" ] []
+            , S.path [ dAttribute, transforms, SA.class "background" ] []
+            , S.path [ dAttribute, transforms, SA.class "foreground" ] []
+            ]
     in
-    S.g
-        (A.classes "line" elem ++ A.style elem)
-        (smoothLine [ A.transformElement elem, SA.class "background" ] elem.model.data
-            :: smoothLine [ A.transformElement elem ] elem.model.data
-            :: groupLabel
-            :: points
-        )
+    S.g (A.classes "line" elem ++ A.style elem) <|
+        List.concat [ lines, labels, points ]
+
+
+ghostLine : Float -> List Point -> String
+ghostLine factor line =
+    let
+        direction f x y =
+            Direction2d.from x y
+                |> Maybe.map
+                    (Direction2d.perpendicularTo
+                        >> Direction2d.toVector
+                        >> Vector2d.scaleTo (meters f)
+                    )
+                |> Maybe.withDefault Vector2d.zero
+
+        fromSegment2 f x y =
+            x |> Point2d.translateBy (direction f x y)
+
+        fromSegment3 f x y z =
+            let
+                d1 =
+                    direction -f y x
+
+                d2 =
+                    direction f y z
+            in
+            y |> Point2d.translateBy (Vector2d.sum [ d1, d2 ] |> Vector2d.scaleTo (meters <| abs f))
+
+        do start pts =
+            case ( start, pts ) of
+                ( Nothing, x :: y :: rest ) ->
+                    fromSegment2 factor x y :: do (Just x) (y :: rest)
+
+                ( Just prev, x :: y :: rest ) ->
+                    fromSegment3 factor prev x y :: do (Just x) (y :: rest)
+
+                ( Just prev, [ x ] ) ->
+                    [ fromSegment2 -factor x prev ]
+
+                _ ->
+                    []
+
+        ( origin, vertices ) =
+            do Nothing (point ( 0, 0 ) :: line)
+                |> List.uncons
+                |> Maybe.withDefault ( point ( 0, 0 ), [] )
+    in
+    D.pathD <|
+        (D.M (fromPoint origin) :: List.map (fromPoint >> D.T) vertices)
 
 
 actionButtons : Line -> Element Line -> List (Html (Msg Line))
@@ -140,22 +227,71 @@ actionButtons line fig =
     ]
 
 
-smoothLine : List (S.Attribute msg) -> Line -> Svg msg
-smoothLine attrs line =
-    S.path (pathAttribute (point ( 0, 0 )) line.vertices :: attrs) []
+pathD : Fill -> List Point -> String
+pathD fill line =
+    case line of
+        start :: rest ->
+            rest
+                |> List.map (fromPoint >> D.L)
+                |> (::) (D.M (fromPoint start))
+                |> iff (fill == Closed) closePath identity
+                |> D.pathD
+
+        _ ->
+            pathD fill [ point ( 0, 0 ) ]
 
 
-pathAttribute : Point -> List Point -> S.Attribute msg
-pathAttribute origin points =
+smooth : List Point -> List Point
+smooth lst =
     let
-        parts =
-            List.map (part "T") points
+        run prev pts =
+            case ( prev, pts ) of
+                ( Nothing, pt :: rest ) ->
+                    pt :: run (Just pt) rest
 
-        part cmd pt =
-            let
-                ( x, y ) =
-                    fromPoint pt
-            in
-            cmd ++ String.fromFloat x ++ "," ++ String.fromFloat y
+                ( Just ptBefore, pt :: ptAfter :: rest ) ->
+                    let
+                        directionBefore =
+                            Vector2d.from pt ptBefore
+
+                        directionAfter =
+                            Vector2d.from pt ptAfter
+
+                        before =
+                            pt |> Point2d.translateBy (Vector2d.scaleBy 0.25 directionBefore)
+
+                        after =
+                            pt |> Point2d.translateBy (Vector2d.scaleBy 0.25 directionAfter)
+                    in
+                    before :: after :: run (Just pt) (ptAfter :: rest)
+
+                _ ->
+                    pts
     in
-    SA.d (String.join " " (part "M" origin :: parts))
+    run Nothing lst
+
+
+closePath : List D.Segment -> List D.Segment
+closePath lst =
+    case lst of
+        (D.M pt) :: _ ->
+            lst ++ [ D.T pt, D.z ]
+
+        _ ->
+            lst ++ [ D.z ]
+
+
+pairsWithExtrapolation : List Point -> List ( Point, Point )
+pairsWithExtrapolation vertices =
+    case vertices of
+        [ pt1, pt2 ] ->
+            [ ( pt1, pt2 ), ( pt2, pt2 |> Point2d.translateBy (Vector2d.from pt1 pt2) ) ]
+
+        pt1 :: pt2 :: rest ->
+            ( pt1, pt2 ) :: pairsWithExtrapolation (pt2 :: rest)
+
+        [ pt1 ] ->
+            [ ( pt1, pt1 |> Point2d.translateBy (vector ( 0, 0.5 )) ) ]
+
+        [] ->
+            []

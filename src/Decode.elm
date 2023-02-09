@@ -78,7 +78,32 @@ line =
     withType "line" <|
         (succeed Shape.Line.Line
             |> required "vertices" (list pair |> map (List.map Geometry.point))
+            |> optional "duplicate_last" bool False
+            |> optional "fill" lineFill Shape.Line.Open
         )
+
+
+lineFill : Decoder Shape.Line.Fill
+lineFill =
+    string
+        |> andThen
+            (\s ->
+                case s of
+                    "open" ->
+                        succeed Shape.Line.Open
+
+                    "closed" ->
+                        succeed Shape.Line.Closed
+
+                    "left" ->
+                        succeed Shape.Line.Left
+
+                    "right" ->
+                        succeed Shape.Line.Right
+
+                    _ ->
+                        fail "invalid fill type"
+            )
 
 
 point : Decoder Shape.Point.Point

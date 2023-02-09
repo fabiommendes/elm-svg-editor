@@ -6,6 +6,7 @@ import Element exposing (Element)
 import Figure.Style exposing (toAttribute)
 import Geometry exposing (Angle, BBox, Vector, fromAngle, fromVector)
 import Html exposing (Attribute)
+import Html.Events exposing (onClick)
 import Length exposing (inMeters)
 import Msg exposing (Msg(..))
 import Quantity as Q
@@ -32,7 +33,7 @@ dragRoot { key, model } =
         SA.class "drag-root" :: touch ( key, [] )
 
     else
-        SA.class "drag-root" :: click ( key, [] )
+        [ SA.class "drag-root", onClick (OnSelectFigure key []) ]
 
 
 dragChild : SubKey -> Element a -> List (Attribute (Msg a))
@@ -41,7 +42,7 @@ dragChild subKey parent =
         SA.class "drag-child" :: touch ( parent.key, subKey )
 
     else
-        SA.class "drag-child" :: click ( parent.key, subKey )
+        [ SA.class "drag-child" ]
 
 
 touch : ( Key, SubKey ) -> List (Attribute (Msg a))
@@ -101,11 +102,22 @@ trans st nums =
     st ++ "(" ++ String.join " " (List.map String.fromFloat nums) ++ ") "
 
 
-rootFigure : String -> Element a -> List (Attribute (Msg a))
-rootFigure name fig =
-    transformElement fig
+rootElement : String -> Element a -> List (Attribute (Msg a))
+rootElement name elem =
+    transformElement elem
         :: List.concat
-            [ dragRoot fig
+            [ dragRoot elem
+            , classes name elem
+            , style elem
+            ]
+
+
+childPart : SubKey -> String -> Element a -> List (Attribute (Msg a))
+childPart sub name fig =
+    transformElement fig
+        :: SA.class "child"
+        :: List.concat
+            [ dragChild sub fig
             , classes name fig
             , style fig
             ]

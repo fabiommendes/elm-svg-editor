@@ -35,6 +35,7 @@ type alias ConfigParams =
     { pointRadius : Float
     , zoomControls : Bool
     , panControls : Bool
+    , panWithTouch : Bool
     }
 
 
@@ -56,6 +57,7 @@ initParams =
     { pointRadius = 0.5
     , zoomControls = True
     , panControls = True
+    , panWithTouch = True
     }
 
 
@@ -92,6 +94,11 @@ withZoomControls value =
 withPanControls : Bool -> Config a -> Config a
 withPanControls value =
     L.modify L.params <| \p -> { p | panControls = value }
+
+
+withPanWithTouch : Bool -> Config a -> Config a
+withPanWithTouch value =
+    L.modify L.params <| \p -> { p | panWithTouch = value }
 
 
 makeDragConfig : (Vector -> msg) -> (Key -> SubKey -> msg) -> Draggable.Config ( Key, SubKey ) msg

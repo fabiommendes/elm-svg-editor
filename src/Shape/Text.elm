@@ -15,7 +15,7 @@ type alias Text =
 
 view : ConfigParams -> Element Text -> Svg (Msg Text)
 view _ elem =
-    S.g (A.rootFigure "text" elem)
+    S.g (A.rootElement "text" elem)
         [ S.text_ [ SA.class "background" ] [ S.text elem.model.data.content ]
         , S.text_ [] [ S.text elem.model.data.content ]
         ]

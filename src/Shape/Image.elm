@@ -19,13 +19,8 @@ view : ConfigParams -> Element Image -> Svg (Msg Image)
 view _ elem =
     let
         attrs =
-            List.concat
-                [ [ SA.width (String.fromFloat elem.model.data.width)
-                  , SA.xlinkHref elem.model.data.href
-                  , A.transformElement elem
-                  ]
-                , A.dragRoot elem
-                , A.classes "image" elem
-                ]
+            SA.width (String.fromFloat elem.model.data.width)
+                :: SA.xlinkHref elem.model.data.href
+                :: A.rootElement "image" elem
     in
     S.image attrs []

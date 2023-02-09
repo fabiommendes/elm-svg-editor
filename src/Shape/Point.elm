@@ -3,11 +3,14 @@ module Shape.Point exposing (Point, circle, view, viewAsPoint)
 import Attributes as SA
 import Config exposing (ConfigParams)
 import Element exposing (Element)
+import Group exposing (GroupInfo)
 import Html.Extra as H
 import Msg exposing (Msg)
 import Svg as S exposing (Attribute, Svg)
 import Svg.Attributes as SA
 import Types exposing (..)
+import Geometry exposing (fromPoint)
+import Geometry exposing (point)
 
 
 type alias Point =
@@ -16,20 +19,20 @@ type alias Point =
 
 view : ConfigParams -> Element a -> Svg (Msg a)
 view cfg elem =
-    viewAsPoint cfg (SA.rootFigure "point" elem) elem
+    viewAsPoint cfg elem.group elem.model.label elem.isSelected (SA.rootElement "point" elem) (point (0, 0))
 
 
-viewAsPoint : ConfigParams -> List (Attribute (Msg a)) -> Element a -> Svg (Msg a)
-viewAsPoint cfg attrs elem =
-    case ( elem.group, elem.model.label ) of
-        ( Just { index, label }, name ) ->
+viewAsPoint : ConfigParams -> Maybe GroupInfo -> String -> Bool -> List (Attribute (Msg a)) -> Geometry.Point -> Svg (Msg a)
+viewAsPoint cfg group name isSelected attrs pt =
+    case ( group, name ) of
+        ( Just { index, label }, _ ) ->
             S.g attrs
-                [ circle cfg.pointRadius ( 0, 0 ) [] []
+                [ circle cfg.pointRadius pt [] []
                 , S.text_ [ SA.class "group-index" ] [ S.text (String.fromInt (index + 1)) ]
-                , if elem.isSelected && name == "" then
+                , if isSelected && name == "" then
                     S.text_ [ SA.class "group-label" ] [ S.text ("(" ++ label ++ ")") ]
 
-                  else if elem.isSelected then
+                  else if isSelected then
                     S.text_ [ SA.class "group-label" ] [ S.text ("(" ++ label ++ " / " ++ name ++ ")") ]
 
                   else
@@ -37,12 +40,12 @@ viewAsPoint cfg attrs elem =
                 ]
 
         ( _, "" ) ->
-            circle cfg.pointRadius ( 0, 0 ) attrs []
+            circle cfg.pointRadius pt attrs []
 
-        ( _, name ) ->
+        ( _, _ ) ->
             S.g attrs
-                [ circle cfg.pointRadius ( 0, 0 ) [] []
-                , if elem.isSelected then
+                [ circle cfg.pointRadius pt [] []
+                , if isSelected then
                     S.text_ [ SA.class "group-label" ] [ S.text ("(" ++ name ++ ")") ]
 
                   else
@@ -50,9 +53,12 @@ viewAsPoint cfg attrs elem =
                 ]
 
 
-circle : Float -> ( Float, Float ) -> List (Attribute msg) -> List (Svg msg) -> Svg msg
-circle r ( x, y ) attrs =
+circle : Float -> Geometry.Point -> List (Attribute msg) -> List (Svg msg) -> Svg msg
+circle r pt attrs =
     let
+        ( x, y ) =
+            fromPoint pt
+
         num =
             String.fromFloat
     in
