@@ -88,3 +88,26 @@ panButtons =
             , btn [ onClick <| OnChangeViewBox "pan.left" (move 1 0), class "absolute left-1 top-8" ] I.keyboard_arrow_left
             ]
         ]
+
+
+navbar : Html msg
+navbar =
+    let
+        icon i =
+            i 20 Inherit
+    in
+    div
+        [ class "navbar shadow-lg bg-primary primary-content"
+        ]
+        [ div [ class "flex-none pl-3" ] [ icon I.menu ]
+        , div
+            [ class "flex-1" ]
+            [ a
+                [ class "btn btn-ghost normal-case text-xl"
+                , class "hover:text-white"
+                , href "/"
+                ]
+                [ text "croq.app" ]
+            ]
+        , div [ class "flex-none px-3" ] [ icon I.more_vert ]
+        ]

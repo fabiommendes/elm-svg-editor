@@ -6,6 +6,7 @@ import Draggable
 import Figure exposing (Figure)
 import File exposing (File)
 import Geometry exposing (..)
+import State exposing (State)
 import Types exposing (..)
 
 
@@ -31,6 +32,7 @@ type Msg a
     | OnUploadRequest
     | OnUploadCompleted File
     | OnUploadProcessed String
+    | OnStateChange (State a)
 
 
 map : (a -> b) -> Msg a -> Msg b
@@ -99,10 +101,13 @@ map f msg =
         OnClickAt pt ->
             OnClickAt pt
 
+        OnStateChange st ->
+            OnStateChange (State.map f st)
+
 
 changeDragMsgsTo : Msg fig -> Msg fig -> Msg fig
 changeDragMsgsTo default msg =
-    case Debug.log "" msg of
+    case msg of
         OnDragMsg _ ->
             default
 

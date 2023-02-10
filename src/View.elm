@@ -3,6 +3,8 @@ module View exposing (..)
 import BaseTypes exposing (Direction(..))
 import Config exposing (Config, withState)
 import Element exposing (Element)
+import Figure
+import Geometry exposing (fromPoint, vector)
 import Group exposing (GroupInfo)
 import Html exposing (..)
 import Html.Attributes as HA exposing (..)
@@ -18,6 +20,7 @@ import Msg exposing (Msg(..))
 import Scene exposing (Scene)
 import State exposing (State(..))
 import Types exposing (..)
+import Ui
 import Util exposing (iff)
 
 
@@ -34,7 +37,7 @@ view cfg m =
         [ class "bg-base w-100"
         , attribute "data-theme" "lemonade"
         ]
-        [ navbar
+        [ Ui.navbar
         , toolbar config m
         , div [ class "max-w-xl m-auto" ] <|
             case m.error of
@@ -109,31 +112,8 @@ contextToolbar cfg scene elem =
         ]
 
 
-navbar : Html msg
-navbar =
-    let
-        icon i =
-            i 20 Inherit
-    in
-    div
-        [ class "navbar shadow-lg bg-primary primary-content"
-        ]
-        [ div [ class "flex-none pl-3" ] [ icon I.menu ]
-        , div
-            [ class "flex-1" ]
-            [ a
-                [ class "btn btn-ghost normal-case text-xl"
-                , class "hover:text-white"
-                , href "/"
-                ]
-                [ text "croq.app" ]
-            ]
-        , div [ class "flex-none px-3" ] [ icon I.more_vert ]
-        ]
-
-
 toolbar : Config a -> Model a -> Html (Msg a)
-toolbar _ m =
+toolbar cfg m =
     let
         genericBtn attrs i =
             button (class "btn-sm px-2" :: attrs) [ i 20 Inherit ]
@@ -149,15 +129,24 @@ toolbar _ m =
 
         onClickMsg msg { key } =
             onClick (msg key)
+
+        insertFigure pt =
+            cfg.config.defaultFigure |> Figure.move (vector (fromPoint pt))
     in
     div [ class "shadow-lg bg-slate-900 text-white z-10" ]
         [ div [ class "p-2 flex max-w-2xl m-auto" ]
             [ div []
-                [ genericBtn [] I.add_circle
-                , genericBtn [ onClick OnDownloadRequest ] I.save_alt
+                [ genericBtn [ onClick OnDownloadRequest ] I.save_alt
                 , genericBtn [ onClick OnUploadRequest ] I.file_open
                 ]
             , div [ class "flex-1 text-slate-300 text-right px-2" ] [ text "|" ]
+            , div []
+                [ genericBtn [ onClick (OnStateChange <| State.StandardEditor) ] I.edit
+                , genericBtn [ onClick (OnStateChange <| State.ClickToInsert "ref" insertFigure) ] I.add_circle_outline
+                , genericBtn [ onClick (OnStateChange <| State.ConnectingLines ("obj", 5)) ] I.timeline
+                , genericBtn [ onClick (OnStateChange <| State.ReadOnlyView) ] I.landscape
+                ]
+            , div [ class "text-slate-300 text-right px-2" ] [ text "|" ]
             , div [ class "" ]
                 [ genericBtn [ selectedMsg (OnFigureChangeOrder Up) ] IR.move_up
                 , genericBtn [ selectedMsg (OnFigureChangeOrder Down) ] IR.move_down

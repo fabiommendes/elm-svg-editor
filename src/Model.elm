@@ -1,13 +1,13 @@
 module Model exposing (..)
 
-import BoundingBox2d exposing (BoundingBox2d)
+import BoundingBox2d
 import Draggable
 import Geometry exposing (Point)
 import Point2d
 import Scene
 import State exposing (State(..))
 import Types exposing (..)
-import Vector2d exposing (Vector2d)
+import Vector2d
 
 
 type alias Model fig =

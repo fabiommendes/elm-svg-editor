@@ -3,6 +3,7 @@ module Editor exposing (..)
 import Config
 import Decode
 import Encode
+import Geometry exposing (point)
 import Html exposing (Html)
 import Model
 import Msg
@@ -33,7 +34,7 @@ init =
 
 defaulConfig : Config
 defaulConfig =
-    Config.init
+    Config.init (Shape.Any.point (point ( 0, 0 )))
         |> Config.withViewFunction Shape.Any.view
         |> Config.withInnerMove Shape.Any.moveInside
         |> Config.withActionButtons Shape.Any.actionButtons

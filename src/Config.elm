@@ -11,7 +11,7 @@ module Config exposing
     , withJson
     , withPointRadius
     , withState
-    , withViewFunction
+    , withViewFunction, withdefaultFigure
     )
 
 import Draggable
@@ -58,6 +58,7 @@ type alias Cfg fig =
     , actionButtons : Element fig -> List (Html (Msg fig))
     , shapeEncoder : fig -> Value
     , shapeDecoder : Decoder fig
+    , defaultFigure : Figure fig
     }
 
 
@@ -77,10 +78,10 @@ type alias Params fig =
     }
 
 
-init : Config fig
-init =
+init : Figure fig -> Config fig
+init fig =
     { params = initParams
-    , config = initConfig
+    , config = initConfig fig
     }
 
 
@@ -96,14 +97,15 @@ initParams =
     }
 
 
-initConfig : Cfg fig
-initConfig =
+initConfig : Figure fig -> Cfg fig
+initConfig fig =
     { drag = makeDragConfig OnDragBy OnSelectFigure
     , shapeEncoder = \_ -> Json.Encode.null
     , shapeDecoder = Json.Decode.fail "no shape decoder provided"
     , view = \_ _ -> Svg.text_ [] [ Svg.text "no view function was provided" ]
-    , innerMove = \_ _ fig -> fig
+    , innerMove = \_ _ x -> x
     , actionButtons = \_ -> []
+    , defaultFigure = fig
     }
 
 
@@ -120,6 +122,11 @@ withInnerMove move ({ config } as cfg) =
 withActionButtons : (Element fig -> List (Html (Msg fig))) -> Config fig -> Config fig
 withActionButtons buttons ({ config } as cfg) =
     { cfg | config = { config | actionButtons = buttons } }
+
+
+withdefaultFigure : Figure fig -> Config fig -> Config fig
+withdefaultFigure fig ({ config } as cfg) =
+    { cfg | config = { config | defaultFigure = fig } }
 
 
 withJson : { decoder : Decoder fig, encoder : fig -> Json.Encode.Value } -> Config fig -> Config fig

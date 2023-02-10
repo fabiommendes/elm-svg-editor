@@ -19,7 +19,6 @@ import Model exposing (Model)
 import Monocle.Lens as L
 import Msg exposing (Msg(..))
 import Quantity as Q
-import Result.Extra as Result
 import Scene
 import State exposing (State(..))
 import Task
@@ -184,3 +183,6 @@ update cfg msg_ m =
 
         OnClickAt pt ->
             return (Model.notifyClick pt m)
+
+        OnStateChange st ->
+            return { m | state = st }
