@@ -31,3 +31,22 @@ map f st =
 
         ConnectingLines key ->
             ConnectingLines key
+
+
+isSimilarTo : State a -> State b -> Bool
+isSimilarTo st1 st2 =
+    case ( st1, st2 ) of
+        ( StandardEditor, StandardEditor ) ->
+            True
+
+        ( ReadOnlyView, ReadOnlyView ) ->
+            True
+
+        ( ClickToInsert _ _, ClickToInsert _ _ ) ->
+            True
+
+        ( ConnectingLines _, ConnectingLines _ ) ->
+            True
+
+        _ ->
+            False

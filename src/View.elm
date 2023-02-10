@@ -59,6 +59,12 @@ notSelectedContext _ =
 contextToolbar : Config a -> Scene a -> Element a -> Html (Msg a)
 contextToolbar cfg scene elem =
     let
+        updateFigureMsg msg updater =
+            selectedMsg (OnFigureUpdate msg (\_ -> Just (updater elem.model)))
+
+        selectedMsg msg =
+            onClick (msg elem.key)
+
         allowedGroups =
             [ ( "foo", "Foo" ), ( "bar", "Bar" ), ( "baz", "Baz" ) ]
 
@@ -99,7 +105,20 @@ contextToolbar cfg scene elem =
                 ]
     in
     div []
-        [ text <| "selected key: " ++ showKey elem.key
+        [ div [ class "shadow-lg bg-slate-900 text-white z-10" ]
+            [ div [ class "p-2 flex max-w-2xl m-auto" ]
+                [ div []
+                    [ text <| "selected key: " ++ showKey elem.key
+                    ]
+                , div [ class "flex-1 text-slate-300 text-right px-2" ] [ text "" ]
+                , div [ class "" ]
+                    [ Ui.toolbarBtn [ selectedMsg (OnFigureChangeOrder Up) ] IR.move_up
+                    , Ui.toolbarBtn [ selectedMsg (OnFigureChangeOrder Down) ] IR.move_down
+                    , Ui.toolbarBtn [ selectedMsg OnFigureDiscard ] I.delete
+                    , Ui.toolbarBtn [ updateFigureMsg "editable.toggle" <| L.modify editable not ] I.lock
+                    ]
+                ]
+            ]
         , elem.subKey
             |> List.map String.fromInt
             |> String.join ", "
@@ -115,43 +134,30 @@ contextToolbar cfg scene elem =
 toolbar : Config a -> Model a -> Html (Msg a)
 toolbar cfg m =
     let
-        genericBtn attrs i =
-            button (class "btn-sm px-2" :: attrs) [ i 20 Inherit ]
-
-        selectedFigure =
-            Scene.getSelected m.scene
-
-        selectedMsg msg =
-            Maybe.unwrap (disabled True) (onClickMsg msg) selectedFigure
-
-        updateFigureMsg msg updater =
-            selectedMsg (OnFigureUpdate msg <| \_ -> selectedFigure |> Maybe.map (.model >> updater))
-
-        onClickMsg msg { key } =
-            onClick (msg key)
-
         insertFigure pt =
             cfg.config.defaultFigure |> Figure.move (vector (fromPoint pt))
+
+        stateMsg msg =
+            onClick (OnStateChange msg)
+                :: (if m.state |> State.isSimilarTo msg then
+                        [ class "btn-active btn-outline btn-ghost" ]
+
+                    else
+                        [ class "text-info"]
+                   )
     in
     div [ class "shadow-lg bg-slate-900 text-white z-10" ]
         [ div [ class "p-2 flex max-w-2xl m-auto" ]
             [ div []
-                [ genericBtn [ onClick OnDownloadRequest ] I.save_alt
-                , genericBtn [ onClick OnUploadRequest ] I.file_open
+                [ Ui.toolbarBtn (stateMsg <| State.StandardEditor) I.edit
+                , Ui.toolbarBtn (stateMsg <| State.ClickToInsert "ref" insertFigure) I.add_circle_outline
+                , Ui.toolbarBtn (stateMsg <| State.ConnectingLines ( "obj", 5 )) I.timeline
+                , Ui.toolbarBtn (stateMsg <| State.ReadOnlyView) I.landscape
                 ]
-            , div [ class "flex-1 text-slate-300 text-right px-2" ] [ text "|" ]
+            , div [ class "flex-1 text-slate-300 text-right px-2" ] [ text "" ]
             , div []
-                [ genericBtn [ onClick (OnStateChange <| State.StandardEditor) ] I.edit
-                , genericBtn [ onClick (OnStateChange <| State.ClickToInsert "ref" insertFigure) ] I.add_circle_outline
-                , genericBtn [ onClick (OnStateChange <| State.ConnectingLines ("obj", 5)) ] I.timeline
-                , genericBtn [ onClick (OnStateChange <| State.ReadOnlyView) ] I.landscape
-                ]
-            , div [ class "text-slate-300 text-right px-2" ] [ text "|" ]
-            , div [ class "" ]
-                [ genericBtn [ selectedMsg (OnFigureChangeOrder Up) ] IR.move_up
-                , genericBtn [ selectedMsg (OnFigureChangeOrder Down) ] IR.move_down
-                , genericBtn [ selectedMsg OnFigureDiscard ] I.delete
-                , genericBtn [ updateFigureMsg "editable.toggle" <| L.modify editable not ] I.lock
+                [ Ui.toolbarBtn [ onClick OnDownloadRequest ] I.save_alt
+                , Ui.toolbarBtn [ onClick OnUploadRequest ] I.file_open
                 ]
             ]
         ]

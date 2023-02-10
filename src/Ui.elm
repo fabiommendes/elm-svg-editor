@@ -111,3 +111,8 @@ navbar =
             ]
         , div [ class "flex-none px-3" ] [ icon I.more_vert ]
         ]
+
+
+toolbarBtn : List (Attribute msg) -> (number -> Coloring -> Html msg) -> Html msg
+toolbarBtn attrs i =
+    button (class "btn-sm px-2" :: attrs) [ i 20 Inherit ]
