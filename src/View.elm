@@ -97,7 +97,7 @@ contextToolbar cfg scene elem =
                 ]
     in
     div []
-        [ text <| "selected key: " ++ String.fromInt elem.key
+        [ text <| "selected key: " ++ showKey elem.key
         , elem.subKey
             |> List.map String.fromInt
             |> String.join ", "
@@ -174,7 +174,7 @@ content cfg m =
     let
         dragEvents =
             if cfg.params.panWithTouch then
-                A.touch ( -1, [] )
+                A.touch ( backgroundKey, [] )
 
             else
                 []

@@ -24,7 +24,7 @@ withExample : Model -> Model
 withExample m =
     scene.set
         (m.scene
-            |> Scene.insertMany
+            |> Scene.insertManyAs "obj"
                 [ F.image 20 "https://i.imgur.com/RyBdN56.jpeg"
                     |> F.move (vector ( 0, 0 ))
                     |> F.editable False
@@ -35,8 +35,8 @@ withExample m =
                 , F.point (vector ( 5, 5 ))
                 , F.line [ ( 1, 2 ), ( 3, 4 ), ( 5, 2 ) ]
                     |> F.setLabel "bem-vindo"
-                , F.text "foo bar"
-                    |> F.move (vector ( 15, 10 ))
+                -- , F.text "foo bar"
+                --     |> F.move (vector ( 15, 10 ))
                 ]
         )
         m

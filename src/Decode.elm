@@ -27,7 +27,26 @@ pair =
 
 key : Decoder Key
 key =
-    int
+    string
+        |> andThen
+            (\st ->
+                case String.split "-" st |> List.reverse of
+                    x :: y :: rest ->
+                        case String.toInt x of
+                            Just n ->
+                                succeed
+                                    ( (y :: rest)
+                                        |> List.reverse
+                                        |> String.join "-"
+                                    , n
+                                    )
+
+                            _ ->
+                                fail ("invalid key: " ++ st)
+
+                    _ ->
+                        fail ("invalid key: " ++ st)
+            )
 
 
 label : Decoder Label

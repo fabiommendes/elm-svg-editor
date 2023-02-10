@@ -28,7 +28,7 @@ pair ( x, y ) =
 
 key : Key -> Value
 key =
-    int
+    showKey >> string
 
 
 label : Label -> Value
@@ -61,7 +61,7 @@ line obj =
     object
         [ ( "type", string "line" )
         , ( "vertices", list pair (obj.vertices |> List.map fromPoint) )
-        , ( "duplicate_last", bool obj.duplicateLast  )
+        , ( "duplicate_last", bool obj.duplicateLast )
         ]
 
 
@@ -124,7 +124,7 @@ scene shapeEnc obj =
         withKey k value =
             D.decodeValue (D.keyValuePairs D.value) value
                 |> Result.withDefault []
-                |> (::) ( "key", int k )
+                |> (::) ( "key", key k )
                 |> object
 
         bbox =

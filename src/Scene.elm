@@ -11,12 +11,12 @@ module Scene exposing
     , groupMany
     , init
     , insert
-    , insertMany
+    , insertManyAs
     , moveGroup
     , moveLayer
     , put
     , update
-    , view
+    , view, insertMany
     )
 
 import BaseTypes exposing (Direction(..))
@@ -150,28 +150,40 @@ put key fig =
 
 
 insert : Figure a -> Scene a -> ( Key, Scene a )
-insert fig scene =
+insert =
+    insertAs "obj"
+
+
+insertAs : String -> Figure a -> Scene a -> ( Key, Scene a )
+insertAs key fig scene =
     let
-        key =
+        key_ =
             Dict.keys (objects.get scene)
+                |> List.filter (Tuple.first >> (==) key)
                 |> List.maximum
-                |> Maybe.unwrap 0 ((+) 1)
+                |> Maybe.unwrap anonymousKey nextKey
     in
-    ( key, put key fig scene )
+    ( key_, put key_ fig scene )
 
 
 insertMany : List (Figure a) -> Scene a -> Scene a
-insertMany figures =
+insertMany =
+    insertManyAs "obj"
+
+
+insertManyAs : String -> List (Figure a) -> Scene a -> Scene a
+insertManyAs key figures =
     L.modify data <|
         \inner ->
             let
                 firstKey =
                     Dict.keys inner.objects
+                        |> List.filter (Tuple.first >> (==) key)
                         |> List.maximum
-                        |> Maybe.unwrap 0 ((+) 1)
+                        |> Maybe.unwrap anonymousKey nextKey
 
                 extra =
-                    figures |> List.indexedMap (\i x -> ( firstKey + i, ( x, Nothing ) ))
+                    figures |> List.indexedMap (\i x -> ( firstKey |> nextKeyBy i, ( x, Nothing ) ))
             in
             { inner
                 | objects = Dict.union inner.objects (Dict.fromList extra)

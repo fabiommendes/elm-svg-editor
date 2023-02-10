@@ -68,7 +68,7 @@ update cfg msg_ m =
             in
             case m.scene.selected of
                 Just ( key, [] ) ->
-                    if key == -1 then
+                    if key == backgroundKey then
                         update cfg
                             (OnChangeViewBox "mouse-drag"
                                 (\bb ->

@@ -62,7 +62,7 @@ style { model } =
 
 classes : String -> Element a -> List (Attribute msg)
 classes name elem =
-    SA.class ("key-" ++ String.fromInt elem.key)
+    SA.class ("key-" ++ showKey elem.key)
         :: SA.class (name ++ "-figure")
         :: (if elem.isSelected then
                 if elem.subKey == [] then
