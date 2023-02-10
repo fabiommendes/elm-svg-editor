@@ -17,6 +17,7 @@ module Config exposing
 import Draggable
 import Draggable.Events as DE
 import Element exposing (Element)
+import Figure exposing (Figure)
 import Geometry exposing (Vector, vector)
 import Html exposing (Html)
 import Json.Decode exposing (Decoder)
@@ -27,11 +28,10 @@ import Msg exposing (Msg(..))
 import State exposing (State(..))
 import Svg exposing (Svg)
 import Types exposing (Key, SubKey)
-import Figure exposing (Figure)
 
 
-type alias ViewFunction a =
-    Params -> Element a -> Svg (Msg a)
+type alias ViewFunction fig =
+    Params fig -> Element fig -> Svg (Msg fig)
 
 
 type alias InnerMoveFunction fig =
@@ -40,7 +40,7 @@ type alias InnerMoveFunction fig =
 
 type alias Config fig =
     { config : Cfg fig
-    , params : Params
+    , params : Params fig
     }
 
 
@@ -66,13 +66,13 @@ type alias Cfg fig =
 The state is controlled by the main model and is copied when passed to scene.
 
 -}
-type alias Params =
+type alias Params fig =
     { pointRadius : Float
     , zoomControls : Bool
     , panControls : Bool
     , panWithTouch : Bool
     , groups : List Key
-    , state : State
+    , state : State fig
     }
 
 
@@ -83,7 +83,7 @@ init =
     }
 
 
-initParams : Params
+initParams : Params fig
 initParams =
     { pointRadius = 0.5
     , zoomControls = True
@@ -140,7 +140,7 @@ withControls value =
     L.modify L.params <| \p -> { p | zoomControls = value.zoom, panControls = value.pan, panWithTouch = value.drag }
 
 
-withState : State -> Config fig -> Config fig
+withState : State fig -> Config fig -> Config fig
 withState value =
     L.modify L.params <| \p -> { p | state = value }
 

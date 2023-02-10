@@ -11,7 +11,7 @@ type alias Model fig =
     , scale : Float
     , drag : Draggable.State ( Key, SubKey )
     , error : Maybe String
-    , state : State
+    , state : State fig
     }
 
 
@@ -21,10 +21,12 @@ init =
     , drag = Draggable.init
     , scale = 0.1
     , error = Nothing
-    , state = StandardEditor
+
+    -- , state = StandardEditor
+    , state = ReadOnlyView
     }
 
 
-withState : State -> Model fig -> Model fig
+withState : State fig -> Model fig -> Model fig
 withState st m =
     { m | state = st }

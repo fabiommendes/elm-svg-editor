@@ -83,7 +83,7 @@ removePoint i =
 
 {-| Render line
 -}
-view : Params -> Element Line -> Svg (Msg Line)
+view : Params fig -> Element Line -> Svg (Msg Line)
 view cfg ({ model, shape } as elem) =
     let
         subKey =

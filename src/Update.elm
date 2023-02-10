@@ -16,6 +16,7 @@ import Json.Encode
 import Length exposing (inMeters)
 import Lens exposing (bbox, scene)
 import Model exposing (Model)
+import Monocle.Common exposing (second)
 import Monocle.Lens as L
 import Msg exposing (Msg(..))
 import Quantity as Q
@@ -41,6 +42,21 @@ update cfg msg_ m =
     case msg_ of
         NoOp ->
             return m
+
+        Batch msgs ->
+            let
+                reducer msg ( m_, cmds ) =
+                    let
+                        ( mNext, cmd ) =
+                            update cfg msg m_
+                    in
+                    ( mNext, cmd :: cmds )
+            in
+            let
+                ( m_, cmds ) =
+                    List.foldl reducer ( m, [] ) msgs
+            in
+            ( m_, Cmd.batch cmds )
 
         OnWindowResize ->
             ( m

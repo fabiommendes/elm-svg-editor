@@ -3,26 +3,25 @@ module Shape.Point exposing (Point, circle, view, viewAsPoint)
 import Attributes as SA
 import Config exposing (Params)
 import Element exposing (Element)
+import Geometry exposing (fromPoint, point)
 import Group exposing (GroupInfo)
 import Html.Extra as H
 import Msg exposing (Msg)
 import Svg as S exposing (Attribute, Svg)
 import Svg.Attributes as SA
 import Types exposing (..)
-import Geometry exposing (fromPoint)
-import Geometry exposing (point)
 
 
 type alias Point =
     ()
 
 
-view : Params -> Element a -> Svg (Msg a)
+view : Params fig -> Element a -> Svg (Msg a)
 view cfg elem =
-    viewAsPoint cfg elem.group elem.model.label elem.isSelected (SA.rootElement "point" elem) (point (0, 0))
+    viewAsPoint cfg elem.group elem.model.label elem.isSelected (SA.rootElement "point" elem) (point ( 0, 0 ))
 
 
-viewAsPoint : Params -> Maybe GroupInfo -> String -> Bool -> List (Attribute (Msg a)) -> Geometry.Point -> Svg (Msg a)
+viewAsPoint : Params fig -> Maybe GroupInfo -> String -> Bool -> List (Attribute (Msg a)) -> Geometry.Point -> Svg (Msg a)
 viewAsPoint cfg group name isSelected attrs pt =
     case ( group, name ) of
         ( Just { index, label }, _ ) ->

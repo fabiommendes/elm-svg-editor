@@ -2,7 +2,7 @@ module View exposing (..)
 
 import Attributes as A
 import BaseTypes exposing (Direction(..))
-import Config exposing (Config)
+import Config exposing (Config, withState)
 import Element exposing (Element)
 import Group exposing (GroupInfo)
 import Html exposing (..)
@@ -17,6 +17,7 @@ import Model exposing (Model)
 import Monocle.Lens as L
 import Msg exposing (Msg(..))
 import Scene exposing (Scene)
+import State exposing (State(..))
 import Svg exposing (svg)
 import Svg.Attributes as SA
 import Types exposing (..)
@@ -27,6 +28,9 @@ import Util exposing (iff)
 view : Config a -> Model a -> Html (Msg a)
 view cfg m =
     let
+        config =
+            cfg |> withState m.state
+
         selected =
             Scene.getSelected m.scene
     in
@@ -35,17 +39,43 @@ view cfg m =
         , attribute "data-theme" "lemonade"
         ]
         [ navbar
-        , toolbar cfg m
+        , toolbar config m
         , div [ class "max-w-xl m-auto" ] <|
             case m.error of
                 Just err ->
                     [ pre [ HA.style "font-size" "0.7rem" ] [ text err ] ]
 
                 Nothing ->
-                    [ main_ [] [ content cfg m ]
-                    , selected
-                        |> Maybe.unpack notSelectedContext (contextToolbar cfg m.scene)
+                    [ main_ [] [ viewScene config m ]
+                    , Maybe.unpack notSelectedContext (contextToolbar cfg m.scene) selected
                     ]
+        ]
+
+
+viewScene : Config a -> Model a -> Html (Msg a)
+viewScene cfg m =
+    let
+        onDrag =
+            if cfg.params.panWithTouch then
+                A.touch ( backgroundKey, [] )
+
+            else
+                []
+
+        sceneSvg =
+            Scene.view cfg m.scene
+    in
+    div [ class "container bg-slate-100", HA.class "scene" ]
+        [ svg
+            (SA.width "100%" :: A.viewBox m.scene.bbox :: onDrag)
+            [ case m.state of
+                ReadOnlyView ->
+                    Svg.map (Msg.onDragMsgs NoOp) sceneSvg
+
+                _ ->
+                    sceneSvg
+            ]
+        , Ui.controls cfg
         ]
 
 
@@ -166,22 +196,4 @@ toolbar _ m =
                 , genericBtn [ updateFigureMsg "editable.toggle" <| L.modify editable not ] I.lock
                 ]
             ]
-        ]
-
-
-content : Config a -> Model a -> Html (Msg a)
-content cfg m =
-    let
-        dragEvents =
-            if cfg.params.panWithTouch then
-                A.touch ( backgroundKey, [] )
-
-            else
-                []
-    in
-    div [ class "container bg-slate-300", HA.id "editor-scene" ]
-        [ svg
-            (SA.width "100%" :: A.viewBox m.scene.bbox :: dragEvents)
-            [ Scene.view cfg m.scene ]
-        , Ui.controls cfg
         ]

@@ -148,7 +148,7 @@ moveInside sub by fig =
             fig
 
 
-view : Params -> Element -> Svg (Msg Any)
+view : Params fig -> Element -> Svg (Msg Any)
 view cfg fig =
     let
         render viewFn msg data =

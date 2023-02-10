@@ -15,7 +15,7 @@ type alias Image =
     }
 
 
-view : Params -> Element Image -> Svg (Msg Image)
+view : Params fig -> Element Image -> Svg (Msg Image)
 view _ ({ shape } as elem) =
     let
         attrs =

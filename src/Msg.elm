@@ -11,6 +11,7 @@ import Types exposing (..)
 
 type Msg a
     = NoOp
+    | Batch (List (Msg a))
     | OnDragMsg (Draggable.Msg ( Key, SubKey ))
     | OnDragBy Vector
     | OnWindowResize
@@ -35,6 +36,9 @@ map f msg =
     case msg of
         NoOp ->
             NoOp
+
+        Batch lst ->
+            Batch (List.map (map f) lst)
 
         OnDragMsg x ->
             OnDragMsg x
@@ -86,3 +90,16 @@ map f msg =
 
         OnUploadProcessed st ->
             OnUploadProcessed st
+
+
+onDragMsgs : Msg fig -> Msg fig -> Msg fig
+onDragMsgs default msg =
+    case Debug.log "" msg of
+        OnDragMsg _ ->
+            default
+
+        OnDragBy _ ->
+            default
+
+        _ ->
+            msg
