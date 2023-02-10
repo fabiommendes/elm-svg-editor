@@ -11,32 +11,39 @@ module Scene exposing
     , groupMany
     , init
     , insert
+    , insertMany
     , insertManyAs
     , moveGroup
     , moveLayer
     , put
     , update
-    , view, insertMany
+    , view
     )
 
+import Attributes as A
 import BaseTypes exposing (Direction(..))
 import BoundingBox2d
 import Config exposing (Config)
 import Dict exposing (Dict)
 import Element exposing (Element)
 import Figure exposing (Figure)
-import Geometry exposing (BBox, Vector, point, vector)
+import Geometry exposing (..)
 import Group exposing (GroupData, GroupInfo)
+import Html as H exposing (Html)
+import Html.Attributes as HA
 import Lens as L
 import List.Extra as List
 import Maybe.Extra as Maybe
 import Monocle.Common exposing (second)
 import Monocle.Lens as L exposing (Lens)
 import Msg exposing (Msg)
+import State exposing (State(..))
 import Svg as S
 import Svg.Attributes as SA
 import Types exposing (..)
+import Ui
 import Util exposing (flip)
+import Msg exposing (Msg(..))
 
 
 {-| Represent an Svg scene
@@ -289,13 +296,47 @@ moveLayer direction key =
     L.modify order run
 
 
-view : Config a -> Scene a -> S.Svg (Msg a)
+view : Config a -> Scene a -> Html (Msg a)
 view cfg scene =
-    S.g [ SA.class "scene" ]
-        (elements scene
-            |> List.filter (.model >> .visible)
-            |> List.map (cfg.config.view cfg.params)
-        )
+    let
+        elementsSvg =
+            elements scene
+                |> List.filter (.model >> .visible)
+                |> List.map (cfg.config.view cfg.params)
+
+        mapMsg f =
+            List.map (S.map f)
+
+        onDrag =
+            if cfg.params.panWithTouch then
+                A.touch ( backgroundKey, [] )
+
+            else
+                []
+
+        supressDragAndInsert msg =
+            case msg of
+                OnDragMsg drag -> 
+                    msg 
+                
+                _ ->
+                    msg
+    in
+    H.div [ HA.class "container bg-slate-100", HA.class "scene" ]
+        [ S.svg
+            (SA.width "100%" :: SA.class "scene" :: A.viewBox scene.bbox :: onDrag)
+            (case cfg.params.state of
+                ReadOnlyView ->
+                    mapMsg (Msg.onDragMsgs Msg.NoOp) elementsSvg
+
+                ClickToInsert cons ->
+                    mapMsg supressDragAndInsert elementsSvg
+
+                _ ->
+                    elementsSvg
+            )
+        , Ui.controls cfg
+        ]
 
 
 orderWithKey : Key -> List Key -> List Key

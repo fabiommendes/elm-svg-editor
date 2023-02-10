@@ -30,7 +30,7 @@ module Shape.Any exposing
 import Config exposing (Params)
 import Element
 import Figure
-import Geometry as G exposing (Vector)
+import Geometry as G exposing (Point)
 import Html exposing (Html)
 import Lens as L
 import Msg exposing (Msg)
@@ -40,6 +40,7 @@ import Shape.Point exposing (Point)
 import Shape.Text exposing (Text)
 import Svg exposing (Svg)
 import Types exposing (..)
+import Geometry exposing (Vector)
 
 
 type alias Figure =
@@ -80,14 +81,20 @@ mapId =
     }
 
 
-point : Vector -> Figure
-point by =
-    Figure.new (PointModel ()) |> Figure.move by
+point : G.Point -> Figure
+point pt =
+    Figure.new (PointModel ()) |> Figure.move (G.vector (G.fromPoint pt))
 
 
 line : List ( Float, Float ) -> Figure
 line data =
-    Figure.new (LineModel { vertices = List.map G.point data, duplicateLast = True, fill = Open })
+    Figure.new
+        (LineModel
+            { vertices = List.map G.point data
+            , duplicateLast = True
+            , fill = Open
+            }
+        )
 
 
 image : Float -> String -> Figure

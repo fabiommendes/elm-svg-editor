@@ -3,12 +3,13 @@ module Figure exposing (Figure, addStyle, grow, map, move, new, rotate, setLabel
 {-| Generic figure utilities
 -}
 
-import Geometry exposing (Angle, Vector, angle, vector)
+import Geometry exposing (Angle, angle, vector)
 import Lens as L exposing (..)
 import Monocle.Lens as L
 import Quantity as Q
 import Types exposing (..)
 import Vector2d
+import Geometry exposing (Vector)
 
 
 type alias Figure shape =

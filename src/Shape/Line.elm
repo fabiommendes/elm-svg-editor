@@ -10,7 +10,7 @@ import Attributes as A
 import Config exposing (Params)
 import Element exposing (Element)
 import Figure exposing (move)
-import Geometry exposing (Point, Vector, fromPoint, point, vector)
+import Geometry exposing (Point, Point, fromPoint, point, vector)
 import Geometry.Paths exposing (pairsWithExtrapolation, smooth)
 import Geometry.Svg as S
 import Geometry.SvgPath exposing (ghostLinePath, pathD)
@@ -27,6 +27,7 @@ import Svg as S exposing (Svg)
 import Svg.Attributes as SA
 import Types exposing (..)
 import Util exposing (iff)
+import Geometry exposing (Vector)
 
 
 type alias Line =

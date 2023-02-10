@@ -3,13 +3,13 @@ module Attributes exposing (..)
 import BoundingBox2d
 import Draggable
 import Element exposing (Element)
-import Style exposing (toAttribute)
 import Geometry exposing (Angle, BBox, Vector, fromAngle, fromVector)
 import Html exposing (Attribute)
 import Html.Events exposing (onClick)
 import Length exposing (inMeters)
 import Msg exposing (Msg(..))
 import Quantity as Q
+import Style exposing (toAttribute)
 import Svg.Attributes as SA
 import Types exposing (..)
 

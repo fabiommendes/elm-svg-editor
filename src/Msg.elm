@@ -5,7 +5,7 @@ import Browser.Dom exposing (Element)
 import Draggable
 import Figure exposing (Figure)
 import File exposing (File)
-import Geometry exposing (BBox, Vector)
+import Geometry exposing (..)
 import Types exposing (..)
 
 

@@ -16,7 +16,6 @@ import Json.Encode
 import Length exposing (inMeters)
 import Lens exposing (bbox, scene)
 import Model exposing (Model)
-import Monocle.Common exposing (second)
 import Monocle.Lens as L
 import Msg exposing (Msg(..))
 import Quantity as Q

@@ -18,7 +18,7 @@ import Draggable
 import Draggable.Events as DE
 import Element exposing (Element)
 import Figure exposing (Figure)
-import Geometry exposing (Vector, vector)
+import Geometry exposing (vector)
 import Html exposing (Html)
 import Json.Decode exposing (Decoder)
 import Json.Encode exposing (Value)
@@ -28,6 +28,7 @@ import Msg exposing (Msg(..))
 import State exposing (State(..))
 import Svg exposing (Svg)
 import Types exposing (Key, SubKey)
+import Geometry exposing (Vector)
 
 
 type alias ViewFunction fig =

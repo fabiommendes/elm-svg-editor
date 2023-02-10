@@ -21,9 +21,7 @@ init =
     , drag = Draggable.init
     , scale = 0.1
     , error = Nothing
-
-    -- , state = StandardEditor
-    , state = ReadOnlyView
+    , state = StandardEditor
     }
 
 

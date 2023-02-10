@@ -6,8 +6,11 @@ import Editor exposing (..)
 import Figure as F
 import Geometry exposing (vector)
 import Lens exposing (scene)
+import Model exposing (withState)
 import Scene
 import Shape.Any as F
+import State exposing (State(..))
+import Geometry exposing (point)
 
 
 main : Program () Model Msg
@@ -22,24 +25,26 @@ main =
 
 withExample : Model -> Model
 withExample m =
-    scene.set
-        (m.scene
-            |> Scene.insertManyAs "obj"
-                [ F.image 20 "https://i.imgur.com/RyBdN56.jpeg"
-                    |> F.move (vector ( 0, 0 ))
-                    |> F.editable False
-                    |> F.draggable False
-                , F.point (vector ( 0, 0 ))
-                , F.point (vector ( 5, 0 ))
-                , F.point (vector ( 0, 5 ))
-                , F.point (vector ( 5, 5 ))
-                , F.line [ ( 1, 2 ), ( 3, 4 ), ( 5, 2 ) ]
-                    |> F.setLabel "bem-vindo"
-                -- , F.text "foo bar"
-                --     |> F.move (vector ( 15, 10 ))
-                ]
-        )
-        m
+    m
+        |> scene.set
+            (m.scene
+                |> Scene.insertManyAs "obj"
+                    [ F.image 20 "https://i.imgur.com/RyBdN56.jpeg"
+                        |> F.move (vector ( 0, 0 ))
+                        |> F.editable False
+                        |> F.draggable False
+                    , F.point (point ( 0, 0 ))
+                    , F.point (point ( 5, 0 ))
+                    , F.point (point ( 0, 5 ))
+                    , F.point (point ( 5, 5 ))
+                    , F.line [ ( 1, 2 ), ( 3, 4 ), ( 5, 2 ) ]
+                        |> F.setLabel "bem-vindo"
+
+                    -- , F.text "foo bar"
+                    --     |> F.move (vector ( 15, 10 ))
+                    ]
+            )
+        |> withState (ClickToInsert F.point)
 
 
 config : Config
