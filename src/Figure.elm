@@ -11,7 +11,7 @@ import Types exposing (..)
 import Vector2d
 
 
-type alias Figure a =
+type alias Figure shape =
     { label : String
     , scale : Float
     , translation : Vector
@@ -20,7 +20,7 @@ type alias Figure a =
     , draggable : Bool
     , visible : Bool
     , style : List { attr : String, value : String }
-    , data : a
+    , shape : shape
     }
 
 
@@ -34,7 +34,7 @@ new data =
     , draggable = True
     , visible = True
     , style = []
-    , data = data
+    , shape = data
     }
 
 
@@ -48,45 +48,45 @@ map f fig =
     , draggable = fig.draggable
     , visible = fig.visible
     , style = fig.style
-    , data = f fig.data
+    , shape = f fig.shape
     }
 
 
-move : Vector -> Figure a -> Figure a
+move : Vector -> Figure shape -> Figure shape
 move by =
     L.modify translation (\pos -> Vector2d.sum [ by, pos ])
 
 
-grow : Float -> Figure a -> Figure a
+grow : Float -> Figure shape -> Figure shape
 grow by =
     L.modify scale ((*) by)
 
 
-rotate : Angle -> Figure a -> Figure a
+rotate : Angle -> Figure shape -> Figure shape
 rotate by fig =
     fig |> rotation.set (Q.sum [ fig.rotation, by ])
 
 
-visible : Bool -> Figure a -> Figure a
+visible : Bool -> Figure shape -> Figure shape
 visible =
     L.visible.set
 
 
-draggable : Bool -> Figure a -> Figure a
+draggable : Bool -> Figure shape -> Figure shape
 draggable =
     L.draggable.set
 
 
-editable : Bool -> Figure a -> Figure a
+editable : Bool -> Figure shape -> Figure shape
 editable =
     L.editable.set
 
 
-setLabel : Label -> Figure a -> Figure a
+setLabel : Label -> Figure shape -> Figure shape
 setLabel text =
     label.set text
 
 
-addStyle : String -> String -> Figure a -> Figure a
+addStyle : String -> String -> Figure shape -> Figure shape
 addStyle attr value =
     L.modify style ((::) { attr = attr, value = value })

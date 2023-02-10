@@ -105,6 +105,7 @@ getSelected scene =
                             , isSelected = True
                             , group = group_
                             , model = fig
+                            , shape = fig.shape
                             }
                         )
             )
@@ -240,7 +241,7 @@ updateGroups groups_ =
     L.modify data <|
         \inner ->
             { inner
-                | groups = groups_ 
+                | groups = groups_
                 , objects = Group.updateGroupInfo groups_ second.set inner.objects
             }
 
@@ -304,6 +305,7 @@ makeElement scene key group_ fig =
                 , group = group_
                 , isSelected = True
                 , model = fig
+                , shape = fig.shape
                 }
 
             else
@@ -312,6 +314,7 @@ makeElement scene key group_ fig =
                 , group = group_
                 , isSelected = False
                 , model = fig
+                , shape = fig.shape
                 }
 
         _ ->
@@ -320,6 +323,7 @@ makeElement scene key group_ fig =
             , group = group_
             , isSelected = False
             , model = fig
+            , shape = fig.shape
             }
 
 

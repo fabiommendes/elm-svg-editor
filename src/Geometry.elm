@@ -9,6 +9,12 @@ import Polyline2d
 import Vector2d
 
 
+
+---
+--- Types and constructors
+---
+
+
 type alias Angle =
     Angle.Angle
 
@@ -83,3 +89,9 @@ line =
 fromLine : Line -> List ( Float, Float )
 fromLine =
     Polyline2d.vertices >> List.map fromPoint
+
+
+
+---
+--- Geometric operations
+---

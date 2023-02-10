@@ -96,7 +96,7 @@ figure shapeEnc obj =
         , ( "draggable", bool obj.draggable )
         , ( "visible", bool obj.visible )
         , ( "style", list (list string) (obj.style |> List.map (\{ attr, value } -> [ attr, value ])) )
-        , ( "data", shapeEnc obj.data )
+        , ( "data", shapeEnc obj.shape )
         ]
 
 

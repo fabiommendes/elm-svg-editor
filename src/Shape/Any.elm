@@ -32,7 +32,7 @@ import Element
 import Figure
 import Geometry as G exposing (Vector)
 import Html exposing (Html)
-import Lens exposing (data)
+import Lens as L
 import Msg exposing (Msg)
 import Shape.Image exposing (Image)
 import Shape.Line exposing (Fill(..), Line)
@@ -139,10 +139,10 @@ replace mapper fig =
 
 moveInside : SubKey -> Vector -> Figure -> Figure
 moveInside sub by fig =
-    case ( fig.data, sub ) of
+    case ( fig.shape, sub ) of
         ( LineModel obj, [ i ] ) ->
             fig
-                |> data.set (LineModel <| Shape.Line.movePoint i by obj)
+                |> L.shape.set (LineModel <| Shape.Line.movePoint i by obj)
 
         _ ->
             fig
@@ -155,7 +155,7 @@ view cfg fig =
             viewFn cfg (Element.map (\_ -> data) fig)
                 |> Svg.map (Msg.map msg)
     in
-    case fig.model.data of
+    case fig.model.shape of
         PointModel pt ->
             render Shape.Point.view PointModel pt
 
@@ -171,7 +171,7 @@ view cfg fig =
 
 actionButtons : Element -> List (Html (Msg Any))
 actionButtons fig =
-    case fig.model.data of
+    case fig.model.shape of
         LineModel obj ->
             Shape.Line.actionButtons obj (Element.map (\_ -> obj) fig)
                 |> List.map (Html.map (Msg.map LineModel))

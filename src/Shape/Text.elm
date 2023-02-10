@@ -14,8 +14,8 @@ type alias Text =
 
 
 view : Params -> Element Text -> Svg (Msg Text)
-view _ elem =
+view _ ({ shape } as elem) =
     S.g (A.rootElement "text" elem)
-        [ S.text_ [ SA.class "background" ] [ S.text elem.model.data.content ]
-        , S.text_ [] [ S.text elem.model.data.content ]
+        [ S.text_ [ SA.class "background" ] [ S.text shape.content ]
+        , S.text_ [] [ S.text shape.content ]
         ]

@@ -116,6 +116,11 @@ selected =
     lens .selected (\x m -> { m | selected = x })
 
 
+shape : Lens { a | shape : b } b
+shape =
+    lens .shape (\x m -> { m | shape = x })
+
+
 visible : Lens { a | visible : b } b
 visible =
     lens .visible (\x m -> { m | visible = x })

@@ -16,11 +16,11 @@ type alias Image =
 
 
 view : Params -> Element Image -> Svg (Msg Image)
-view _ elem =
+view _ ({ shape } as elem) =
     let
         attrs =
-            SA.width (String.fromFloat elem.model.data.width)
-                :: SA.xlinkHref elem.model.data.href
+            SA.width (String.fromFloat shape.width)
+                :: SA.xlinkHref shape.href
                 :: A.rootElement "image" elem
     in
     S.image attrs []

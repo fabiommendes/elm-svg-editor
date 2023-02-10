@@ -11,14 +11,13 @@ import Config exposing (Params)
 import Direction2d
 import Element exposing (Element)
 import Figure exposing (move)
-import Geometry exposing (Point, Vector, angle, fromPoint, point, vector)
+import Geometry exposing (Point, Vector, fromPoint, point, vector)
 import Geometry.Svg as S
 import Html as H exposing (Html)
 import Html.Attributes as HA
 import Html.Events as HE
 import Length exposing (meters)
-import Lens exposing (..)
-import LineSegment2d exposing (LineSegment2d)
+import Lens as L exposing (..)
 import List.Extra as List
 import Monocle.Lens as L
 import Msg exposing (Msg(..))
@@ -95,7 +94,7 @@ view cfg elem =
         makePoint i pt =
             let
                 isLast =
-                    i == nPoints - 1 && elem.model.data.duplicateLast
+                    i == nPoints - 1 && elem.model.shape.duplicateLast
 
                 elem_ =
                     if isLast then
@@ -119,10 +118,10 @@ view cfg elem =
             Shape.Point.view cfg elem
 
         nPoints =
-            elem.model.data.vertices |> List.length
+            elem.model.shape.vertices |> List.length
 
         points =
-            firstPoint :: List.indexedMap makePoint elem.model.data.vertices
+            firstPoint :: List.indexedMap makePoint elem.model.shape.vertices
 
         labels =
             [ elem.group
@@ -131,13 +130,13 @@ view cfg elem =
             ]
 
         dAttribute =
-            SA.d (pathD elem.model.data.fill line)
+            SA.d (pathD elem.model.shape.fill line)
 
         transforms =
             A.transformElement elem
 
         line =
-            (point ( 0, 0 ) :: elem.model.data.vertices)
+            (point ( 0, 0 ) :: elem.model.shape.vertices)
                 |> smooth
                 |> smooth
                 |> smooth
@@ -217,7 +216,7 @@ actionButtons line fig =
                     in
                     Just
                         (fig.model
-                            |> data.set (func i line)
+                            |> L.shape.set (func i line)
                         )
                 )
                 fig.key
@@ -257,8 +256,9 @@ smooth lst =
 
                         directionAfter =
                             Vector2d.from pt ptAfter
-                        
-                        smoothingFactor = 0.15
+
+                        smoothingFactor =
+                            0.15
 
                         before =
                             pt |> Point2d.translateBy (Vector2d.scaleBy smoothingFactor directionBefore)
