@@ -11,6 +11,7 @@ module Scene exposing
     , groupMany
     , init
     , insert
+    , insertAs
     , insertMany
     , insertManyAs
     , moveGroup
@@ -31,19 +32,19 @@ import Geometry exposing (..)
 import Group exposing (GroupData, GroupInfo)
 import Html as H exposing (Html)
 import Html.Attributes as HA
+import Html.Events.Extra.Pointer as Pointer
 import Lens as L
 import List.Extra as List
 import Maybe.Extra as Maybe
 import Monocle.Common exposing (second)
 import Monocle.Lens as L exposing (Lens)
-import Msg exposing (Msg)
+import Msg exposing (Msg(..))
 import State exposing (State(..))
 import Svg as S
 import Svg.Attributes as SA
 import Types exposing (..)
 import Ui
 import Util exposing (flip)
-import Msg exposing (Msg(..))
 
 
 {-| Represent an Svg scene
@@ -118,7 +119,7 @@ getSelected scene =
             )
 
 
-{-| Return all elements in scene
+{-| Return all elements in scene in the same order as scene.order
 -}
 elements : Scene a -> List (Element a)
 elements scene =
@@ -145,6 +146,8 @@ update key func =
     L.modify objects <| Dict.update key (Maybe.map updater)
 
 
+{-| Put figure in scene at the outmost layer.
+-}
 put : Key -> Figure a -> Scene a -> Scene a
 put key fig =
     L.modify data
@@ -168,7 +171,7 @@ insertAs key fig scene =
             Dict.keys (objects.get scene)
                 |> List.filter (Tuple.first >> (==) key)
                 |> List.maximum
-                |> Maybe.unwrap anonymousKey nextKey
+                |> Maybe.unwrap ( key, 0 ) nextKey
     in
     ( key_, put key_ fig scene )
 
@@ -187,14 +190,14 @@ insertManyAs key figures =
                     Dict.keys inner.objects
                         |> List.filter (Tuple.first >> (==) key)
                         |> List.maximum
-                        |> Maybe.unwrap anonymousKey nextKey
+                        |> Maybe.unwrap ( key, 0 ) nextKey
 
                 extra =
                     figures |> List.indexedMap (\i x -> ( firstKey |> nextKeyBy i, ( x, Nothing ) ))
             in
             { inner
                 | objects = Dict.union inner.objects (Dict.fromList extra)
-                , order = List.map Tuple.first extra ++ inner.order
+                , order = inner.order ++ List.map Tuple.first extra
             }
 
 
@@ -307,30 +310,29 @@ view cfg scene =
         mapMsg f =
             List.map (S.map f)
 
-        onDrag =
-            if cfg.params.panWithTouch then
-                A.touch ( backgroundKey, [] )
+        pointerEvents state panWithTouch =
+            case ( state, panWithTouch ) of
+                ( ClickToInsert _ _, _ ) ->
+                    Pointer.onDown (.pointer >> .offsetPos >> point >> OnClickAt) :: pointerEvents ReadOnlyView panWithTouch
 
-            else
-                []
+                ( _, True ) ->
+                    A.touch ( backgroundKey, [] )
 
-        supressDragAndInsert msg =
-            case msg of
-                OnDragMsg drag -> 
-                    msg 
-                
                 _ ->
-                    msg
+                    []
+
+        supressDrag =
+            mapMsg (Msg.changeDragMsgsTo Msg.NoOp)
     in
-    H.div [ HA.class "container bg-slate-100", HA.class "scene" ]
+    H.div [ HA.class "container bg-slate-100", HA.class "scene", HA.id cfg.params.sceneId ]
         [ S.svg
-            (SA.width "100%" :: SA.class "scene" :: A.viewBox scene.bbox :: onDrag)
+            (SA.width "100%" :: SA.class "scene" :: A.viewBox scene.bbox :: pointerEvents cfg.params.state cfg.params.panWithTouch)
             (case cfg.params.state of
                 ReadOnlyView ->
-                    mapMsg (Msg.onDragMsgs Msg.NoOp) elementsSvg
+                    supressDrag elementsSvg
 
-                ClickToInsert cons ->
-                    mapMsg supressDragAndInsert elementsSvg
+                ClickToInsert _ _ ->
+                    supressDrag elementsSvg
 
                 _ ->
                     elementsSvg
@@ -345,7 +347,7 @@ orderWithKey key lst =
         lst
 
     else
-        key :: lst
+        lst ++ [ key ]
 
 
 makeElement : Scene a -> Key -> Maybe GroupInfo -> Figure a -> Element a

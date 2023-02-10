@@ -4,13 +4,12 @@ import Browser
 import Config
 import Editor exposing (..)
 import Figure as F
-import Geometry exposing (vector)
+import Geometry exposing (point, vector)
 import Lens exposing (scene)
 import Model exposing (withState)
 import Scene
 import Shape.Any as F
 import State exposing (State(..))
-import Geometry exposing (point)
 
 
 main : Program () Model Msg
@@ -31,11 +30,14 @@ withExample m =
                 |> Scene.insertManyAs "obj"
                     [ F.image 20 "https://i.imgur.com/RyBdN56.jpeg"
                         |> F.move (vector ( 0, 0 ))
-                        |> F.editable False
-                        |> F.draggable False
+
+                    -- |> F.editable False
+                    -- |> F.draggable False
                     , F.point (point ( 0, 0 ))
                     , F.point (point ( 5, 0 ))
-                    , F.point (point ( 0, 5 ))
+                    ]
+                |> Scene.insertManyAs "obj"
+                    [ F.point (point ( 0, 5 ))
                     , F.point (point ( 5, 5 ))
                     , F.line [ ( 1, 2 ), ( 3, 4 ), ( 5, 2 ) ]
                         |> F.setLabel "bem-vindo"
@@ -44,7 +46,7 @@ withExample m =
                     --     |> F.move (vector ( 15, 10 ))
                     ]
             )
-        |> withState (ClickToInsert F.point)
+        |> withState (ClickToInsert "point" F.point)
 
 
 config : Config

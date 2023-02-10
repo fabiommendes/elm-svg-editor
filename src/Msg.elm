@@ -12,10 +12,12 @@ import Types exposing (..)
 type Msg a
     = NoOp
     | Batch (List (Msg a))
+    | OnErrorDetected String String
     | OnDragMsg (Draggable.Msg ( Key, SubKey ))
     | OnDragBy Vector
     | OnWindowResize
-    | OnRescaleViewport Element
+    | OnViewportRescaled Element
+    | OnClickAt Point
     | OnFigureChangeOrder Direction Key
     | OnSelectFigure Key SubKey
     | OnFigureCreate (Figure a)
@@ -40,6 +42,9 @@ map f msg =
         Batch lst ->
             Batch (List.map (map f) lst)
 
+        OnErrorDetected s1 s2 ->
+            OnErrorDetected s1 s2
+
         OnDragMsg x ->
             OnDragMsg x
 
@@ -49,8 +54,8 @@ map f msg =
         OnWindowResize ->
             OnWindowResize
 
-        OnRescaleViewport elem ->
-            OnRescaleViewport elem
+        OnViewportRescaled elem ->
+            OnViewportRescaled elem
 
         OnFigureChangeOrder dir key ->
             OnFigureChangeOrder dir key
@@ -91,9 +96,12 @@ map f msg =
         OnUploadProcessed st ->
             OnUploadProcessed st
 
+        OnClickAt pt ->
+            OnClickAt pt
 
-onDragMsgs : Msg fig -> Msg fig -> Msg fig
-onDragMsgs default msg =
+
+changeDragMsgsTo : Msg fig -> Msg fig -> Msg fig
+changeDragMsgsTo default msg =
     case Debug.log "" msg of
         OnDragMsg _ ->
             default

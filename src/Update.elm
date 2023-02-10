@@ -21,6 +21,7 @@ import Msg exposing (Msg(..))
 import Quantity as Q
 import Result.Extra as Result
 import Scene
+import State exposing (State(..))
 import Task
 import Types exposing (..)
 import Vector2d
@@ -59,11 +60,22 @@ update cfg msg_ m =
 
         OnWindowResize ->
             ( m
-            , Browser.Dom.getElement "editor-scene"
-                |> Task.attempt (Result.unwrap NoOp OnRescaleViewport)
+            , Browser.Dom.getElement cfg.params.sceneId
+                |> Task.attempt
+                    (\res ->
+                        case res of
+                            Ok elem ->
+                                OnViewportRescaled elem
+
+                            Err _ ->
+                                OnErrorDetected "resize" "ERROR"
+                    )
             )
 
-        OnRescaleViewport { element } ->
+        OnErrorDetected s1 s2 ->
+            return { m | error = Just (s1 ++ ": " ++ s2) }
+
+        OnViewportRescaled { element } ->
             let
                 factor =
                     BoundingBox2d.dimensions m.scene.bbox
@@ -143,8 +155,11 @@ update cfg msg_ m =
                     Q.ratio
                         (Tuple.first (BoundingBox2d.dimensions scene.bbox))
                         (Tuple.first (BoundingBox2d.dimensions bb))
+
+                newScale =
+                    m.scale * growth
             in
-            return { m | scale = m.scale * growth, scene = scene }
+            return { m | scale = newScale, scene = scene }
 
         OnDownloadRequest ->
             let
@@ -166,3 +181,6 @@ update cfg msg_ m =
 
                 Err err ->
                     return { m | error = Just <| Json.Decode.errorToString err }
+
+        OnClickAt pt ->
+            return (Model.notifyClick pt m)

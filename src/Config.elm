@@ -18,7 +18,7 @@ import Draggable
 import Draggable.Events as DE
 import Element exposing (Element)
 import Figure exposing (Figure)
-import Geometry exposing (vector)
+import Geometry exposing (Vector, vector)
 import Html exposing (Html)
 import Json.Decode exposing (Decoder)
 import Json.Encode exposing (Value)
@@ -28,7 +28,6 @@ import Msg exposing (Msg(..))
 import State exposing (State(..))
 import Svg exposing (Svg)
 import Types exposing (Key, SubKey)
-import Geometry exposing (Vector)
 
 
 type alias ViewFunction fig =
@@ -74,6 +73,7 @@ type alias Params fig =
     , panWithTouch : Bool
     , groups : List Key
     , state : State fig
+    , sceneId : String
     }
 
 
@@ -92,6 +92,7 @@ initParams =
     , panWithTouch = True
     , groups = []
     , state = StandardEditor
+    , sceneId = "SCENE-EDITOR"
     }
 
 
