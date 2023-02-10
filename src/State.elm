@@ -14,7 +14,7 @@ type State fig
     = StandardEditor
     | ReadOnlyView
     | ClickToInsert String (Point -> Figure fig)
-    | ConnectingLines Key
+    | Connecting (Maybe Key)
 
 
 map : (a -> b) -> State a -> State b
@@ -29,8 +29,8 @@ map f st =
         ClickToInsert key func ->
             ClickToInsert key (\pt -> Figure.map f (func pt))
 
-        ConnectingLines key ->
-            ConnectingLines key
+        Connecting key ->
+            Connecting key
 
 
 isSimilarTo : State a -> State b -> Bool
@@ -45,7 +45,27 @@ isSimilarTo st1 st2 =
         ( ClickToInsert _ _, ClickToInsert _ _ ) ->
             True
 
-        ( ConnectingLines _, ConnectingLines _ ) ->
+        ( Connecting _, Connecting _ ) ->
+            True
+
+        _ ->
+            False
+
+
+isClickToInsert : State fig -> Bool
+isClickToInsert state =
+    case state of
+        ClickToInsert _ _ ->
+            True
+
+        _ ->
+            False
+
+
+isConnecting : State fig -> Bool
+isConnecting state =
+    case state of
+        Connecting _ ->
             True
 
         _ ->

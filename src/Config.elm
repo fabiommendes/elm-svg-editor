@@ -5,13 +5,16 @@ module Config exposing
     , init
     , makeDragConfig
     , withActionButtons
+    , withConnector
     , withControls
+    , withDefaultFigure
+    , withDefaultTarget
     , withGroups
     , withInnerMove
     , withJson
     , withPointRadius
     , withState
-    , withViewFunction, withdefaultFigure
+    , withViewFunction
     )
 
 import Draggable
@@ -59,6 +62,8 @@ type alias Cfg fig =
     , shapeEncoder : fig -> Value
     , shapeDecoder : Decoder fig
     , defaultFigure : Figure fig
+    , defaultTarget : Figure fig
+    , connectFigures : Figure fig -> Figure fig -> ( Figure fig, Figure fig )
     }
 
 
@@ -106,6 +111,8 @@ initConfig fig =
     , innerMove = \_ _ x -> x
     , actionButtons = \_ -> []
     , defaultFigure = fig
+    , defaultTarget = fig
+    , connectFigures = Tuple.pair
     }
 
 
@@ -124,9 +131,19 @@ withActionButtons buttons ({ config } as cfg) =
     { cfg | config = { config | actionButtons = buttons } }
 
 
-withdefaultFigure : Figure fig -> Config fig -> Config fig
-withdefaultFigure fig ({ config } as cfg) =
+withDefaultFigure : Figure fig -> Config fig -> Config fig
+withDefaultFigure fig ({ config } as cfg) =
     { cfg | config = { config | defaultFigure = fig } }
+
+
+withDefaultTarget : Figure fig -> Config fig -> Config fig
+withDefaultTarget fig ({ config } as cfg) =
+    { cfg | config = { config | defaultTarget = fig } }
+
+
+withConnector : (Figure fig -> Figure fig -> ( Figure fig, Figure fig )) -> Config fig -> Config fig
+withConnector func ({ config } as cfg) =
+    { cfg | config = { config | connectFigures = func } }
 
 
 withJson : { decoder : Decoder fig, encoder : fig -> Json.Encode.Value } -> Config fig -> Config fig

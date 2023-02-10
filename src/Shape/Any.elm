@@ -3,7 +3,7 @@ module Shape.Any exposing
     , line, point, text, image
     , andThen, map, replace, moveInside
     , actionButtons, view
-    , mapId
+    , connect, mapId
     )
 
 {-|
@@ -30,9 +30,11 @@ module Shape.Any exposing
 import Config exposing (Params)
 import Element
 import Figure
-import Geometry as G exposing (Point)
+import Geometry as G exposing (Point, Vector)
+import Geometry.PointExt exposing (purePoint)
 import Html exposing (Html)
 import Lens as L
+import Monocle.Lens as L
 import Msg exposing (Msg)
 import Shape.Image exposing (Image)
 import Shape.Line exposing (Fill(..), Line)
@@ -40,7 +42,7 @@ import Shape.Point exposing (Point)
 import Shape.Text exposing (Text)
 import Svg exposing (Svg)
 import Types exposing (..)
-import Geometry exposing (Vector)
+import Vector2d
 
 
 type alias Figure =
@@ -90,7 +92,7 @@ line : List ( Float, Float ) -> Figure
 line data =
     Figure.new
         (LineModel
-            { vertices = List.map G.point data
+            { vertices = List.map (G.point >> purePoint) data
             , duplicateLast = True
             , fill = Open
             }
@@ -153,6 +155,33 @@ moveInside sub by fig =
 
         _ ->
             fig
+
+
+connect : Figure -> Figure -> ( Figure, Figure )
+connect target src =
+    let
+        shift =
+            Vector2d.minus target.translation src.translation
+    in
+    case ( target.shape, src.shape ) of
+        ( LineModel ln, PointModel _ ) ->
+            ( { target | shape = LineModel { ln | vertices = ln.vertices ++ [ purePoint (G.pointVec shift) ] } }
+            , src
+            )
+
+        ( PointModel _, _ ) ->
+            connect (Figure.map (\_ -> (line []).shape) target) src
+
+        -- ( LineModel ln, LineModel ln2 ) ->
+        --     let
+        --         vertices =
+        --             ln2.vertices |> List.map (Point2d.translateBy shift)
+        --     in
+        --     ( { target | shape = LineModel { ln | vertices = ln.vertices ++ vertices } }
+        --     , src
+        --     )
+        _ ->
+            ( target, src )
 
 
 view : Params fig -> Element -> Svg (Msg Any)

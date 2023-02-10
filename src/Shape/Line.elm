@@ -3,21 +3,22 @@ module Shape.Line exposing
     , Line
     , actionButtons
     , movePoint
-    , view
+    , view, vertices
     )
 
 import Attributes as A
 import Config exposing (Params)
 import Element exposing (Element)
 import Figure exposing (move)
-import Geometry exposing (Point, Point, fromPoint, point, vector)
+import Geometry exposing (Point, Vector, fromPoint, point, vector)
 import Geometry.Paths exposing (pairsWithExtrapolation, smooth)
+import Geometry.PointExt as PointExt exposing (PointExt)
 import Geometry.Svg as S
 import Geometry.SvgPath exposing (ghostLinePath, pathD)
 import Html as H exposing (Html)
 import Html.Attributes as HA
 import Html.Events as HE
-import Lens as L exposing (..)
+import Lens as L
 import List.Extra as List
 import Monocle.Lens as L
 import Msg exposing (Msg(..))
@@ -27,11 +28,10 @@ import Svg as S exposing (Svg)
 import Svg.Attributes as SA
 import Types exposing (..)
 import Util exposing (iff)
-import Geometry exposing (Vector)
 
 
 type alias Line =
-    { vertices : List Point
+    { vertices : List PointExt
     , duplicateLast : Bool
     , fill : Fill
     }
@@ -44,11 +44,16 @@ type Fill
     | Right
 
 
+vertices : Line -> List Point
+vertices pt =
+    pt.vertices |> List.map .point
+
+
 {-| Move the i-th internal point by the given displacement
 -}
 movePoint : Int -> Vector -> Line -> Line
 movePoint i displacement =
-    L.modify vertices <| List.updateAt i (Point2d.translateBy displacement)
+    L.modify L.vertices <| List.updateAt i (L.modify L.point (Point2d.translateBy displacement))
 
 
 {-| Add new point in the i-th position
@@ -67,19 +72,19 @@ insertPoint i line =
         after_ =
             case after of
                 ( pt1, pt2 ) :: rest ->
-                    pt1 :: Point2d.midpoint pt1 pt2 :: List.map Tuple.first rest
+                    pt1 :: PointExt.midpoint pt1 pt2 :: List.map Tuple.first rest
 
                 _ ->
                     []
     in
-    vertices.set (before_ ++ after_) line
+    L.vertices.set (before_ ++ after_) line
 
 
 {-| Remove the i-th point from line
 -}
 removePoint : Int -> Line -> Line
 removePoint i =
-    L.modify vertices (List.removeAt i)
+    L.modify L.vertices (List.removeAt i)
 
 
 {-| Render line
@@ -90,8 +95,11 @@ view cfg ({ model, shape } as elem) =
         subKey =
             elem.subKey |> List.getAt 0 |> Maybe.withDefault -1
 
-        makePoint i pt =
+        makePoint i pte =
             let
+                pt =
+                    pte.point
+
                 isLast =
                     i == nPoints - 1 && model.shape.duplicateLast
 
@@ -135,7 +143,7 @@ view cfg ({ model, shape } as elem) =
             A.transformElement elem
 
         line =
-            (point ( 0, 0 ) :: elem.model.shape.vertices)
+            (PointExt.pointExt ( 0, 0 ) :: shape.vertices)
                 |> smooth
                 |> smooth
                 |> smooth

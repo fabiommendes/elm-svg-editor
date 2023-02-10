@@ -81,6 +81,11 @@ fromPoint =
     Point2d.toTuple inMeters
 
 
+pointVec : Vector -> Point
+pointVec =
+    point << fromVector
+
+
 line : List ( Float, Float ) -> Line
 line =
     List.map point >> Polyline2d.fromVertices

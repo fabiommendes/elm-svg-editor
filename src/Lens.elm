@@ -96,6 +96,16 @@ params =
     lens .params (\x m -> { m | params = x })
 
 
+point : Lens { a | point : b } b
+point =
+    lens .point (\x m -> { m | point = x })
+
+
+props : Lens { a | props : b } b
+props =
+    lens .props (\x m -> { m | props = x })
+
+
 rotation : Lens { a | rotation : b } b
 rotation =
     lens .rotation (\x m -> { m | rotation = x })

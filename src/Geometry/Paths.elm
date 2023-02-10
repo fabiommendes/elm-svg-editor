@@ -1,14 +1,13 @@
 module Geometry.Paths exposing (..)
 
 import Direction2d
-import Geometry exposing (Point, point)
-import Length exposing (meters)
-import Point2d
-import Vector2d
 import Geometry exposing (vector)
+import Geometry.PointExt as PointExt exposing (PointExt, pointExt)
+import Length exposing (meters)
+import Vector2d
 
 
-smooth : List Point -> List Point
+smooth : List PointExt -> List PointExt
 smooth lst =
     let
         run prev pts =
@@ -19,19 +18,19 @@ smooth lst =
                 ( Just ptBefore, pt :: ptAfter :: rest ) ->
                     let
                         directionBefore =
-                            Vector2d.from pt ptBefore
+                            Vector2d.from pt.point ptBefore.point
 
                         directionAfter =
-                            Vector2d.from pt ptAfter
+                            Vector2d.from pt.point ptAfter.point
 
                         smoothingFactor =
                             0.15
 
                         before =
-                            pt |> Point2d.translateBy (Vector2d.scaleBy smoothingFactor directionBefore)
+                            pt |> PointExt.translateBy (Vector2d.scaleBy smoothingFactor directionBefore)
 
                         after =
-                            pt |> Point2d.translateBy (Vector2d.scaleBy smoothingFactor directionAfter)
+                            pt |> PointExt.translateBy (Vector2d.scaleBy smoothingFactor directionAfter)
                     in
                     before :: after :: run (Just pt) (ptAfter :: rest)
 
@@ -41,11 +40,11 @@ smooth lst =
     run Nothing lst
 
 
-ghostLine : Float -> List Point -> List Point
+ghostLine : Float -> List PointExt -> List PointExt
 ghostLine factor line =
     let
         direction f x y =
-            Direction2d.from x y
+            Direction2d.from x.point y.point
                 |> Maybe.map
                     (Direction2d.perpendicularTo
                         >> Direction2d.toVector
@@ -54,7 +53,7 @@ ghostLine factor line =
                 |> Maybe.withDefault Vector2d.zero
 
         fromSegment2 f x y =
-            x |> Point2d.translateBy (direction f x y)
+            x |> PointExt.translateBy (direction f x y)
 
         fromSegment3 f x y z =
             let
@@ -64,8 +63,9 @@ ghostLine factor line =
                 d2 =
                     direction f y z
             in
-            y |> Point2d.translateBy (Vector2d.sum [ d1, d2 ] |> Vector2d.scaleTo (meters <| abs f))
+            y |> PointExt.translateBy (Vector2d.sum [ d1, d2 ] |> Vector2d.scaleTo (meters <| abs f))
 
+        do : Maybe PointExt -> List PointExt -> List PointExt
         do start pts =
             case ( start, pts ) of
                 ( Nothing, x :: y :: rest ) ->
@@ -80,20 +80,20 @@ ghostLine factor line =
                 _ ->
                     []
     in
-    do Nothing (point ( 0, 0 ) :: line)
+    do Nothing (pointExt ( 0, 0 ) :: line)
 
 
-pairsWithExtrapolation : List Point -> List ( Point, Point )
+pairsWithExtrapolation : List PointExt -> List ( PointExt, PointExt )
 pairsWithExtrapolation vertices =
     case vertices of
         [ pt1, pt2 ] ->
-            [ ( pt1, pt2 ), ( pt2, pt2 |> Point2d.translateBy (Vector2d.from pt1 pt2) ) ]
+            [ ( pt1, pt2 ), ( pt2, pt2 |> PointExt.translateBy (Vector2d.from pt1.point pt2.point) ) ]
 
         pt1 :: pt2 :: rest ->
             ( pt1, pt2 ) :: pairsWithExtrapolation (pt2 :: rest)
 
         [ pt1 ] ->
-            [ ( pt1, pt1 |> Point2d.translateBy (vector ( 0, 0.5 )) ) ]
+            [ ( pt1, pt1 |> PointExt.translateBy (vector ( 0, 0.5 )) ) ]
 
         [] ->
             []

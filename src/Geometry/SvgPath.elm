@@ -1,24 +1,25 @@
 module Geometry.SvgPath exposing (..)
 
-import Geometry exposing (Point, fromPoint, point)
+import Geometry exposing (fromPoint)
 import Geometry.Paths exposing (ghostLine)
+import Geometry.PointExt exposing (PointExt, pointExt)
 import List.Extra as List
 import Svg.PathD as D
 import Util exposing (iff)
 
 
-pathD : Bool -> List Point -> String
+pathD : Bool -> List PointExt -> String
 pathD fill line =
     case line of
         start :: rest ->
             rest
-                |> List.map (fromPoint >> D.L)
-                |> (::) (D.M (fromPoint start))
+                |> List.map (.point >> fromPoint >> D.L)
+                |> (::) (D.M (fromPoint start.point))
                 |> iff fill closePath identity
                 |> D.pathD
 
         _ ->
-            pathD fill [ point ( 0, 0 ) ]
+            pathD fill [ pointExt ( 0, 0 ) ]
 
 
 closePath : List D.Segment -> List D.Segment
@@ -31,13 +32,13 @@ closePath lst =
             lst ++ [ D.z ]
 
 
-ghostLinePath : Float -> List Point -> String
+ghostLinePath : Float -> List PointExt -> String
 ghostLinePath factor pts =
     let
         ( origin, vertices ) =
             ghostLine factor pts
                 |> List.uncons
-                |> Maybe.withDefault ( point ( 0, 0 ), [] )
+                |> Maybe.withDefault ( pointExt ( 0, 0 ), [] )
     in
     D.pathD <|
-        (D.M (fromPoint origin) :: List.map (fromPoint >> D.L) vertices)
+        (D.M (fromPoint origin.point) :: List.map (.point >> fromPoint >> D.L) vertices)

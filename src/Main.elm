@@ -41,6 +41,9 @@ withExample m =
                     , F.point (point ( 5, 5 ))
                     , F.line [ ( 1, 2 ), ( 3, 4 ), ( 5, 2 ) ]
                         |> F.setLabel "bem-vindo"
+                    , F.line [ ( 1, 2 ), ( 2, 2 ), ( 1, 2 ), ( 1, 5 ) ]
+                        |> F.setLabel "bar"
+                        |> F.move (vector ( 10, 2 ))
 
                     -- , F.text "foo bar"
                     --     |> F.move (vector ( 15, 10 ))

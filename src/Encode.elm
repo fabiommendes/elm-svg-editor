@@ -9,6 +9,7 @@ import Json.Decode as D
 import Json.Encode exposing (..)
 import Length exposing (inMeters)
 import List.Extra as List
+import Maybe.Extra as Maybe
 import Scene exposing (Scene)
 import Shape.Any
 import Shape.Image
@@ -16,6 +17,17 @@ import Shape.Line
 import Shape.Point
 import Shape.Text
 import Types exposing (..)
+import Geometry.PointExt exposing (PointExt)
+
+
+extendObject : List ( String, Value ) -> Value -> Value
+extendObject pairs obj =
+    case D.decodeValue (D.keyValuePairs D.value) obj of
+        Ok lst ->
+            object (lst ++ pairs)
+
+        Err _ ->
+            object pairs
 
 
 pair : ( Float, Float ) -> Value
@@ -60,9 +72,19 @@ line : Shape.Line.Line -> Value
 line obj =
     object
         [ ( "type", string "line" )
-        , ( "vertices", list pair (obj.vertices |> List.map fromPoint) )
+        , ( "vertices", list pointExt obj.vertices )
         , ( "duplicate_last", bool obj.duplicateLast )
         ]
+
+
+pointExt : PointExt -> Value
+pointExt pt =
+    pair (fromPoint pt.point)
+        |> extendObject
+            [ ( "back", bool pt.props.back )
+            , ( "breakLine", bool pt.props.breakLine )
+            , ( "from", pt.props.from |> Maybe.unwrap null key )
+            ]
 
 
 point : Shape.Point.Point -> Value

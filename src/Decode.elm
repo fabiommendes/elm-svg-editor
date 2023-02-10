@@ -3,7 +3,7 @@ module Decode exposing (..)
 import BoundingBox2d
 import Dict
 import Figure exposing (Figure)
-import Geometry exposing (BBox, angle, vector)
+import Geometry as G exposing (BBox, angle, point, vector)
 import Group exposing (GroupData)
 import Json.Decode exposing (..)
 import Json.Decode.Pipeline exposing (..)
@@ -16,6 +16,8 @@ import Shape.Point
 import Shape.Text
 import Types exposing (..)
 import Util exposing (flip)
+import Geometry.PointExt exposing (PointExt)
+import Geometry.PointExt exposing (PointProp)
 
 
 pair : Decoder ( Float, Float )
@@ -51,7 +53,7 @@ key =
                     )
 
         keyAsInt =
-            int |> map (flip nextKeyBy anonymousKey )
+            int |> map (flip nextKeyBy anonymousKey)
     in
     oneOf [ keyAsString, keyAsInt ]
 
@@ -103,10 +105,21 @@ line : Decoder Shape.Line.Line
 line =
     withType "line" <|
         (succeed Shape.Line.Line
-            |> required "vertices" (list pair |> map (List.map Geometry.point))
+            |> required "vertices" (list pointExt)
             |> optional "duplicate_last" bool False
             |> optional "fill" lineFill Shape.Line.Open
         )
+
+
+pointExt : Decoder PointExt
+pointExt =
+    map2 PointExt
+        (succeed PointProp
+            |> optional "back" bool False
+            |> optional "breakLine" bool False
+            |> optional "from" (maybe key) Nothing
+        )
+        (map G.point pair)
 
 
 lineFill : Decoder Shape.Line.Fill

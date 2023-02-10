@@ -18,7 +18,7 @@ module Scene exposing
     , moveLayer
     , put
     , update
-    , view
+    , view, keys
     )
 
 import Attributes as A
@@ -209,6 +209,13 @@ discard key =
                 | objects = Dict.remove key inner.objects
                 , order = List.filter ((/=) key) inner.order
             }
+
+
+{-| List of keys, from bottom layer to top
+-}
+keys : Scene a -> List Key
+keys =
+    order.get
 
 
 

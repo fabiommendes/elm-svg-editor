@@ -39,7 +39,8 @@ defaulConfig =
         |> Config.withInnerMove Shape.Any.moveInside
         |> Config.withActionButtons Shape.Any.actionButtons
         |> Config.withJson { encoder = Encode.shape, decoder = Decode.shape }
-
+        |> Config.withDefaultTarget (Shape.Any.line [])
+        |> Config.withConnector Shape.Any.connect
 
 update : Config -> Msg -> Model -> ( Model, Cmd Msg )
 update =

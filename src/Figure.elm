@@ -1,15 +1,14 @@
-module Figure exposing (Figure, addStyle, grow, map, move, new, rotate, setLabel, visible, editable, draggable)
+module Figure exposing (Figure, addStyle, draggable, editable, grow, map, move, new, rotate, setLabel, visible, andThen)
 
 {-| Generic figure utilities
 -}
 
-import Geometry exposing (Angle, angle, vector)
+import Geometry exposing (Angle, Vector, angle, vector)
 import Lens as L exposing (..)
 import Monocle.Lens as L
 import Quantity as Q
 import Types exposing (..)
 import Vector2d
-import Geometry exposing (Vector)
 
 
 type alias Figure shape =
@@ -51,6 +50,11 @@ map f fig =
     , style = fig.style
     , shape = f fig.shape
     }
+
+
+andThen : (a -> Figure b) -> Figure a -> Figure b
+andThen f fig =
+    map (f >> .shape) fig
 
 
 move : Vector -> Figure shape -> Figure shape

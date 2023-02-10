@@ -9,6 +9,7 @@ import Group exposing (GroupInfo)
 import Html exposing (..)
 import Html.Attributes as HA exposing (..)
 import Html.Events exposing (onClick, onInput)
+import Html.Extra as Html
 import Lens exposing (editable)
 import Material.Icons as I
 import Material.Icons.Round as IR
@@ -19,6 +20,7 @@ import Monocle.Lens as L
 import Msg exposing (Msg(..))
 import Scene exposing (Scene)
 import State exposing (State(..))
+import Toolbars
 import Types exposing (..)
 import Ui
 import Util exposing (iff)
@@ -140,10 +142,10 @@ toolbar cfg m =
         stateMsg msg =
             onClick (OnStateChange msg)
                 :: (if m.state |> State.isSimilarTo msg then
-                        [ class "btn-active btn-outline btn-ghost" ]
+                        [ class "glass" ]
 
                     else
-                        [ class "text-info"]
+                        [ class "text-info" ]
                    )
     in
     div [ class "shadow-lg bg-slate-900 text-white z-10" ]
@@ -151,12 +153,17 @@ toolbar cfg m =
             [ div []
                 [ Ui.toolbarBtn (stateMsg <| State.StandardEditor) I.edit
                 , Ui.toolbarBtn (stateMsg <| State.ClickToInsert "ref" insertFigure) I.add_circle_outline
-                , Ui.toolbarBtn (stateMsg <| State.ConnectingLines ( "obj", 5 )) I.timeline
+                , Ui.toolbarBtn (stateMsg <| State.Connecting Nothing) I.timeline
                 , Ui.toolbarBtn (stateMsg <| State.ReadOnlyView) I.landscape
                 ]
             , div [ class "flex-1 text-slate-300 text-right px-2" ] [ text "" ]
             , div []
-                [ Ui.toolbarBtn [ onClick OnDownloadRequest ] I.save_alt
+                [ if State.isClickToInsert m.state then
+                    Toolbars.removeLastItem m.scene
+
+                  else
+                    Html.nothing
+                , Ui.toolbarBtn [ onClick OnDownloadRequest ] I.save_alt
                 , Ui.toolbarBtn [ onClick OnUploadRequest ] I.file_open
                 ]
             ]

@@ -114,7 +114,46 @@ update cfg msg_ m =
                     return m
 
         OnSelectFigure key subKey ->
-            onScene <| \s -> { s | selected = Just ( key, subKey ) }
+            let
+                select k s =
+                    { s | selected = Just k }
+            in
+            case m.state of
+                Connecting (Just k) ->
+                    if k == key then
+                        return m
+
+                    else
+                        case ( Scene.get k m.scene, Scene.get key m.scene ) of
+                            ( Just target, Just dest ) ->
+                                let
+                                    ( target_, dest_ ) =
+                                        cfg.config.connectFigures target dest
+                                in
+                                onScene (Scene.put k target_ >> Scene.put key dest_ >> select ( k, [] ))
+
+                            _ ->
+                                return { m | scene = select ( key, subKey ) m.scene, state = Connecting Nothing }
+
+                Connecting Nothing ->
+                    let
+                        target =
+                            Scene.get key m.scene
+                                |> Maybe.withDefault cfg.config.defaultTarget
+
+                        ( k, scene ) =
+                            Scene.insert target m.scene
+
+                        msg =
+                            OnSelectFigure key subKey
+
+                        model =
+                            { m | scene = scene |> select ( k, [] ), state = Connecting (Just k) }
+                    in
+                    update cfg msg model
+
+                _ ->
+                    onScene <| select ( key, subKey )
 
         OnFigureCreate fig ->
             onScene <| Scene.insert fig >> Tuple.second
