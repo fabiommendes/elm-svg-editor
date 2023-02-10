@@ -281,7 +281,7 @@ view cfg scene =
     S.g [ SA.class "scene" ]
         (elements scene
             |> List.filter (.model >> .visible)
-            |> List.map (cfg.view cfg.params)
+            |> List.map (cfg.config.view cfg.params)
         )
 
 

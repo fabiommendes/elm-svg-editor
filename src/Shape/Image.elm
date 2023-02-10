@@ -1,7 +1,7 @@
 module Shape.Image exposing (Image, view)
 
 import Attributes as A
-import Config exposing (ConfigParams)
+import Config exposing (Params)
 import Element exposing (Element)
 import Msg exposing (Msg)
 import Svg as S exposing (Svg)
@@ -15,7 +15,7 @@ type alias Image =
     }
 
 
-view : ConfigParams -> Element Image -> Svg (Msg Image)
+view : Params -> Element Image -> Svg (Msg Image)
 view _ elem =
     let
         attrs =

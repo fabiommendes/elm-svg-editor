@@ -7,7 +7,7 @@ module Shape.Line exposing
     )
 
 import Attributes as A
-import Config exposing (ConfigParams)
+import Config exposing (Params)
 import Direction2d
 import Element exposing (Element)
 import Figure exposing (move)
@@ -86,7 +86,7 @@ removePoint i =
 
 {-| Render line
 -}
-view : ConfigParams -> Element Line -> Svg (Msg Line)
+view : Params -> Element Line -> Svg (Msg Line)
 view cfg elem =
     let
         subKey =
@@ -141,14 +141,15 @@ view cfg elem =
                 |> smooth
                 |> smooth
                 |> smooth
+                |> smooth
 
         lines =
-            [ S.path [ SA.d (ghostLine 0.2 line), SA.filter "blur(0.050px) opacity(0.9)", transforms, SA.class "foreground" ] []
-            , S.path [ SA.d (ghostLine 0.4 line), SA.filter "blur(0.075px) opacity(0.7)", transforms, SA.class "foreground" ] []
-            , S.path [ SA.d (ghostLine 0.6 line), SA.filter "blur(0.100px) opacity(0.5)", transforms, SA.class "foreground" ] []
-            , S.path [ SA.d (ghostLine 0.8 line), SA.filter "blur(0.150px) opacity(0.3)", transforms, SA.class "foreground" ] []
-            , S.path [ SA.d (ghostLine 1.2 line), SA.filter "blur(0.250px) opacity(0.1)", transforms, SA.class "foreground" ] []
-            , S.path [ dAttribute, transforms, SA.class "background" ] []
+            [ S.path [ dAttribute, transforms, SA.class "background" ] []
+            , S.path [ SA.d (ghostLine 0.1 line), SA.filter "blur(0.05px) opacity(0.9)", transforms, SA.class "foreground" ] []
+            , S.path [ SA.d (ghostLine 0.25 line), SA.filter "blur(0.125px) opacity(0.7)", transforms, SA.class "foreground" ] []
+            , S.path [ SA.d (ghostLine 0.5 line), SA.filter "blur(0.25px) opacity(0.5)", transforms, SA.class "foreground" ] []
+            , S.path [ SA.d (ghostLine 0.8 line), SA.filter "blur(0.4px) opacity(0.3)", transforms, SA.class "foreground" ] []
+            , S.path [ SA.d (ghostLine 1.2 line), SA.filter "blur(0.6px) opacity(0.1)", transforms, SA.class "foreground" ] []
             , S.path [ dAttribute, transforms, SA.class "foreground" ] []
             ]
     in
@@ -201,7 +202,7 @@ ghostLine factor line =
                 |> Maybe.withDefault ( point ( 0, 0 ), [] )
     in
     D.pathD <|
-        (D.M (fromPoint origin) :: List.map (fromPoint >> D.T) vertices)
+        (D.M (fromPoint origin) :: List.map (fromPoint >> D.L) vertices)
 
 
 actionButtons : Line -> Element Line -> List (Html (Msg Line))
@@ -256,12 +257,14 @@ smooth lst =
 
                         directionAfter =
                             Vector2d.from pt ptAfter
+                        
+                        smoothingFactor = 0.15
 
                         before =
-                            pt |> Point2d.translateBy (Vector2d.scaleBy 0.25 directionBefore)
+                            pt |> Point2d.translateBy (Vector2d.scaleBy smoothingFactor directionBefore)
 
                         after =
-                            pt |> Point2d.translateBy (Vector2d.scaleBy 0.25 directionAfter)
+                            pt |> Point2d.translateBy (Vector2d.scaleBy smoothingFactor directionAfter)
                     in
                     before :: after :: run (Just pt) (ptAfter :: rest)
 

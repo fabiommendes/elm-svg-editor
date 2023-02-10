@@ -45,6 +45,5 @@ withExample m =
 config : Config
 config =
     defaulConfig
-        |> Config.withPanControls True
-        |> Config.withZoomControls True
+        |> Config.withControls { pan = True, zoom = True, drag = True }
         |> Config.withPointRadius 0.3

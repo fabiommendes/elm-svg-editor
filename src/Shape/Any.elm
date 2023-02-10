@@ -27,7 +27,7 @@ module Shape.Any exposing
 
 -}
 
-import Config exposing (ConfigParams)
+import Config exposing (Params)
 import Element
 import Figure
 import Geometry as G exposing (Vector)
@@ -148,7 +148,7 @@ moveInside sub by fig =
             fig
 
 
-view : ConfigParams -> Element -> Svg (Msg Any)
+view : Params -> Element -> Svg (Msg Any)
 view cfg fig =
     let
         render viewFn msg data =

@@ -105,7 +105,7 @@ contextToolbar cfg scene elem =
             |> text
             |> List.singleton
             |> div []
-        , div [] (cfg.actionButtons elem)
+        , div [] (cfg.config.actionButtons elem)
         , Maybe.unwrap selectGroup showGroup elem.group
         ]
 

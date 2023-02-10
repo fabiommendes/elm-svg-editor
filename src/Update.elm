@@ -59,7 +59,7 @@ update cfg msg_ m =
             return { m | scale = factor }
 
         OnDragMsg msg ->
-            Draggable.update cfg.dragConfig msg m
+            Draggable.update cfg.config.drag msg m
 
         OnDragBy rawDelta ->
             let
@@ -82,7 +82,7 @@ update cfg msg_ m =
                         onScene <| Scene.update key (Figure.move delta)
 
                 Just ( key, subKey ) ->
-                    onScene <| Scene.update key (cfg.innerMove subKey delta)
+                    onScene <| Scene.update key (cfg.config.innerMove subKey delta)
 
                 _ ->
                     return m
@@ -134,7 +134,7 @@ update cfg msg_ m =
         OnDownloadRequest ->
             let
                 data =
-                    Json.Encode.encode 2 (Encode.scene cfg.shapeEncoder m.scene)
+                    Json.Encode.encode 2 (Encode.scene cfg.config.shapeEncoder m.scene)
             in
             ( m, File.Download.string "data.json" "application/json" data )
 
@@ -145,7 +145,7 @@ update cfg msg_ m =
             ( m, File.toString file |> Task.perform OnUploadProcessed )
 
         OnUploadProcessed st ->
-            case Json.Decode.decodeString (Decode.scene cfg.shapeDecoder) st of
+            case Json.Decode.decodeString (Decode.scene cfg.config.shapeDecoder) st of
                 Ok scene ->
                     return { m | scene = scene, error = Nothing }
 

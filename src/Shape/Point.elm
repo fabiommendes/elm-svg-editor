@@ -1,7 +1,7 @@
 module Shape.Point exposing (Point, circle, view, viewAsPoint)
 
 import Attributes as SA
-import Config exposing (ConfigParams)
+import Config exposing (Params)
 import Element exposing (Element)
 import Group exposing (GroupInfo)
 import Html.Extra as H
@@ -17,12 +17,12 @@ type alias Point =
     ()
 
 
-view : ConfigParams -> Element a -> Svg (Msg a)
+view : Params -> Element a -> Svg (Msg a)
 view cfg elem =
     viewAsPoint cfg elem.group elem.model.label elem.isSelected (SA.rootElement "point" elem) (point (0, 0))
 
 
-viewAsPoint : ConfigParams -> Maybe GroupInfo -> String -> Bool -> List (Attribute (Msg a)) -> Geometry.Point -> Svg (Msg a)
+viewAsPoint : Params -> Maybe GroupInfo -> String -> Bool -> List (Attribute (Msg a)) -> Geometry.Point -> Svg (Msg a)
 viewAsPoint cfg group name isSelected attrs pt =
     case ( group, name ) of
         ( Just { index, label }, _ ) ->

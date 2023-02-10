@@ -7,12 +7,12 @@ import Types exposing (..)
 
 {-| An shape in the scene with some context.
 -}
-type alias Element a =
+type alias Element fig =
     { key : Key
     , subKey : SubKey
     , group : Maybe GroupInfo
     , isSelected : Bool
-    , model : Figure a
+    , model : Figure fig
     }
 
 
@@ -24,3 +24,8 @@ map f e =
     , isSelected = e.isSelected
     , model = Figure.map f e.model
     }
+
+
+withShape : fig -> Element fig -> Element fig
+withShape shape ({ model } as elem) =
+    { elem | model = { model | data = shape } }
