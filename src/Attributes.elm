@@ -3,7 +3,7 @@ module Attributes exposing (..)
 import BoundingBox2d
 import Draggable
 import Element exposing (Element)
-import Figure.Style exposing (toAttribute)
+import Style exposing (toAttribute)
 import Geometry exposing (Angle, BBox, Vector, fromAngle, fromVector)
 import Html exposing (Attribute)
 import Html.Events exposing (onClick)

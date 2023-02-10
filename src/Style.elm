@@ -1,4 +1,4 @@
-module Figure.Style exposing (..)
+module Style exposing (..)
 
 import Dict
 import Html exposing (Attribute)
