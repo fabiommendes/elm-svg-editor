@@ -38,6 +38,8 @@ type Msg a
     | OnUploadCompleted File
     | OnUploadProcessed String
     | OnStateChange (State a)
+    | OnUndo
+    | OnRedo
 
 
 map : (a -> b) -> Msg a -> Msg b
@@ -111,6 +113,12 @@ map f msg =
 
         OnKeyPress cmd ->
             OnKeyPress cmd
+
+        OnUndo ->
+            OnUndo
+
+        OnRedo ->
+            OnRedo
 
 
 changeDragMsgsTo : Msg fig -> Msg fig -> Msg fig

@@ -15,10 +15,9 @@ import Json.Decode
 import Json.Encode
 import Length exposing (inMeters)
 import Lens exposing (scene)
-import Model exposing (Model)
-import Monocle.Lens as L
+import Model as M exposing (Model)
 import Msg exposing (KeyBoardCommands(..), Msg(..))
-import Scene
+import Scene as S
 import State exposing (State(..))
 import Task
 import Types exposing (..)
@@ -35,7 +34,10 @@ update cfg msg_ m =
             return (f m)
 
         onScene f =
-            do (L.modify scene f)
+            do (M.updateScene f)
+
+        onSceneTransform f =
+            do (M.transformScene f)
     in
     case msg_ of
         NoOp ->
@@ -91,7 +93,7 @@ update cfg msg_ m =
                 delta =
                     rawDelta |> Vector2d.scaleBy m.scale
             in
-            case Scene.selected m.scene of
+            case m |> M.onScene S.selected of
                 Just ( key, [] ) ->
                     if key == backgroundKey then
                         update cfg
@@ -104,10 +106,10 @@ update cfg msg_ m =
                             m
 
                     else
-                        onScene <| Scene.update key (Figure.move delta)
+                        onSceneTransform <| S.update key (Figure.move delta)
 
                 Just ( key, subKey ) ->
-                    onScene <| Scene.update key (cfg.config.innerMove subKey delta)
+                    onSceneTransform <| S.update key (cfg.config.innerMove subKey delta)
 
                 _ ->
                     return m
@@ -119,70 +121,78 @@ update cfg msg_ m =
                         return m
 
                     else
-                        case ( Scene.get k m.scene, Scene.get key m.scene ) of
+                        case ( S.get k (M.scene m), S.get key (M.scene m) ) of
                             ( Just target, Just dest ) ->
                                 let
                                     ( target_, dest_ ) =
                                         cfg.config.connectFigures target dest
                                 in
-                                onScene (Scene.put k target_ >> Scene.put key dest_ >> Scene.select ( k, [] ))
+                                onScene (S.put k target_ >> S.put key dest_ >> S.select ( k, [] ))
 
                             _ ->
-                                return { m | scene = Scene.select ( key, subKey ) m.scene, state = Connecting Nothing }
+                                m
+                                    |> M.updateScene (S.select ( key, subKey ))
+                                    |> M.withState (Connecting Nothing)
+                                    |> return
 
                 Connecting Nothing ->
                     let
                         target =
-                            Scene.get key m.scene
+                            S.get key (M.scene m)
                                 |> Maybe.withDefault cfg.config.defaultTarget
 
-                        ( k, scene ) =
-                            Scene.insert target m.scene
+                        ( k, scene_ ) =
+                            S.insert target (M.scene m)
+
+                        scene =
+                            S.select ( k, [] ) scene_
 
                         msg =
                             OnSelectFigure key subKey
 
                         model =
-                            { m | scene = scene |> Scene.select ( k, [] ), state = Connecting (Just k) }
+                            m
+                                |> M.pushScene scene
+                                |> M.withState (Connecting (Just k))
                     in
                     update cfg msg model
 
                 _ ->
-                    onScene <| Scene.select ( key, subKey )
+                    onScene <| S.select ( key, subKey )
 
         OnFigureCreate fig ->
-            onScene <| Scene.insert fig >> Tuple.second
+            onScene <| S.insert fig >> Tuple.second
 
         OnFigureDiscard key ->
-            onScene <| Scene.discard key
+            onScene <| S.discard key
 
         OnFigureReplace fig key ->
-            onScene <| Scene.put key fig
+            onScene <| S.put key fig
 
         OnFigureChangeOrder direction key ->
-            onScene <| Scene.moveLayer direction key
+            onScene <| S.moveLayer direction key
 
         OnFigureUpdate _ lazy key ->
-            case ( Scene.get key m.scene, lazy () ) of
+            case ( m |> M.onScene (S.get key), lazy () ) of
                 ( Just _, Just fig ) ->
-                    onScene <| Scene.put key fig
+                    onScene <| S.put key fig
 
                 _ ->
                     return m
 
         OnGroupOrderChange direction key ->
-            onScene (Scene.moveGroup direction key)
+            onScene (S.moveGroup direction key)
 
         OnGroupInclude label key ->
-            onScene (Scene.group key label)
+            onScene (S.group key label)
 
         OnChangeViewBox _ fn ->
-            return (m |> Model.focusTo (fn m.bbox))
+            return (m |> M.focusTo (fn m.bbox))
 
         OnDownloadRequest ->
             let
                 data =
-                    Json.Encode.encode 2 (Encode.scene cfg.config.shapeEncoder m.scene)
+                    Json.Encode.encode 2 (Encode.scene cfg.config.shapeEncoder (M.scene m))
             in
             ( m, File.Download.string "data.json" "application/json" data )
 
@@ -195,21 +205,30 @@ update cfg msg_ m =
         OnUploadProcessed st ->
             case Json.Decode.decodeString (Decode.scene cfg.config.shapeDecoder) st of
                 Ok scene ->
-                    return { m | scene = scene, error = Nothing }
+                    m
+                        |> M.pushScene scene
+                        |> M.clearError
+                        |> return
 
                 Err err ->
                     return { m | error = Just <| Json.Decode.errorToString err }
 
         OnClickAt pt ->
-            return (Model.notifyClick pt m)
+            return (M.notifyClick pt m)
 
         OnStateChange st ->
             return { m | state = st }
 
         OnKeyPress Delete ->
-            case Scene.selected m.scene of
+            case m |> M.onScene S.selected of
                 Just ( key, _ ) ->
                     update cfg (OnFigureDiscard key) m
 
                 Nothing ->
                     return m
+
+        OnUndo ->
+            return (M.undo m)
+
+        OnRedo ->
+            return (M.redo m)

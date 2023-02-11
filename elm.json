@@ -23,6 +23,7 @@
             "elm-community/list-extra": "8.7.0",
             "elm-community/maybe-extra": "5.3.0",
             "elm-community/result-extra": "2.4.0",
+            "elm-community/undo-redo": "3.0.0",
             "ianmackenzie/elm-geometry": "3.9.1",
             "ianmackenzie/elm-geometry-svg": "3.0.0",
             "ianmackenzie/elm-units": "2.9.0",

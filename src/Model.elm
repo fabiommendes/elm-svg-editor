@@ -2,17 +2,19 @@ module Model exposing (..)
 
 import BoundingBox2d
 import Draggable
+import Figure exposing (Figure)
 import Geometry exposing (BBox, Point, Vector, point, vector)
 import Point2d
 import Quantity as Q
-import Scene
+import Scene exposing (Scene)
 import State exposing (State(..))
 import Types exposing (..)
+import UndoList exposing (UndoList)
 import Vector2d
 
 
 type alias Model fig =
-    { scene : Scene.Scene fig
+    { scenes : UndoList (Scene.Scene fig)
     , scale : Float
     , translation : Vector
     , bbox : BBox
@@ -43,7 +45,7 @@ focusTo bbox m =
 
 init : Model a
 init =
-    { scene = Scene.init
+    { scenes = UndoList.fresh Scene.init
     , drag = Draggable.init
     , error = Nothing
     , state = StandardEditor
@@ -56,6 +58,65 @@ init =
 withState : State fig -> Model fig -> Model fig
 withState st m =
     { m | state = st }
+
+
+withError : String -> Model fig -> Model fig
+withError st m =
+    { m | error = Just st }
+
+
+withFigures : String -> List (Figure a) -> Model a -> Model a
+withFigures prefix figs =
+    updateScene (Scene.insertManyAs prefix figs)
+
+
+clearError : Model fig -> Model fig
+clearError m =
+    { m | error = Nothing }
+
+
+{-| Transform present scene, putting it as the new present state
+-}
+updateScene : (Scene a -> Scene a) -> Model a -> Model a
+updateScene f m =
+    { m | scenes = m.scenes |> UndoList.new (f m.scenes.present) }
+
+
+{-| Transform present scene, without registering in history
+-}
+transformScene : (Scene a -> Scene a) -> Model a -> Model a
+transformScene f ({ scenes } as m) =
+    { m | scenes = { scenes | present = f scenes.present } }
+
+
+onScene : (Scene a -> b) -> Model a -> b
+onScene f =
+    scene >> f
+
+
+pushScene : Scene a -> Model a -> Model a
+pushScene s =
+    updateScene (\_ -> s)
+
+
+scene : Model a -> Scene a
+scene =
+    .scenes >> .present
+
+
+undo : Model fig -> Model fig
+undo m =
+    { m | scenes = UndoList.undo m.scenes }
+
+
+redo : Model fig -> Model fig
+redo m =
+    { m | scenes = UndoList.redo m.scenes }
+
+
+clearHistory : Model fig -> Model fig
+clearHistory m =
+    { m | scenes = UndoList.fresh m.scenes.present }
 
 
 notifyClick : Point -> Model fig -> Model fig
@@ -73,7 +134,11 @@ notifyClick pt m =
                         |> Point2d.scaleAbout Point2d.origin m.scale
                         |> Point2d.translateBy offset
             in
-            { m | scene = Tuple.second (Scene.insertAs key (factory pt_) m.scene) }
+            { m
+                | scenes =
+                    m.scenes
+                        |> UndoList.new (Scene.insertManyAs key [ factory pt_ ] m.scenes.present)
+            }
 
         _ ->
             m

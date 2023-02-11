@@ -33,7 +33,7 @@ view cfg m =
             cfg |> withState m.state
 
         selected =
-            Scene.getSelected m.scene
+            Scene.getSelected (Model.scene m)
     in
     div
         [ class "bg-base w-100"
@@ -47,8 +47,8 @@ view cfg m =
                     [ pre [ HA.style "font-size" "0.7rem" ] [ text err ] ]
 
                 Nothing ->
-                    [ main_ [] [ Scene.view config m.bbox m.scene ]
-                    , Maybe.unpack notSelectedContext (contextToolbar cfg m.scene) selected
+                    [ main_ [] [ Scene.view config m.bbox (Model.scene m) ]
+                    , Maybe.unpack notSelectedContext (contextToolbar cfg (Model.scene m)) selected
                     ]
         ]
 
@@ -158,8 +158,12 @@ toolbar cfg m =
                 ]
             , div [ class "flex-1 text-slate-300 text-right px-2" ] [ text "" ]
             , div []
+                [ Ui.toolbarBtn [ onClick OnUndo ] I.undo
+                , Ui.toolbarBtn [ onClick OnRedo ] I.redo
+                ], div [ class "text-slate-300 text-right px-2" ] [ text "" ]
+            , div []
                 [ if State.isClickToInsert m.state then
-                    Toolbars.removeLastItem m.scene
+                    Toolbars.removeLastItem (Model.scene m)
 
                   else
                     Html.nothing
