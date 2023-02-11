@@ -1,4 +1,16 @@
-module Figure exposing (Figure, addStyle, draggable, editable, grow, map, move, new, rotate, setLabel, visible, andThen)
+module Figure exposing
+    ( Figure
+    , addStyle
+    , andThen
+    , editable
+    , grow
+    , map
+    , move
+    , new
+    , rotate
+    , setLabel
+    , visible
+    )
 
 {-| Generic figure utilities
 -}
@@ -17,7 +29,6 @@ type alias Figure shape =
     , translation : Vector
     , rotation : Angle
     , editable : Bool
-    , draggable : Bool
     , visible : Bool
     , style : List { attr : String, value : String }
     , shape : shape
@@ -31,7 +42,6 @@ new data =
     , translation = vector ( 0, 0 )
     , rotation = angle 0
     , editable = True
-    , draggable = True
     , visible = True
     , style = []
     , shape = data
@@ -45,7 +55,6 @@ map f fig =
     , translation = fig.translation
     , rotation = fig.rotation
     , editable = fig.editable
-    , draggable = fig.draggable
     , visible = fig.visible
     , style = fig.style
     , shape = f fig.shape
@@ -75,11 +84,6 @@ rotate by fig =
 visible : Bool -> Figure shape -> Figure shape
 visible =
     L.visible.set
-
-
-draggable : Bool -> Figure shape -> Figure shape
-draggable =
-    L.draggable.set
 
 
 editable : Bool -> Figure shape -> Figure shape

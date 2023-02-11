@@ -200,7 +200,6 @@ figure shapeDec =
         |> required "translation" (map vector pair)
         |> required "rotation" (map angle float)
         |> required "editable" bool
-        |> required "draggable" bool
         |> required "visible" bool
         |> required "style" (list style)
         |> required "data" shapeDec

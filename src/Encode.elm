@@ -113,7 +113,6 @@ figure shapeEnc obj =
         , ( "translation", pair (fromVector obj.translation) )
         , ( "rotation", float (fromAngle obj.rotation) )
         , ( "editable", bool obj.editable )
-        , ( "draggable", bool obj.draggable )
         , ( "visible", bool obj.visible )
         , ( "style", list (list string) (obj.style |> List.map (\{ attr, value } -> [ attr, value ])) )
         , ( "data", shapeEnc obj.shape )

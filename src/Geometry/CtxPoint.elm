@@ -1,6 +1,7 @@
 module Geometry.CtxPoint exposing (..)
 
 import Geometry exposing (Point, Vector, point)
+import Length exposing (Length)
 import Lens as L
 import Monocle.Lens as L
 import Point2d
@@ -56,3 +57,13 @@ translateBy vec =
 midpoint : CtxPoint -> CtxPoint -> CtxPoint
 midpoint u v =
     purePoint (Point2d.midpoint u.point v.point)
+
+
+distanceFrom : CtxPoint -> CtxPoint -> Length
+distanceFrom pt1 pt2 =
+    Point2d.distanceFrom pt1.point pt2.point
+
+
+origin : CtxPoint
+origin =
+    purePoint Point2d.origin

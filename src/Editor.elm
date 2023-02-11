@@ -5,6 +5,7 @@ import Decode
 import Encode
 import Geometry exposing (point)
 import Html exposing (Html)
+import Lens as L
 import Model
 import Msg
 import Shape.Any exposing (Any)
@@ -34,13 +35,14 @@ init =
 
 defaulConfig : Config
 defaulConfig =
-    Config.init (Shape.Any.point (point ( 0, 0 )))
+    Config.init (L.editable.set False <| Shape.Any.point (point ( 0, 0 )))
         |> Config.withViewFunction Shape.Any.view
         |> Config.withInnerMove Shape.Any.moveInside
         |> Config.withActionButtons Shape.Any.actionButtons
         |> Config.withJson { encoder = Encode.shape, decoder = Decode.shape }
         |> Config.withDefaultTarget (Shape.Any.line [])
         |> Config.withConnector Shape.Any.connect
+
 
 update : Config -> Msg -> Model -> ( Model, Cmd Msg )
 update =

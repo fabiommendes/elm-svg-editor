@@ -105,6 +105,9 @@ contextToolbar cfg scene elem =
                     , button [ class (iff isLast "btn btn-disabled" "btn btn-active"), action Up ] [ text "+" ]
                     ]
                 ]
+
+        lockButtonAttrs =
+            (updateFigureMsg "editable.toggle" <| L.modify editable not) :: iff elem.model.editable [] [ HA.class "btn-active" ]
     in
     div []
         [ div [ class "shadow-lg bg-slate-900 text-white z-10" ]
@@ -117,7 +120,7 @@ contextToolbar cfg scene elem =
                     [ Ui.toolbarBtn [ selectedMsg (OnFigureChangeOrder Up) ] IR.move_up
                     , Ui.toolbarBtn [ selectedMsg (OnFigureChangeOrder Down) ] IR.move_down
                     , Ui.toolbarBtn [ selectedMsg OnFigureDiscard ] I.delete
-                    , Ui.toolbarBtn [ updateFigureMsg "editable.toggle" <| L.modify editable not ] I.lock
+                    , Ui.toolbarBtn lockButtonAttrs I.lock
                     ]
                 ]
             ]
@@ -160,7 +163,8 @@ toolbar cfg m =
             , div []
                 [ Ui.toolbarBtn [ onClick OnUndo ] I.undo
                 , Ui.toolbarBtn [ onClick OnRedo ] I.redo
-                ], div [ class "text-slate-300 text-right px-2" ] [ text "" ]
+                ]
+            , div [ class "text-slate-300 text-right px-2" ] [ text "" ]
             , div []
                 [ if State.isClickToInsert m.state then
                     Toolbars.removeLastItem (Model.scene m)

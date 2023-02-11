@@ -119,6 +119,11 @@ clearHistory m =
     { m | scenes = UndoList.fresh m.scenes.present }
 
 
+trimHistory : Model fig -> Model fig
+trimHistory ({ scenes } as m) =
+    { m | scenes = { scenes | past = List.take 50 scenes.past } }
+
+
 notifyClick : Point -> Model fig -> Model fig
 notifyClick pt m =
     case m.state of

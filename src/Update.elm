@@ -26,6 +26,11 @@ import Vector2d
 
 update : Config a -> Msg a -> Model a -> ( Model a, Cmd (Msg a) )
 update cfg msg_ m =
+    update_ cfg msg_ m.state (M.trimHistory m)
+
+
+update_ : Config a -> Msg a -> State a -> Model a -> ( Model a, Cmd (Msg a) )
+update_ cfg msg_ state_ m =
     let
         return m_ =
             ( m_, Cmd.none )
@@ -39,11 +44,11 @@ update cfg msg_ m =
         onSceneTransform f =
             do (M.transformScene f)
     in
-    case msg_ of
-        NoOp ->
+    case ( msg_, state_ ) of
+        ( NoOp, _ ) ->
             return m
 
-        Batch msgs ->
+        ( Batch msgs, _ ) ->
             let
                 reducer msg ( m_, cmds ) =
                     let
@@ -58,7 +63,7 @@ update cfg msg_ m =
             in
             ( m_, Cmd.batch cmds )
 
-        OnWindowResize ->
+        ( OnWindowResize, _ ) ->
             ( m
             , Browser.Dom.getElement cfg.params.sceneId
                 |> Task.attempt
@@ -72,10 +77,10 @@ update cfg msg_ m =
                     )
             )
 
-        OnErrorDetected s1 s2 ->
+        ( OnErrorDetected s1 s2, _ ) ->
             return { m | error = Just (s1 ++ ": " ++ s2) }
 
-        OnViewportRescaled { element } ->
+        ( OnViewportRescaled { element }, _ ) ->
             let
                 factor =
                     BoundingBox2d.dimensions m.bbox
@@ -85,17 +90,17 @@ update cfg msg_ m =
             in
             return { m | scale = factor }
 
-        OnDragMsg msg ->
+        ( OnDragMsg msg, _ ) ->
             Draggable.update cfg.config.drag msg m
 
-        OnDragBy rawDelta ->
+        ( OnDragBy rawDelta, _ ) ->
             let
                 delta =
                     rawDelta |> Vector2d.scaleBy m.scale
             in
             case m |> M.onScene S.selected of
                 Just ( key, [] ) ->
-                    if key == backgroundKey then
+                    if key == backgroundKey && m.state == State.ReadOnlyView then
                         update cfg
                             (OnChangeViewBox "mouse-drag"
                                 (\bb ->
@@ -114,65 +119,64 @@ update cfg msg_ m =
                 _ ->
                     return m
 
-        OnSelectFigure key subKey ->
-            case m.state of
-                Connecting (Just k) ->
-                    if k == key then
-                        return m
+        ( OnSelectFigure key subKey, Connecting (Just k) ) ->
+            if k == key then
+                return m
 
-                    else
-                        case ( S.get k (M.scene m), S.get key (M.scene m) ) of
-                            ( Just target, Just dest ) ->
-                                let
-                                    ( target_, dest_ ) =
-                                        cfg.config.connectFigures target dest
-                                in
-                                onScene (S.put k target_ >> S.put key dest_ >> S.select ( k, [] ))
+            else
+                case ( S.get k (M.scene m), S.get key (M.scene m) ) of
+                    ( Just target, Just dest ) ->
+                        case cfg.config.connectFigures target dest of
+                            Just changed ->
+                                onScene (S.put k changed >> S.select ( k, [] ))
 
                             _ ->
-                                m
-                                    |> M.updateScene (S.select ( key, subKey ))
-                                    |> M.withState (Connecting Nothing)
-                                    |> return
+                                return m
 
-                Connecting Nothing ->
-                    let
-                        target =
-                            S.get key (M.scene m)
-                                |> Maybe.withDefault cfg.config.defaultTarget
+                    _ ->
+                        m
+                            |> M.updateScene (S.select ( key, subKey ))
+                            |> return
 
-                        ( k, scene_ ) =
-                            S.insert target (M.scene m)
+        ( OnSelectFigure key _, Connecting Nothing ) ->
+            let
+                target =
+                    S.get key (M.scene m)
+                        |> Debug.log "pt"
+                        |> Maybe.withDefault cfg.config.defaultTarget
+                        |> Figure.editable True
 
-                        scene =
-                            S.select ( k, [] ) scene_
+                ( k, scene_ ) =
+                    S.insert target (M.scene m)
 
-                        msg =
-                            OnSelectFigure key subKey
+                scene =
+                    S.select ( k, [] ) scene_
+            in
+            if key == backgroundKey then
+                return m
 
-                        model =
-                            m
-                                |> M.pushScene scene
-                                |> M.withState (Connecting (Just k))
-                    in
-                    update cfg msg model
+            else
+                m
+                    |> M.pushScene scene
+                    |> M.withState (Connecting (Just k))
+                    |> return
 
-                _ ->
-                    onScene <| S.select ( key, subKey )
+        ( OnSelectFigure key subKey, _ ) ->
+            onScene <| S.select ( key, subKey )
 
-        OnFigureCreate fig ->
+        ( OnFigureCreate fig, _ ) ->
             onScene <| S.insert fig >> Tuple.second
 
-        OnFigureDiscard key ->
+        ( OnFigureDiscard key, _ ) ->
             onScene <| S.discard key
 
-        OnFigureReplace fig key ->
+        ( OnFigureReplace fig key, _ ) ->
             onScene <| S.put key fig
 
-        OnFigureChangeOrder direction key ->
+        ( OnFigureChangeOrder direction key, _ ) ->
             onScene <| S.moveLayer direction key
 
-        OnFigureUpdate _ lazy key ->
+        ( OnFigureUpdate _ lazy key, _ ) ->
             case ( m |> M.onScene (S.get key), lazy () ) of
                 ( Just _, Just fig ) ->
                     onScene <| S.put key fig
@@ -180,29 +184,29 @@ update cfg msg_ m =
                 _ ->
                     return m
 
-        OnGroupOrderChange direction key ->
+        ( OnGroupOrderChange direction key, _ ) ->
             onScene (S.moveGroup direction key)
 
-        OnGroupInclude label key ->
+        ( OnGroupInclude label key, _ ) ->
             onScene (S.group key label)
 
-        OnChangeViewBox _ fn ->
+        ( OnChangeViewBox _ fn, _ ) ->
             return (m |> M.focusTo (fn m.bbox))
 
-        OnDownloadRequest ->
+        ( OnDownloadRequest, _ ) ->
             let
                 data =
                     Json.Encode.encode 2 (Encode.scene cfg.config.shapeEncoder (M.scene m))
             in
             ( m, File.Download.string "data.json" "application/json" data )
 
-        OnUploadRequest ->
+        ( OnUploadRequest, _ ) ->
             ( m, File.Select.file [ "application/json" ] OnUploadCompleted )
 
-        OnUploadCompleted file ->
+        ( OnUploadCompleted file, _ ) ->
             ( m, File.toString file |> Task.perform OnUploadProcessed )
 
-        OnUploadProcessed st ->
+        ( OnUploadProcessed st, _ ) ->
             case Json.Decode.decodeString (Decode.scene cfg.config.shapeDecoder) st of
                 Ok scene ->
                     m
@@ -213,13 +217,13 @@ update cfg msg_ m =
                 Err err ->
                     return { m | error = Just <| Json.Decode.errorToString err }
 
-        OnClickAt pt ->
+        ( OnClickAt pt, _ ) ->
             return (M.notifyClick pt m)
 
-        OnStateChange st ->
+        ( OnStateChange st, _ ) ->
             return { m | state = st }
 
-        OnKeyPress Delete ->
+        ( OnKeyPress Delete, _ ) ->
             case m |> M.onScene S.selected of
                 Just ( key, _ ) ->
                     update cfg (OnFigureDiscard key) m
@@ -227,8 +231,8 @@ update cfg msg_ m =
                 Nothing ->
                     return m
 
-        OnUndo ->
+        ( OnUndo, _ ) ->
             return (M.undo m)
 
-        OnRedo ->
+        ( OnRedo, _ ) ->
             return (M.redo m)

@@ -364,7 +364,7 @@ view cfg bbox data =
         pointerEvents state panWithTouch =
             case ( state, panWithTouch ) of
                 ( ClickToInsert _ _, _ ) ->
-                    Pointer.onDown (.pointer >> .offsetPos >> point >> OnClickAt) :: pointerEvents ReadOnlyView panWithTouch
+                    [ Pointer.onDown (.pointer >> .offsetPos >> point >> OnClickAt) ]
 
                 ( _, True ) ->
                     A.touch ( backgroundKey, [] )

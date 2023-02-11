@@ -31,8 +31,9 @@ import Config exposing (Params)
 import Element
 import Figure
 import Geometry as G exposing (Point, Vector)
-import Geometry.CtxPoint exposing (purePoint)
+import Geometry.CtxPoint exposing (distanceFrom, origin, purePoint)
 import Html exposing (Html)
+import Length exposing (inMeters)
 import Lens as L
 import Monocle.Lens as L
 import Msg exposing (Msg)
@@ -157,17 +158,25 @@ moveInside sub by fig =
             fig
 
 
-connect : Figure -> Figure -> ( Figure, Figure )
+connect : Figure -> Figure -> Maybe Figure
 connect target src =
     let
         shift =
             Vector2d.minus target.translation src.translation
     in
-    case ( target.shape, src.shape ) of
+    case Debug.log "pair" ( target.shape, src.shape ) of
         ( LineModel ln, PointModel _ ) ->
-            ( { target | shape = LineModel { ln | vertices = ln.vertices ++ [ purePoint (G.pointVec shift) ] } }
-            , src
-            )
+            let
+                pointLocal =
+                    purePoint (G.pointVec shift)
+
+                distance =
+                    pointLocal |> distanceFrom origin |> inMeters
+            in
+            -- if distance <= 1.0e-3 then
+            --     ( target, src )
+            -- else
+            Just { target | shape = LineModel { ln | vertices = ln.vertices ++ [ purePoint (G.pointVec shift) ] } }
 
         ( PointModel _, _ ) ->
             connect (Figure.map (\_ -> (line []).shape) target) src
@@ -181,7 +190,7 @@ connect target src =
         --     , src
         --     )
         _ ->
-            ( target, src )
+            Nothing
 
 
 view : Params fig -> Element -> Svg (Msg Any)

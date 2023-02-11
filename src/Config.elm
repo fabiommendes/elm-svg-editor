@@ -41,6 +41,10 @@ type alias InnerMoveFunction fig =
     SubKey -> Vector -> Figure fig -> Figure fig
 
 
+type alias FigureConnector fig =
+    Figure fig -> Figure fig -> Maybe (Figure fig)
+
+
 type alias Config fig =
     { config : Cfg fig
     , params : Params fig
@@ -63,7 +67,7 @@ type alias Cfg fig =
     , shapeDecoder : Decoder fig
     , defaultFigure : Figure fig
     , defaultTarget : Figure fig
-    , connectFigures : Figure fig -> Figure fig -> ( Figure fig, Figure fig )
+    , connectFigures : FigureConnector fig
     }
 
 
@@ -112,7 +116,7 @@ initConfig fig =
     , actionButtons = \_ -> []
     , defaultFigure = fig
     , defaultTarget = fig
-    , connectFigures = Tuple.pair
+    , connectFigures = \_ _ -> Nothing
     }
 
 
@@ -141,7 +145,7 @@ withDefaultTarget fig ({ config } as cfg) =
     { cfg | config = { config | defaultTarget = fig } }
 
 
-withConnector : (Figure fig -> Figure fig -> ( Figure fig, Figure fig )) -> Config fig -> Config fig
+withConnector : FigureConnector fig -> Config fig -> Config fig
 withConnector func ({ config } as cfg) =
     { cfg | config = { config | connectFigures = func } }
 

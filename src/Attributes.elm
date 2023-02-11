@@ -29,7 +29,7 @@ viewBox bb =
 
 dragRoot : Element a -> List (Attribute (Msg a))
 dragRoot { key, model } =
-    if model.draggable && model.editable then
+    if model.editable && model.editable then
         SA.class "drag-root" :: touch ( key, [] )
 
     else
@@ -38,7 +38,7 @@ dragRoot { key, model } =
 
 dragChild : SubKey -> Element a -> List (Attribute (Msg a))
 dragChild subKey parent =
-    if parent.model.draggable && parent.model.editable then
+    if parent.model.editable && parent.model.editable then
         SA.class "drag-child" :: touch ( parent.key, subKey )
 
     else
