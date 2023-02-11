@@ -14,17 +14,15 @@ import File.Select
 import Json.Decode
 import Json.Encode
 import Length exposing (inMeters)
-import Lens exposing (bbox, scene)
+import Lens exposing (scene)
 import Model exposing (Model)
 import Monocle.Lens as L
-import Msg exposing (Msg(..))
-import Quantity as Q
+import Msg exposing (KeyBoardCommands(..), Msg(..))
 import Scene
 import State exposing (State(..))
 import Task
 import Types exposing (..)
 import Vector2d
-import Msg exposing (KeyBoardCommands(..))
 
 
 update : Config a -> Msg a -> Model a -> ( Model a, Cmd (Msg a) )
@@ -78,7 +76,7 @@ update cfg msg_ m =
         OnViewportRescaled { element } ->
             let
                 factor =
-                    BoundingBox2d.dimensions m.scene.bbox
+                    BoundingBox2d.dimensions m.bbox
                         |> Tuple.first
                         |> inMeters
                         |> (*) (1 / element.width)
@@ -93,7 +91,7 @@ update cfg msg_ m =
                 delta =
                     rawDelta |> Vector2d.scaleBy m.scale
             in
-            case m.scene.selected of
+            case Scene.selected m.scene of
                 Just ( key, [] ) ->
                     if key == backgroundKey then
                         update cfg
@@ -115,10 +113,6 @@ update cfg msg_ m =
                     return m
 
         OnSelectFigure key subKey ->
-            let
-                select k s =
-                    { s | selected = Just k }
-            in
             case m.state of
                 Connecting (Just k) ->
                     if k == key then
@@ -131,10 +125,10 @@ update cfg msg_ m =
                                     ( target_, dest_ ) =
                                         cfg.config.connectFigures target dest
                                 in
-                                onScene (Scene.put k target_ >> Scene.put key dest_ >> select ( k, [] ))
+                                onScene (Scene.put k target_ >> Scene.put key dest_ >> Scene.select ( k, [] ))
 
                             _ ->
-                                return { m | scene = select ( key, subKey ) m.scene, state = Connecting Nothing }
+                                return { m | scene = Scene.select ( key, subKey ) m.scene, state = Connecting Nothing }
 
                 Connecting Nothing ->
                     let
@@ -149,12 +143,12 @@ update cfg msg_ m =
                             OnSelectFigure key subKey
 
                         model =
-                            { m | scene = scene |> select ( k, [] ), state = Connecting (Just k) }
+                            { m | scene = scene |> Scene.select ( k, [] ), state = Connecting (Just k) }
                     in
                     update cfg msg model
 
                 _ ->
-                    onScene <| select ( key, subKey )
+                    onScene <| Scene.select ( key, subKey )
 
         OnFigureCreate fig ->
             onScene <| Scene.insert fig >> Tuple.second
@@ -183,22 +177,7 @@ update cfg msg_ m =
             onScene (Scene.group key label)
 
         OnChangeViewBox _ fn ->
-            let
-                bb =
-                    m.scene.bbox
-
-                scene =
-                    L.modify bbox fn m.scene
-
-                growth =
-                    Q.ratio
-                        (Tuple.first (BoundingBox2d.dimensions scene.bbox))
-                        (Tuple.first (BoundingBox2d.dimensions bb))
-
-                newScale =
-                    m.scale * growth
-            in
-            return { m | scale = newScale, scene = scene }
+            return (m |> Model.focusTo (fn m.bbox))
 
         OnDownloadRequest ->
             let
@@ -228,7 +207,7 @@ update cfg msg_ m =
             return { m | state = st }
 
         OnKeyPress Delete ->
-            case m.scene.selected of
+            case Scene.selected m.scene of
                 Just ( key, _ ) ->
                     update cfg (OnFigureDiscard key) m
 

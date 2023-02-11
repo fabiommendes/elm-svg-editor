@@ -1,13 +1,12 @@
 module Encode exposing (..)
 
-import BoundingBox2d
 import Dict
 import Figure exposing (Figure)
 import Geometry exposing (..)
+import Geometry.CtxPoint exposing (CtxPoint)
 import Group
 import Json.Decode as D
 import Json.Encode exposing (..)
-import Length exposing (inMeters)
 import List.Extra as List
 import Maybe.Extra as Maybe
 import Scene exposing (Scene)
@@ -17,7 +16,6 @@ import Shape.Line
 import Shape.Point
 import Shape.Text
 import Types exposing (..)
-import Geometry.PointEx exposing (PointEx)
 
 
 extendObject : List ( String, Value ) -> Value -> Value
@@ -77,13 +75,13 @@ line obj =
         ]
 
 
-pointExt : PointEx -> Value
+pointExt : CtxPoint -> Value
 pointExt pt =
     pair (fromPoint pt.point)
         |> extendObject
-            [ ( "back", bool pt.props.back )
-            , ( "breakLine", bool pt.props.breakLine )
-            , ( "from", pt.props.from |> Maybe.unwrap null key )
+            [ ( "back", bool pt.ctx.back )
+            , ( "breakLine", bool pt.ctx.breakLine )
+            , ( "from", pt.ctx.from |> Maybe.unwrap null key )
             ]
 
 
@@ -148,16 +146,8 @@ scene shapeEnc obj =
                 |> Result.withDefault []
                 |> (::) ( "key", key k )
                 |> object
-
-        bbox =
-            BoundingBox2d.extrema obj.bbox
-                |> (\{ minX, minY, maxX, maxY } -> [ minX, minY, maxX, maxY ])
-                |> List.map inMeters
     in
     object
-        [ ( "scale", float obj.scale )
-        , ( "translation", pair (fromVector obj.translation) )
-        , ( "bbox", list float bbox )
-        , ( "groups", object groups )
+        [ ( "groups", object groups )
         , ( "objects", list identity objects )
         ]

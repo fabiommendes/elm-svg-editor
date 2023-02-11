@@ -4,7 +4,7 @@ import BoundingBox2d
 import Dict
 import Figure exposing (Figure)
 import Geometry as G exposing (BBox, angle, point, vector)
-import Geometry.PointEx exposing (PointEx, Props)
+import Geometry.CtxPoint exposing (CtxPoint, Props)
 import Group exposing (GroupData)
 import Json.Decode exposing (..)
 import Json.Decode.Pipeline exposing (..)
@@ -125,9 +125,9 @@ line =
         )
 
 
-pointExt : Decoder PointEx
+pointExt : Decoder CtxPoint
 pointExt =
-    map2 PointEx
+    map2 CtxPoint
         (succeed Props
             |> optional "back" bool False
             |> optional "breakLine" bool False
@@ -214,16 +214,8 @@ scene shapeDec =
             field "key" key
                 |> andThen (\k -> map (Tuple.pair k) (figure shapeDec))
 
-        groups : Decoder (GroupData Key)
-        groups =
-            field "groups" (keyValuePairs (list key))
-                |> map Dict.fromList
-
-        initScene s scale translation bb =
-            { s | scale = scale, translation = translation, bbox = bb }
-
-        updateScene : List ( Key, Figure a ) -> GroupData Key -> Scene a -> Scene a
-        updateScene figs grps scene_ =
+        makeScene : List ( Key, Figure a ) -> GroupData Key -> Scene a
+        makeScene figs grps =
             let
                 expand lst =
                     lst
@@ -237,15 +229,12 @@ scene shapeDec =
                 reducer ( k, fig ) =
                     Scene.put k fig
             in
-            List.foldl reducer scene_ (List.reverse figs)
+            List.foldl reducer Scene.init (List.reverse figs)
                 |> Scene.groupMany (expand grps)
     in
-    map3 updateScene (field "objects" <| list keyfig) groups <|
-        (succeed (initScene <| Scene.init 0 0)
-            |> required "scale" float
-            |> required "translation" (map vector pair)
-            |> required "bbox" bbox
-        )
+    succeed makeScene
+        |> required "objects" (list keyfig)
+        |> required "groups" (keyValuePairs (list key) |> map Dict.fromList)
 
 
 bbox : Decoder BBox

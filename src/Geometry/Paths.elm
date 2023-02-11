@@ -2,13 +2,22 @@ module Geometry.Paths exposing (..)
 
 import Direction2d
 import Geometry exposing (vector)
-import Geometry.PointEx as PointExt exposing (PointEx, pointEx)
-import Length exposing (meters)
+import Geometry.CtxPoint as PointExt exposing (CtxPoint, pointEx)
+import Length exposing (inMeters, meters)
 import Vector2d
 
 
-smooth : List PointEx -> List PointEx
-smooth lst =
+smooth2 : Int -> List CtxPoint -> List CtxPoint
+smooth2 nIter lst =
+    if nIter <= 0 then
+        lst
+
+    else
+        smooth2 (nIter - 1) (smoothOnce2 lst)
+
+
+smoothOnce2 : List CtxPoint -> List CtxPoint
+smoothOnce2 lst =
     let
         run prev pts =
             case ( prev, pts ) of
@@ -40,7 +49,61 @@ smooth lst =
     run Nothing lst
 
 
-ghostLine : Float -> List PointEx -> List PointEx
+smooth : Int -> List CtxPoint -> List CtxPoint
+smooth nIter lst =
+    if nIter <= 0 then
+        lst
+
+    else
+        smooth (nIter - 1) (smoothOnce lst)
+
+
+smoothOnce : List CtxPoint -> List CtxPoint
+smoothOnce lst =
+    let
+        run prev pts =
+            case ( prev, pts ) of
+                ( Nothing, pt :: rest ) ->
+                    pt :: run (Just pt) rest
+
+                ( Just ptBefore, pt :: ptAfter :: rest ) ->
+                    let
+                        smoothingFactor =
+                            0.45
+
+                        d0 =
+                            Vector2d.from pt.point ptBefore.point
+
+                        d1 =
+                            Vector2d.from pt.point ptAfter.point
+
+                        length =
+                            min (Vector2d.length d0 |> inMeters) (Vector2d.length d1 |> inMeters) |> meters
+
+                        d0_ =
+                            d0 |> Vector2d.scaleTo length
+
+                        d1_ =
+                            d1 |> Vector2d.scaleTo length
+
+                        middle =
+                            Vector2d.interpolateFrom d0_ d1_ 0.5 |> Vector2d.scaleBy (smoothingFactor / 2)
+
+                        before =
+                            pt |> PointExt.translateBy (Vector2d.scaleBy smoothingFactor d0_ |> Vector2d.minus middle)
+
+                        after =
+                            pt |> PointExt.translateBy (Vector2d.scaleBy smoothingFactor d1_ |> Vector2d.minus middle)
+                    in
+                    before :: pt :: after :: run (Just pt) (ptAfter :: rest)
+
+                _ ->
+                    pts
+    in
+    run Nothing lst
+
+
+ghostLine : Float -> List CtxPoint -> List CtxPoint
 ghostLine factor line =
     let
         direction f x y =
@@ -65,7 +128,7 @@ ghostLine factor line =
             in
             y |> PointExt.translateBy (Vector2d.sum [ d1, d2 ] |> Vector2d.scaleTo (meters <| abs f))
 
-        do : Maybe PointEx -> List PointEx -> List PointEx
+        do : Maybe CtxPoint -> List CtxPoint -> List CtxPoint
         do start pts =
             case ( start, pts ) of
                 ( Nothing, x :: y :: rest ) ->
@@ -83,7 +146,7 @@ ghostLine factor line =
     do Nothing (pointEx ( 0, 0 ) :: line)
 
 
-pairsWithExtrapolation : List PointEx -> List ( PointEx, PointEx )
+pairsWithExtrapolation : List CtxPoint -> List ( CtxPoint, CtxPoint )
 pairsWithExtrapolation vertices =
     case vertices of
         [ pt1, pt2 ] ->

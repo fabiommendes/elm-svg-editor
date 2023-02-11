@@ -47,7 +47,7 @@ view cfg m =
                     [ pre [ HA.style "font-size" "0.7rem" ] [ text err ] ]
 
                 Nothing ->
-                    [ main_ [] [ Scene.view config m.scene ]
+                    [ main_ [] [ Scene.view config m.bbox m.scene ]
                     , Maybe.unpack notSelectedContext (contextToolbar cfg m.scene) selected
                     ]
         ]

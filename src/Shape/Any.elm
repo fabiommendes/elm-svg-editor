@@ -31,7 +31,7 @@ import Config exposing (Params)
 import Element
 import Figure
 import Geometry as G exposing (Point, Vector)
-import Geometry.PointEx exposing (purePoint)
+import Geometry.CtxPoint exposing (purePoint)
 import Html exposing (Html)
 import Lens as L
 import Monocle.Lens as L

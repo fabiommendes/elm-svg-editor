@@ -3,7 +3,8 @@ module Shape.Line exposing
     , Line
     , actionButtons
     , movePoint
-    , view, vertices
+    , vertices
+    , view
     )
 
 import Attributes as A
@@ -11,8 +12,8 @@ import Config exposing (Params)
 import Element exposing (Element)
 import Figure exposing (move)
 import Geometry exposing (Point, Vector, fromPoint, point, vector)
+import Geometry.CtxPoint as PointExt exposing (CtxPoint)
 import Geometry.Paths exposing (pairsWithExtrapolation, smooth)
-import Geometry.PointEx as PointExt exposing (PointEx)
 import Geometry.Svg as S
 import Geometry.SvgPath exposing (ghostLinePath, pathD)
 import Html as H exposing (Html)
@@ -28,10 +29,11 @@ import Svg as S exposing (Svg)
 import Svg.Attributes as SA
 import Types exposing (..)
 import Util exposing (iff)
+import Geometry.Paths exposing (smooth2)
 
 
 type alias Line =
-    { vertices : List PointEx
+    { vertices : List CtxPoint
     , duplicateLast : Bool
     , fill : Fill
     }
@@ -144,10 +146,9 @@ view cfg ({ model, shape } as elem) =
 
         line =
             (PointExt.pointEx ( 0, 0 ) :: shape.vertices)
-                |> smooth
-                |> smooth
-                |> smooth
-                |> smooth
+                |> smooth 1
+                |> smooth2 1
+                -- |> smooth 1
 
         lines =
             [ S.path [ dAttribute, transforms, SA.class "background" ] []

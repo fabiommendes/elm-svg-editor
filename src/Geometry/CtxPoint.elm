@@ -1,4 +1,4 @@
-module Geometry.PointEx exposing (..)
+module Geometry.CtxPoint exposing (..)
 
 import Geometry exposing (Point, Vector, point)
 import Lens as L
@@ -9,14 +9,14 @@ import Types exposing (Key)
 
 {-| A point extended with some
 -}
-type alias TaggedPoint a =
-    { props : a
+type alias GenericCtxPoint a =
+    { ctx : a
     , point : Point
     }
 
 
-type alias PointEx =
-    { props : Props
+type alias CtxPoint =
+    { ctx : Props
     , point : Point
     }
 
@@ -28,7 +28,7 @@ type alias Props =
     }
 
 
-pointEx : ( Float, Float ) -> PointEx
+pointEx : ( Float, Float ) -> CtxPoint
 pointEx =
     point >> purePoint
 
@@ -38,21 +38,21 @@ pointPropDefault =
     { back = False, breakLine = False, from = Nothing }
 
 
-purePoint : Point -> PointEx
+purePoint : Point -> CtxPoint
 purePoint =
-    PointEx pointPropDefault
+    CtxPoint pointPropDefault
 
 
-pureVertices : List Point -> List PointEx
+pureVertices : List Point -> List CtxPoint
 pureVertices =
-    List.map (PointEx pointPropDefault)
+    List.map (CtxPoint pointPropDefault)
 
 
-translateBy : Vector -> PointEx -> PointEx
+translateBy : Vector -> CtxPoint -> CtxPoint
 translateBy vec =
     L.modify L.point (Point2d.translateBy vec)
 
 
-midpoint : PointEx -> PointEx -> PointEx
+midpoint : CtxPoint -> CtxPoint -> CtxPoint
 midpoint u v =
     purePoint (Point2d.midpoint u.point v.point)

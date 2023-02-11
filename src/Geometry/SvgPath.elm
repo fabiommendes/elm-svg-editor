@@ -2,13 +2,13 @@ module Geometry.SvgPath exposing (..)
 
 import Geometry exposing (fromPoint)
 import Geometry.Paths exposing (ghostLine)
-import Geometry.PointEx exposing (PointEx, pointEx)
+import Geometry.CtxPoint exposing (CtxPoint, pointEx)
 import List.Extra as List
 import Svg.PathD as D
 import Util exposing (iff)
 
 
-pathD : Bool -> List PointEx -> String
+pathD : Bool -> List CtxPoint -> String
 pathD fill line =
     case line of
         start :: rest ->
@@ -32,7 +32,7 @@ closePath lst =
             lst ++ [ D.z ]
 
 
-ghostLinePath : Float -> List PointEx -> String
+ghostLinePath : Float -> List CtxPoint -> String
 ghostLinePath factor pts =
     let
         ( origin, vertices ) =
