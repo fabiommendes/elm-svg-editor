@@ -10,6 +10,10 @@ import State exposing (State)
 import Types exposing (..)
 
 
+type KeyBoardCommands
+    = Delete
+
+
 type Msg a
     = NoOp
     | Batch (List (Msg a))
@@ -19,6 +23,7 @@ type Msg a
     | OnWindowResize
     | OnViewportRescaled Element
     | OnClickAt Point
+    | OnKeyPress KeyBoardCommands
     | OnFigureChangeOrder Direction Key
     | OnSelectFigure Key SubKey
     | OnFigureCreate (Figure a)
@@ -103,6 +108,9 @@ map f msg =
 
         OnStateChange st ->
             OnStateChange (State.map f st)
+
+        OnKeyPress cmd ->
+            OnKeyPress cmd
 
 
 changeDragMsgsTo : Msg fig -> Msg fig -> Msg fig

@@ -4,10 +4,12 @@ import BoundingBox2d
 import Dict
 import Figure exposing (Figure)
 import Geometry as G exposing (BBox, angle, point, vector)
+import Geometry.PointEx exposing (PointEx, Props)
 import Group exposing (GroupData)
 import Json.Decode exposing (..)
 import Json.Decode.Pipeline exposing (..)
 import Length exposing (meters)
+import Msg exposing (KeyBoardCommands(..), Msg(..))
 import Scene exposing (Scene)
 import Shape.Any exposing (Any(..))
 import Shape.Image
@@ -16,8 +18,6 @@ import Shape.Point
 import Shape.Text
 import Types exposing (..)
 import Util exposing (flip)
-import Geometry.PointExt exposing (PointExt)
-import Geometry.PointExt exposing (PointProp)
 
 
 pair : Decoder ( Float, Float )
@@ -61,6 +61,20 @@ key =
 label : Decoder Label
 label =
     string
+
+
+keyPress : Decoder (Msg a)
+keyPress =
+    field "key" string
+        |> andThen
+            (\k ->
+                case k of
+                    "Delete" ->
+                        succeed (OnKeyPress Delete)
+
+                    _ ->
+                        fail (Debug.log "invalid" k)
+            )
 
 
 
@@ -111,10 +125,10 @@ line =
         )
 
 
-pointExt : Decoder PointExt
+pointExt : Decoder PointEx
 pointExt =
-    map2 PointExt
-        (succeed PointProp
+    map2 PointEx
+        (succeed Props
             |> optional "back" bool False
             |> optional "breakLine" bool False
             |> optional "from" (maybe key) Nothing

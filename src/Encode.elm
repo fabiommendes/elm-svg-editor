@@ -17,7 +17,7 @@ import Shape.Line
 import Shape.Point
 import Shape.Text
 import Types exposing (..)
-import Geometry.PointExt exposing (PointExt)
+import Geometry.PointEx exposing (PointEx)
 
 
 extendObject : List ( String, Value ) -> Value -> Value
@@ -77,7 +77,7 @@ line obj =
         ]
 
 
-pointExt : PointExt -> Value
+pointExt : PointEx -> Value
 pointExt pt =
     pair (fromPoint pt.point)
         |> extendObject

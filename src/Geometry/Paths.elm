@@ -2,12 +2,12 @@ module Geometry.Paths exposing (..)
 
 import Direction2d
 import Geometry exposing (vector)
-import Geometry.PointExt as PointExt exposing (PointExt, pointExt)
+import Geometry.PointEx as PointExt exposing (PointEx, pointEx)
 import Length exposing (meters)
 import Vector2d
 
 
-smooth : List PointExt -> List PointExt
+smooth : List PointEx -> List PointEx
 smooth lst =
     let
         run prev pts =
@@ -40,7 +40,7 @@ smooth lst =
     run Nothing lst
 
 
-ghostLine : Float -> List PointExt -> List PointExt
+ghostLine : Float -> List PointEx -> List PointEx
 ghostLine factor line =
     let
         direction f x y =
@@ -65,7 +65,7 @@ ghostLine factor line =
             in
             y |> PointExt.translateBy (Vector2d.sum [ d1, d2 ] |> Vector2d.scaleTo (meters <| abs f))
 
-        do : Maybe PointExt -> List PointExt -> List PointExt
+        do : Maybe PointEx -> List PointEx -> List PointEx
         do start pts =
             case ( start, pts ) of
                 ( Nothing, x :: y :: rest ) ->
@@ -80,10 +80,10 @@ ghostLine factor line =
                 _ ->
                     []
     in
-    do Nothing (pointExt ( 0, 0 ) :: line)
+    do Nothing (pointEx ( 0, 0 ) :: line)
 
 
-pairsWithExtrapolation : List PointExt -> List ( PointExt, PointExt )
+pairsWithExtrapolation : List PointEx -> List ( PointEx, PointEx )
 pairsWithExtrapolation vertices =
     case vertices of
         [ pt1, pt2 ] ->

@@ -24,6 +24,7 @@ import State exposing (State(..))
 import Task
 import Types exposing (..)
 import Vector2d
+import Msg exposing (KeyBoardCommands(..))
 
 
 update : Config a -> Msg a -> Model a -> ( Model a, Cmd (Msg a) )
@@ -225,3 +226,11 @@ update cfg msg_ m =
 
         OnStateChange st ->
             return { m | state = st }
+
+        OnKeyPress Delete ->
+            case m.scene.selected of
+                Just ( key, _ ) ->
+                    update cfg (OnFigureDiscard key) m
+
+                Nothing ->
+                    return m
