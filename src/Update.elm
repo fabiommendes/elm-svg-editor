@@ -26,7 +26,7 @@ import Vector2d
 
 update : Config a -> Msg a -> Model a -> ( Model a, Cmd (Msg a) )
 update cfg msg_ m =
-    update_ cfg msg_ m.state (M.trimHistory m)
+    update_ cfg (Debug.log "UPDATE" msg_) m.state (M.trimHistory m)
 
 
 update_ : Config a -> Msg a -> State a -> Model a -> ( Model a, Cmd (Msg a) )
@@ -124,7 +124,7 @@ update_ cfg msg_ state_ m =
                 return m
 
             else
-                case ( S.get k (M.scene m), S.get key (M.scene m) ) of
+                case ( S.getElement k (M.scene m), S.getElement key (M.scene m) ) of
                     ( Just target, Just dest ) ->
                         case cfg.config.connectFigures target dest of
                             Just changed ->
@@ -142,7 +142,6 @@ update_ cfg msg_ state_ m =
             let
                 target =
                     S.get key (M.scene m)
-                        |> Debug.log "pt"
                         |> Maybe.withDefault cfg.config.defaultTarget
                         |> Figure.editable True
 
@@ -221,7 +220,7 @@ update_ cfg msg_ state_ m =
             return (M.notifyClick pt m)
 
         ( OnStateChange st, _ ) ->
-            return { m | state = st }
+            return (m |> M.changeState cfg st)
 
         ( OnKeyPress Delete, _ ) ->
             case m |> M.onScene S.selected of

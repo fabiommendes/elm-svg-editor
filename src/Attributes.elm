@@ -55,8 +55,8 @@ click id =
     [ Draggable.mouseTrigger id OnDragMsg ]
 
 
-style : Element a -> List (Attribute msg)
-style { model } =
+styles : Element a -> List (Attribute msg)
+styles { model } =
     model.style |> List.map (\{ attr, value } -> toAttribute attr value)
 
 
@@ -108,7 +108,7 @@ rootElement name elem =
         :: List.concat
             [ dragRoot elem
             , classes name elem
-            , style elem
+            , styles elem
             ]
 
 
@@ -119,5 +119,5 @@ childPart sub name fig =
         :: List.concat
             [ dragChild sub fig
             , classes name fig
-            , style fig
+            , styles fig
             ]

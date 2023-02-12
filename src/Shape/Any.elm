@@ -3,7 +3,7 @@ module Shape.Any exposing
     , line, point, text, image
     , andThen, map, replace, moveInside
     , actionButtons, view
-    , connect, mapId
+    , connect, endConnection, mapId
     )
 
 {-|
@@ -31,12 +31,13 @@ import Config exposing (Params)
 import Element
 import Figure
 import Geometry as G exposing (Point, Vector)
-import Geometry.CtxPoint exposing (distanceFrom, origin, purePoint)
+import Geometry.CtxPoint as CtxPoint exposing (distanceFrom, origin, purePoint)
 import Html exposing (Html)
 import Length exposing (inMeters)
 import Lens as L
 import Monocle.Lens as L
 import Msg exposing (Msg)
+import Scene exposing (Scene)
 import Shape.Image exposing (Image)
 import Shape.Line exposing (Fill(..), Line)
 import Shape.Point exposing (Point)
@@ -44,6 +45,7 @@ import Shape.Text exposing (Text)
 import Svg exposing (Svg)
 import Types exposing (..)
 import Vector2d
+import BaseTypes exposing (Direction(..))
 
 
 type alias Figure =
@@ -158,29 +160,34 @@ moveInside sub by fig =
             fig
 
 
-connect : Figure -> Figure -> Maybe Figure
-connect target src =
+connect : Element -> Element -> Maybe Figure
+connect ({ model } as target) src =
     let
         shift =
-            Vector2d.minus target.translation src.translation
+            Vector2d.minus model.translation src.model.translation
     in
     case ( target.shape, src.shape ) of
         ( LineModel ln, PointModel _ ) ->
             let
                 pointLocal =
                     purePoint (G.pointVec shift)
+                        |> CtxPoint.from src.key
 
                 distance =
                     pointLocal |> distanceFrom origin |> inMeters
             in
             if distance <= 1.0e-3 then
-                Just target
+                Just target.model
 
             else
-                Just { target | shape = LineModel { ln | vertices = ln.vertices ++ [ purePoint (G.pointVec shift) ] } }
+                Just { model | shape = LineModel { ln | vertices = ln.vertices ++ [ pointLocal ] } }
 
         ( PointModel _, _ ) ->
-            connect (Figure.map (\_ -> (line []).shape) target) src
+            let
+                targetAsLine =
+                    Element.map (\_ -> (line []).shape) target
+            in
+            connect (Debug.log "target" targetAsLine) src
 
         -- ( LineModel ln, LineModel ln2 ) ->
         --     let
@@ -192,6 +199,22 @@ connect target src =
         --     )
         _ ->
             Nothing
+
+
+endConnection : Element -> Scene Any -> Scene Any
+endConnection elem scene =
+    case elem.shape of
+        LineModel ln ->
+            let
+                keys =
+                    ln.vertices
+                        |> List.filterMap (.ctx >> .from)
+            in
+            scene |> 
+                Scene.moveFrom keys Down elem.key
+
+        _ ->
+            scene
 
 
 view : Params -> Element -> Svg (Msg Any)

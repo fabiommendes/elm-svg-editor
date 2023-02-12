@@ -49,6 +49,11 @@ pureVertices =
     List.map (CtxPoint pointPropDefault)
 
 
+from : Key -> CtxPoint -> CtxPoint
+from key =
+    (L.compose L.ctx L.from).set (Just key)
+
+
 translateBy : Vector -> CtxPoint -> CtxPoint
 translateBy vec =
     L.modify L.point (Point2d.translateBy vec)

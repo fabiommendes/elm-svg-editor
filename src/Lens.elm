@@ -39,6 +39,11 @@ config =
     lens .config (\x m -> { m | config = x })
 
 
+ctx : Lens { a | ctx : b } b
+ctx =
+    lens .ctx (\x m -> { m | ctx = x })
+
+
 data : Lens { a | data : b } b
 data =
     lens .data (\x m -> { m | data = x })
@@ -53,6 +58,10 @@ editable : Lens { a | editable : b } b
 editable =
     lens .editable (\x m -> { m | editable = x })
 
+
+from : Lens { a | from : b } b
+from =
+    lens .from (\x m -> { m | from = x })
 
 figure : Lens { a | figure : b } b
 figure =

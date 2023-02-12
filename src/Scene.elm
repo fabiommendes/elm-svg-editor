@@ -15,6 +15,7 @@ module Scene exposing
     , insertMany
     , insertManyAs
     , keys
+    , moveFrom
     , moveGroup
     , moveLayer
     , pop
@@ -22,33 +23,25 @@ module Scene exposing
     , select
     , selected
     , update
-    , view
     )
 
-import Attributes as A
 import BaseTypes exposing (Direction(..))
-import Config exposing (Config)
 import Dict exposing (Dict)
 import Dict.Extra as Dict
 import Element exposing (Element)
 import Figure exposing (Figure)
 import Geometry exposing (..)
 import Group exposing (GroupData, GroupInfo)
-import Html as H exposing (Html)
-import Html.Attributes as HA
-import Html.Events.Extra.Pointer as Pointer
 import Lens as L
 import List.Extra as List
 import Maybe.Extra as Maybe
 import Monocle.Common exposing (second)
 import Monocle.Lens as L exposing (Lens)
 import Msg exposing (Msg(..))
+import Set
 import State exposing (State(..))
-import Svg as S
-import Svg.Attributes as SA
 import Types exposing (..)
-import Ui
-import Util exposing (flip)
+import Util exposing (flip, iff)
 
 
 {-| Represent an Svg scene
@@ -350,46 +343,40 @@ moveLayer direction key (Scene s) =
         |> Scene
 
 
-view : Config a -> State a ->  BBox -> Scene a -> Html (Msg a)
-view cfg state bbox data =
+moveFrom : List Key -> Direction -> Key -> Scene a -> Scene a
+moveFrom keyList direction key ((Scene s) as scene_) =
     let
-        elementsSvg =
-            elements data
-                |> List.filter (.model >> .visible)
-                |> List.map (cfg.config.view cfg.params)
+        hasKey =
+            Set.fromList keyList |> flip Set.member
 
-        mapMsg f =
-            List.map (S.map f)
+        order =
+            s.order
+                |> List.indexedMap (\i k -> ( i, k, hasKey k ))
+                |> List.filterMap
+                    (\( i, k, keep ) ->
+                        if keep && k /= key then
+                            Just i
 
-        pointerEvents st panWithTouch =
-            case ( st, panWithTouch ) of
-                ( ClickToInsert _ _, _ ) ->
-                    [ Pointer.onDown (.pointer >> .offsetPos >> point >> OnClickAt) ]
+                        else
+                            Nothing
+                    )
+                |> iff (direction == Up) (List.maximum >> Maybe.map ((+) 1)) List.minimum
 
-                ( _, True ) ->
-                    A.touch ( backgroundKey, [] )
-
-                _ ->
-                    []
-
-        supressDrag =
-            mapMsg (Msg.changeDragMsgsTo Msg.NoOp)
+        newOrder =
+            Maybe.map (flip List.splitAt s.order) order
+                |> Maybe.map
+                    (\( pre, post ) ->
+                        List.filter ((/=) key) pre ++ key :: List.filter ((/=) key) post
+                    )
     in
-    H.div [ HA.class "container bg-slate-100", HA.class "scene", HA.id cfg.params.sceneId ]
-        [ S.svg
-            (SA.width "100%" :: SA.class "scene" :: A.viewBox bbox :: pointerEvents state cfg.params.panWithTouch)
-            (case state of
-                ReadOnlyView ->
-                    supressDrag elementsSvg
+    if hasKey key then
+        moveFrom (List.filter ((/=) key) keyList) direction key scene_
 
-                ClickToInsert _ _ ->
-                    supressDrag elementsSvg
+    else if List.member key s.order then
+        Scene { s | order = newOrder |> Maybe.withDefault s.order }
 
-                _ ->
-                    elementsSvg
-            )
-        , Ui.controls cfg
-        ]
+    else
+        scene_
 
 
 orderWithKey : Key -> List Key -> List Key

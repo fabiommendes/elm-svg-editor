@@ -30,6 +30,7 @@ import Msg exposing (Msg(..))
 import State exposing (State(..))
 import Svg exposing (Svg)
 import Types exposing (Key, SubKey)
+import Scene exposing (Scene)
 
 
 type alias ViewFunction fig =
@@ -41,7 +42,11 @@ type alias InnerMoveFunction fig =
 
 
 type alias FigureConnector fig =
-    Figure fig -> Figure fig -> Maybe (Figure fig)
+    Element fig -> Element fig -> Maybe (Figure fig)
+
+
+type alias FigureEndConnection fig =
+    Element fig -> Scene fig -> Scene fig
 
 
 type alias Config fig =
@@ -67,6 +72,7 @@ type alias Cfg fig =
     , defaultFigure : Figure fig
     , defaultTarget : Figure fig
     , connectFigures : FigureConnector fig
+    , endConnection : FigureEndConnection fig
     }
 
 
@@ -114,6 +120,7 @@ initConfig fig =
     , defaultFigure = fig
     , defaultTarget = fig
     , connectFigures = \_ _ -> Nothing
+    , endConnection = \ _ -> identity 
     }
 
 
@@ -142,9 +149,9 @@ withDefaultTarget fig ({ config } as cfg) =
     { cfg | config = { config | defaultTarget = fig } }
 
 
-withConnector : FigureConnector fig -> Config fig -> Config fig
-withConnector func ({ config } as cfg) =
-    { cfg | config = { config | connectFigures = func } }
+withConnector : { connect : FigureConnector fig, end : FigureEndConnection fig } -> Config fig -> Config fig
+withConnector { connect, end } ({ config } as cfg) =
+    { cfg | config = { config | connectFigures = connect, endConnection = end } }
 
 
 withJson : { decoder : Decoder fig, encoder : fig -> Json.Encode.Value } -> Config fig -> Config fig

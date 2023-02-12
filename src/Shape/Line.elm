@@ -7,13 +7,13 @@ module Shape.Line exposing
     , view
     )
 
-import Attributes as A
+import Attributes as SA
 import Config exposing (Params)
 import Element exposing (Element)
 import Figure exposing (move)
 import Geometry exposing (Point, Vector, fromPoint, point, vector)
 import Geometry.CtxPoint as PointExt exposing (CtxPoint)
-import Geometry.Paths exposing (pairsWithExtrapolation, smooth)
+import Geometry.Paths exposing (pairsWithExtrapolation, smooth, smooth2)
 import Geometry.Svg as S
 import Geometry.SvgPath exposing (ghostLinePath, pathD)
 import Html as H exposing (Html)
@@ -29,7 +29,6 @@ import Svg as S exposing (Svg)
 import Svg.Attributes as SA
 import Types exposing (..)
 import Util exposing (iff)
-import Geometry.Paths exposing (smooth2)
 
 
 type alias Line =
@@ -115,7 +114,7 @@ view cfg ({ model, shape } as elem) =
                 attrs =
                     SA.class (iff (i == subKey) "point selected-point" "point")
                         :: SA.class ("key-" ++ String.fromInt i)
-                        :: A.childPart [ i ] "line" elem_
+                        :: SA.childPart [ i ] "line" elem_
             in
             if isLast then
                 Shape.Point.viewAsPoint cfg elem.group model.label elem.isSelected (SA.class "last-point" :: attrs) (point ( 0, 0 ))
@@ -142,14 +141,14 @@ view cfg ({ model, shape } as elem) =
             SA.d (pathD (shape.fill == Closed) line)
 
         transforms =
-            A.transformElement elem
+            SA.transformElement elem
 
         line =
             (PointExt.pointEx ( 0, 0 ) :: shape.vertices)
                 |> smooth 1
                 |> smooth2 1
-                -- |> smooth 1
 
+        -- |> smooth 1
         lines =
             [ S.path [ dAttribute, transforms, SA.class "background" ] []
             , S.path [ SA.d (ghostLinePath 0.1 line), SA.filter "blur(0.05px) opacity(0.9)", transforms, SA.class "foreground" ] []
@@ -157,10 +156,10 @@ view cfg ({ model, shape } as elem) =
             , S.path [ SA.d (ghostLinePath 0.5 line), SA.filter "blur(0.25px) opacity(0.5)", transforms, SA.class "foreground" ] []
             , S.path [ SA.d (ghostLinePath 0.8 line), SA.filter "blur(0.4px) opacity(0.3)", transforms, SA.class "foreground" ] []
             , S.path [ SA.d (ghostLinePath 1.2 line), SA.filter "blur(0.6px) opacity(0.1)", transforms, SA.class "foreground" ] []
-            , S.path [ dAttribute, transforms, SA.class "foreground" ] []
+            , S.path (dAttribute :: transforms :: SA.class "foreground" :: SA.dragRoot elem) []
             ]
     in
-    S.g (A.classes "line" elem ++ A.style elem) <|
+    S.g (SA.classes "line" elem ++ SA.styles elem) <|
         List.concat [ lines, labels, points ]
 
 

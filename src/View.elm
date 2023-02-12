@@ -1,14 +1,16 @@
 module View exposing (..)
 
+import Attributes as A
 import BaseTypes exposing (Direction(..))
 import Config exposing (Config)
 import Element exposing (Element)
 import Figure
-import Geometry exposing (fromPoint, vector)
+import Geometry exposing (BBox, fromPoint, point, vector)
 import Group exposing (GroupInfo)
 import Html exposing (..)
 import Html.Attributes as HA exposing (..)
 import Html.Events exposing (onClick, onInput)
+import Html.Events.Extra.Pointer as Pointer
 import Html.Extra as Html
 import Lens exposing (editable)
 import Material.Icons as I
@@ -20,6 +22,8 @@ import Monocle.Lens as L
 import Msg exposing (Msg(..))
 import Scene exposing (Scene)
 import State exposing (State(..))
+import Svg as S
+import Svg.Attributes as SA
 import Toolbars
 import Types exposing (..)
 import Ui
@@ -29,8 +33,6 @@ import Util exposing (iff)
 view : Config a -> Model a -> Html (Msg a)
 view cfg m =
     let
-
-
         selected =
             Scene.getSelected (Model.scene m)
     in
@@ -46,9 +48,51 @@ view cfg m =
                     [ pre [ HA.style "font-size" "0.7rem" ] [ text err ] ]
 
                 Nothing ->
-                    [ main_ [] [ Scene.view cfg m.state m.bbox (Model.scene m) ]
+                    [ main_ [] [ viewScene cfg m.state m.bbox (Model.scene m) ]
                     , Maybe.unpack notSelectedContext (contextToolbar cfg (Model.scene m)) selected
                     ]
+        ]
+
+
+viewScene : Config a -> State a -> BBox -> Scene a -> Html (Msg a)
+viewScene cfg state bbox data =
+    let
+        elementsSvg =
+            Scene.elements data
+                |> List.filter (.model >> .visible)
+                |> List.map (cfg.config.view cfg.params)
+
+        mapMsg f =
+            List.map (S.map f)
+
+        pointerEvents st panWithTouch =
+            case ( st, panWithTouch ) of
+                ( ClickToInsert _ _, _ ) ->
+                    [ Pointer.onDown (.pointer >> .offsetPos >> point >> OnClickAt) ]
+
+                ( _, True ) ->
+                    A.touch ( backgroundKey, [] )
+
+                _ ->
+                    []
+
+        supressDrag =
+            mapMsg (Msg.changeDragMsgsTo Msg.NoOp)
+    in
+    div [ HA.class "container bg-slate-100", HA.class "scene", HA.id cfg.params.sceneId ]
+        [ S.svg
+            (SA.width "100%" :: SA.class "scene" :: A.viewBox bbox :: pointerEvents state cfg.params.panWithTouch)
+            (case state of
+                ReadOnlyView ->
+                    supressDrag elementsSvg
+
+                ClickToInsert _ _ ->
+                    supressDrag elementsSvg
+
+                _ ->
+                    elementsSvg
+            )
+        , Ui.controls cfg
         ]
 
 

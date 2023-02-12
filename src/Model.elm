@@ -1,6 +1,7 @@
 module Model exposing (..)
 
 import BoundingBox2d
+import Config exposing (Config)
 import Draggable
 import Figure exposing (Figure)
 import Geometry exposing (BBox, Point, Vector, point, vector)
@@ -10,6 +11,7 @@ import Scene exposing (Scene)
 import State exposing (State(..))
 import Types exposing (..)
 import UndoList exposing (UndoList)
+import Util exposing (flip)
 import Vector2d
 
 
@@ -53,6 +55,28 @@ init =
     , translation = vector ( 0, 0 )
     , bbox = BoundingBox2d.from (point ( 0, 0 )) (point ( 20, 20 ))
     }
+
+
+changeState : Config fig -> State fig -> Model fig -> Model fig
+changeState cfg st m =
+    if st == m.state then
+        m
+
+    else
+        case ( m.state, st ) of
+            ( Connecting (Just key), _ ) ->
+                m
+                    |> transformScene
+                        (\s ->
+                            s
+                                |> Scene.getElement key
+                                |> Maybe.map (flip cfg.config.endConnection s)
+                                |> Maybe.withDefault s
+                        )
+                    |> withState st
+
+            _ ->
+                { m | state = st }
 
 
 withState : State fig -> Model fig -> Model fig

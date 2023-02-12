@@ -44,7 +44,7 @@ defaulConfig =
         |> Config.withActionButtons Shape.Any.actionButtons
         |> Config.withJson { encoder = Encode.shape, decoder = Decode.shape }
         |> Config.withDefaultTarget (Shape.Any.line [])
-        |> Config.withConnector Shape.Any.connect
+        |> Config.withConnector { connect = Shape.Any.connect, end = Shape.Any.endConnection }
 
 
 update : Config -> Msg -> Model -> ( Model, Cmd Msg )
