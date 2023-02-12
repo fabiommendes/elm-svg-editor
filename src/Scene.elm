@@ -350,8 +350,8 @@ moveLayer direction key (Scene s) =
         |> Scene
 
 
-view : Config a -> BBox -> Scene a -> Html (Msg a)
-view cfg bbox data =
+view : Config a -> State a ->  BBox -> Scene a -> Html (Msg a)
+view cfg state bbox data =
     let
         elementsSvg =
             elements data
@@ -361,8 +361,8 @@ view cfg bbox data =
         mapMsg f =
             List.map (S.map f)
 
-        pointerEvents state panWithTouch =
-            case ( state, panWithTouch ) of
+        pointerEvents st panWithTouch =
+            case ( st, panWithTouch ) of
                 ( ClickToInsert _ _, _ ) ->
                     [ Pointer.onDown (.pointer >> .offsetPos >> point >> OnClickAt) ]
 
@@ -377,8 +377,8 @@ view cfg bbox data =
     in
     H.div [ HA.class "container bg-slate-100", HA.class "scene", HA.id cfg.params.sceneId ]
         [ S.svg
-            (SA.width "100%" :: SA.class "scene" :: A.viewBox bbox :: pointerEvents cfg.params.state cfg.params.panWithTouch)
-            (case cfg.params.state of
+            (SA.width "100%" :: SA.class "scene" :: A.viewBox bbox :: pointerEvents state cfg.params.panWithTouch)
+            (case state of
                 ReadOnlyView ->
                     supressDrag elementsSvg
 

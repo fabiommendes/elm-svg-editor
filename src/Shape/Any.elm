@@ -164,7 +164,7 @@ connect target src =
         shift =
             Vector2d.minus target.translation src.translation
     in
-    case Debug.log "pair" ( target.shape, src.shape ) of
+    case ( target.shape, src.shape ) of
         ( LineModel ln, PointModel _ ) ->
             let
                 pointLocal =
@@ -173,10 +173,11 @@ connect target src =
                 distance =
                     pointLocal |> distanceFrom origin |> inMeters
             in
-            -- if distance <= 1.0e-3 then
-            --     ( target, src )
-            -- else
-            Just { target | shape = LineModel { ln | vertices = ln.vertices ++ [ purePoint (G.pointVec shift) ] } }
+            if distance <= 1.0e-3 then
+                Just target
+
+            else
+                Just { target | shape = LineModel { ln | vertices = ln.vertices ++ [ purePoint (G.pointVec shift) ] } }
 
         ( PointModel _, _ ) ->
             connect (Figure.map (\_ -> (line []).shape) target) src
@@ -193,7 +194,7 @@ connect target src =
             Nothing
 
 
-view : Params fig -> Element -> Svg (Msg Any)
+view : Params -> Element -> Svg (Msg Any)
 view cfg fig =
     let
         render viewFn msg data =

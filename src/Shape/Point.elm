@@ -16,12 +16,12 @@ type alias Point =
     ()
 
 
-view : Params fig -> Element a -> Svg (Msg a)
+view : Params -> Element a -> Svg (Msg a)
 view cfg elem =
     viewAsPoint cfg elem.group elem.model.label elem.isSelected (SA.rootElement "point" elem) (point ( 0, 0 ))
 
 
-viewAsPoint : Params fig -> Maybe GroupInfo -> String -> Bool -> List (Attribute (Msg a)) -> Geometry.Point -> Svg (Msg a)
+viewAsPoint : Params -> Maybe GroupInfo -> String -> Bool -> List (Attribute (Msg a)) -> Geometry.Point -> Svg (Msg a)
 viewAsPoint cfg group name isSelected attrs pt =
     case ( group, name ) of
         ( Just { index, label }, _ ) ->

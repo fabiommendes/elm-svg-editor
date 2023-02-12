@@ -12,6 +12,8 @@ import Types exposing (..)
 
 type KeyBoardCommands
     = Delete
+    | Undo
+    | Redo
 
 
 type Msg a

@@ -231,6 +231,12 @@ update_ cfg msg_ state_ m =
                 Nothing ->
                     return m
 
+        ( OnKeyPress Undo, _ ) ->
+            update cfg OnUndo m
+
+        ( OnKeyPress Redo, _ ) ->
+            update cfg OnRedo m
+
         ( OnUndo, _ ) ->
             return (M.undo m)
 

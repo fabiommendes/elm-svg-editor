@@ -1,7 +1,7 @@
 module View exposing (..)
 
 import BaseTypes exposing (Direction(..))
-import Config exposing (Config, withState)
+import Config exposing (Config)
 import Element exposing (Element)
 import Figure
 import Geometry exposing (fromPoint, vector)
@@ -29,8 +29,7 @@ import Util exposing (iff)
 view : Config a -> Model a -> Html (Msg a)
 view cfg m =
     let
-        config =
-            cfg |> withState m.state
+
 
         selected =
             Scene.getSelected (Model.scene m)
@@ -40,14 +39,14 @@ view cfg m =
         , attribute "data-theme" "lemonade"
         ]
         [ Ui.navbar
-        , toolbar config m
+        , toolbar cfg m
         , div [ class "max-w-xl m-auto" ] <|
             case m.error of
                 Just err ->
                     [ pre [ HA.style "font-size" "0.7rem" ] [ text err ] ]
 
                 Nothing ->
-                    [ main_ [] [ Scene.view config m.bbox (Model.scene m) ]
+                    [ main_ [] [ Scene.view cfg m.state m.bbox (Model.scene m) ]
                     , Maybe.unpack notSelectedContext (contextToolbar cfg (Model.scene m)) selected
                     ]
         ]

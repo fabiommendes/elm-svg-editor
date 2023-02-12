@@ -65,15 +65,28 @@ label =
 
 keyPress : Decoder (Msg a)
 keyPress =
-    field "key" string
+    map3 (\x y z -> ( x, y, z ))
+        (field "key" string)
+        (field "ctrlKey" bool)
+        (field "shiftKey" bool)
         |> andThen
-            (\k ->
-                case k of
-                    "Delete" ->
+            (\p ->
+                case p of
+                    ( "Delete", _, _ ) ->
                         succeed (OnKeyPress Delete)
 
-                    _ ->
-                        fail (Debug.log "invalid" k)
+                    ( "z", True, False ) ->
+                        succeed (OnKeyPress Undo)
+
+                    ( "z", True, True ) ->
+                        succeed (OnKeyPress Redo)
+
+                    -- shift may capitalize Z
+                    ( "Z", True, True ) ->
+                        succeed (OnKeyPress Redo)
+
+                    ( k, _, _ ) ->
+                        fail k
             )
 
 

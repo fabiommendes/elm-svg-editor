@@ -13,7 +13,7 @@ type alias Text =
     { content : String }
 
 
-view : Params fig -> Element Text -> Svg (Msg Text)
+view : Params -> Element Text -> Svg (Msg Text)
 view _ ({ shape } as elem) =
     S.g (A.rootElement "text" elem)
         [ S.text_ [ SA.class "background" ] [ S.text shape.content ]

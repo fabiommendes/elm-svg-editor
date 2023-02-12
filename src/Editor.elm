@@ -35,7 +35,10 @@ init =
 
 defaulConfig : Config
 defaulConfig =
-    Config.init (L.editable.set False <| Shape.Any.point (point ( 0, 0 )))
+    Config.init
+        (Shape.Any.point (point ( 0, 0 ))
+            |> L.editable.set False
+        )
         |> Config.withViewFunction Shape.Any.view
         |> Config.withInnerMove Shape.Any.moveInside
         |> Config.withActionButtons Shape.Any.actionButtons

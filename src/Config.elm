@@ -13,7 +13,6 @@ module Config exposing
     , withInnerMove
     , withJson
     , withPointRadius
-    , withState
     , withViewFunction
     )
 
@@ -34,7 +33,7 @@ import Types exposing (Key, SubKey)
 
 
 type alias ViewFunction fig =
-    Params fig -> Element fig -> Svg (Msg fig)
+    Params -> Element fig -> Svg (Msg fig)
 
 
 type alias InnerMoveFunction fig =
@@ -47,7 +46,7 @@ type alias FigureConnector fig =
 
 type alias Config fig =
     { config : Cfg fig
-    , params : Params fig
+    , params : Params
     }
 
 
@@ -76,13 +75,12 @@ type alias Cfg fig =
 The state is controlled by the main model and is copied when passed to scene.
 
 -}
-type alias Params fig =
+type alias Params =
     { pointRadius : Float
     , zoomControls : Bool
     , panControls : Bool
     , panWithTouch : Bool
     , groups : List Key
-    , state : State fig
     , sceneId : String
     }
 
@@ -94,14 +92,13 @@ init fig =
     }
 
 
-initParams : Params fig
+initParams : Params
 initParams =
     { pointRadius = 0.5
     , zoomControls = True
     , panControls = True
     , panWithTouch = True
     , groups = []
-    , state = StandardEditor
     , sceneId = "SCENE-EDITOR"
     }
 
@@ -168,11 +165,6 @@ withPointRadius r =
 withControls : { zoom : Bool, pan : Bool, drag : Bool } -> Config fig -> Config fig
 withControls value =
     L.modify L.params <| \p -> { p | zoomControls = value.zoom, panControls = value.pan, panWithTouch = value.drag }
-
-
-withState : State fig -> Config fig -> Config fig
-withState value =
-    L.modify L.params <| \p -> { p | state = value }
 
 
 makeDragConfig : (Vector -> msg) -> (Key -> SubKey -> msg) -> Draggable.Config ( Key, SubKey ) msg
