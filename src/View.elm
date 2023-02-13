@@ -21,6 +21,8 @@ import Model exposing (Model)
 import Monocle.Lens as L
 import Msg exposing (Msg(..))
 import Scene exposing (Scene)
+import Shape.Type exposing (Any)
+import Shape.View
 import State exposing (State(..))
 import Svg as S
 import Svg.Attributes as SA
@@ -30,7 +32,7 @@ import Ui
 import Util exposing (iff)
 
 
-view : Config a -> Model a -> Html (Msg a)
+view : Config -> Model -> Html Msg
 view cfg m =
     let
         selected =
@@ -54,13 +56,13 @@ view cfg m =
         ]
 
 
-viewScene : Config a -> State a -> BBox -> Scene a -> Html (Msg a)
+viewScene : Config -> State -> BBox -> Scene -> Html Msg
 viewScene cfg state bbox data =
     let
         elementsSvg =
             Scene.elements data
                 |> List.filter (.model >> .visible)
-                |> List.map (cfg.config.view cfg.params)
+                |> List.map (Shape.View.view cfg.params)
 
         mapMsg f =
             List.map (S.map f)
@@ -101,7 +103,7 @@ notSelectedContext _ =
     div [] [ text "no key selected" ]
 
 
-contextToolbar : Config a -> Scene a -> Element a -> Html (Msg a)
+contextToolbar : Config -> Scene -> Element -> Html Msg
 contextToolbar cfg scene elem =
     let
         updateFigureMsg msg updater =
@@ -113,7 +115,7 @@ contextToolbar cfg scene elem =
         allowedGroups =
             [ ( "foo", "Foo" ), ( "bar", "Bar" ), ( "baz", "Baz" ) ]
 
-        selectGroup : Html (Msg a)
+        selectGroup : Html Msg
         selectGroup =
             select [ class "select w-full max-w-xs", onInput (\grp -> OnGroupInclude grp elem.key) ]
                 (option [] [ text "Selecione um grupo" ]
@@ -125,7 +127,7 @@ contextToolbar cfg scene elem =
                        )
                 )
 
-        showGroup : GroupInfo -> Html (Msg a)
+        showGroup : GroupInfo -> Html Msg
         showGroup { label, index } =
             let
                 action direction =
@@ -177,7 +179,7 @@ contextToolbar cfg scene elem =
         ]
 
 
-toolbar : Config a -> Model a -> Html (Msg a)
+toolbar : Config -> Model -> Html Msg
 toolbar cfg m =
     let
         insertFigure pt =

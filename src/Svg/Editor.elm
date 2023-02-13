@@ -23,7 +23,7 @@ import Lens as L
 import Model
 import Msg
 import Shape.Any
-import Shape.Types as Shape
+import Shape.Toolbar
 import Subscriptions
 import Task
 import Types exposing (..)
@@ -34,19 +34,19 @@ import View
 {-| Editor model
 -}
 type alias Model =
-    Model.Model Shape.Any
+    Model.Model
 
 
 {-| Message
 -}
 type alias Msg =
-    Msg.Msg Shape.Any
+    Msg.Msg
 
 
 {-| Editor config
 -}
 type alias Config =
-    Config.Config Shape.Any
+    Config.Config
 
 
 {-| Init function in TEA
@@ -64,10 +64,7 @@ defaulConfig =
         (Shape.Any.point (point ( 0, 0 ))
             |> L.editable.set False
         )
-        |> Config.withViewFunction Shape.Any.view
-        |> Config.withInnerMove Shape.Any.moveInside
-        |> Config.withInnerRemove Shape.Any.removeInside
-        |> Config.withActionButtons Shape.Any.actionButtons
+        |> Config.withActionButtons Shape.Toolbar.toolbar
         |> Config.withJson { encoder = Encode.shape, decoder = Decode.shape }
         |> Config.withConnector
             { connect = Shape.Any.connect

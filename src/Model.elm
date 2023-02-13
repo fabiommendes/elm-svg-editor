@@ -15,23 +15,23 @@ import Util exposing (flip)
 import Vector2d
 
 
-type alias Model fig =
-    { scenes : UndoList (Scene.Scene fig)
+type alias Model =
+    { scenes : UndoList Scene.Scene
     , scale : Float
     , translation : Vector
     , bbox : BBox
     , drag : Draggable.State ( Key, SubKey )
     , error : Maybe String
-    , state : State fig
+    , state : State
     }
 
 
-focused : Model a -> BBox
+focused : Model -> BBox
 focused =
     .bbox
 
 
-focusTo : BBox -> Model a -> Model a
+focusTo : BBox -> Model -> Model
 focusTo bbox m =
     let
         growth =
@@ -45,7 +45,7 @@ focusTo bbox m =
     { m | scale = newScale, bbox = bbox }
 
 
-init : Model a
+init : Model
 init =
     { scenes = UndoList.fresh Scene.init
     , drag = Draggable.init
@@ -57,7 +57,7 @@ init =
     }
 
 
-changeState : Config fig -> State fig -> Model fig -> Model fig
+changeState : Config -> State -> Model -> Model
 changeState cfg st m =
     if st == m.state then
         m
@@ -79,76 +79,76 @@ changeState cfg st m =
                 { m | state = st }
 
 
-withState : State fig -> Model fig -> Model fig
+withState : State -> Model -> Model
 withState st m =
     { m | state = st }
 
 
-withError : String -> Model fig -> Model fig
+withError : String -> Model -> Model
 withError st m =
     { m | error = Just st }
 
 
-withFigures : String -> List (Figure a) -> Model a -> Model a
+withFigures : String -> List Figure -> Model -> Model
 withFigures prefix figs =
     updateScene (Scene.insertManyAs prefix figs)
 
 
-clearError : Model fig -> Model fig
+clearError : Model -> Model
 clearError m =
     { m | error = Nothing }
 
 
 {-| Transform present scene, putting it as the new present state
 -}
-updateScene : (Scene a -> Scene a) -> Model a -> Model a
+updateScene : (Scene -> Scene) -> Model -> Model
 updateScene f m =
     { m | scenes = m.scenes |> UndoList.new (f m.scenes.present) }
 
 
 {-| Transform present scene, without registering in history
 -}
-transformScene : (Scene a -> Scene a) -> Model a -> Model a
+transformScene : (Scene -> Scene) -> Model -> Model
 transformScene f ({ scenes } as m) =
     { m | scenes = { scenes | present = f scenes.present } }
 
 
-onScene : (Scene a -> b) -> Model a -> b
+onScene : (Scene -> b) -> Model -> b
 onScene f =
     scene >> f
 
 
-pushScene : Scene a -> Model a -> Model a
+pushScene : Scene -> Model -> Model
 pushScene s =
     updateScene (\_ -> s)
 
 
-scene : Model a -> Scene a
+scene : Model -> Scene
 scene =
     .scenes >> .present
 
 
-undo : Model fig -> Model fig
+undo : Model -> Model
 undo m =
     { m | scenes = UndoList.undo m.scenes }
 
 
-redo : Model fig -> Model fig
+redo : Model -> Model
 redo m =
     { m | scenes = UndoList.redo m.scenes }
 
 
-clearHistory : Model fig -> Model fig
+clearHistory : Model -> Model
 clearHistory m =
     { m | scenes = UndoList.fresh m.scenes.present }
 
 
-trimHistory : Model fig -> Model fig
+trimHistory : Model -> Model
 trimHistory ({ scenes } as m) =
     { m | scenes = { scenes | past = List.take 50 scenes.past } }
 
 
-notifyClick : Point -> Model fig -> Model fig
+notifyClick : Point -> Model -> Model
 notifyClick pt m =
     case m.state of
         ClickToInsert key factory ->

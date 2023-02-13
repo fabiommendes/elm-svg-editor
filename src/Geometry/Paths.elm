@@ -5,7 +5,7 @@ import Geometry exposing (vector)
 import Geometry.CtxPoint as PointExt exposing (CtxPoint, pointCtx)
 import Length exposing (inMeters, meters)
 import Lens exposing (vertices)
-import Shape.Types exposing (Fill(..))
+import Shape.Type exposing (Fill(..))
 import Vector2d
 
 

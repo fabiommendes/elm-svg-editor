@@ -6,7 +6,6 @@ import Browser.Dom
 import Config exposing (Config)
 import Decode
 import Draggable
-import Element as E
 import Encode
 import Figure
 import File
@@ -20,18 +19,19 @@ import Maybe.Extra as Maybe
 import Model as M exposing (Model)
 import Msg exposing (KeyBoardCommands(..), Msg(..))
 import Scene as S
+import Shape.Any
 import State exposing (State(..))
 import Task
 import Types exposing (..)
 import Vector2d
 
 
-update : Config a -> Msg a -> Model a -> ( Model a, Cmd (Msg a) )
+update : Config -> Msg -> Model -> ( Model, Cmd Msg )
 update cfg msg_ m =
     update_ cfg msg_ m.state (M.trimHistory m)
 
 
-update_ : Config a -> Msg a -> State a -> Model a -> ( Model a, Cmd (Msg a) )
+update_ : Config -> Msg -> State -> Model -> ( Model, Cmd Msg )
 update_ cfg msg_ state_ m =
     let
         return m_ =
@@ -116,7 +116,7 @@ update_ cfg msg_ state_ m =
                         onSceneTransform <| S.update key (Figure.move delta)
 
                 Just ( key, subKey ) ->
-                    onSceneTransform <| S.update key (cfg.config.innerMove subKey delta)
+                    onSceneTransform <| S.update key (Shape.Any.moveInside subKey delta)
 
                 _ ->
                     return m
@@ -142,7 +142,6 @@ update_ cfg msg_ state_ m =
 
         ( OnSelectFigure key _, Connecting Nothing ) ->
             let
-                scene : E.Element a -> Maybe (S.Scene a)
                 scene elem =
                     let
                         target =
@@ -152,7 +151,11 @@ update_ cfg msg_ state_ m =
                         Nothing
 
                     else if cfg.config.connection.canConnect elem then
-                        Just <| (S.insert target.model (M.scene m) |> (\( k, scn ) -> S.select ( k, [] ) scn))
+                        let
+                            ( k, scn ) =
+                                S.insert target.model (M.scene m)
+                        in
+                        Just <| S.select ( k, [] ) scn
 
                     else
                         Nothing
@@ -202,7 +205,7 @@ update_ cfg msg_ state_ m =
         ( OnDownloadRequest, _ ) ->
             let
                 data =
-                    Json.Encode.encode 2 (Encode.scene cfg.config.shapeEncoder (M.scene m))
+                    Json.Encode.encode 2 (Encode.scene (M.scene m))
             in
             ( m, File.Download.string "data.json" "application/json" data )
 
@@ -213,7 +216,7 @@ update_ cfg msg_ state_ m =
             ( m, File.toString file |> Task.perform OnUploadProcessed )
 
         ( OnUploadProcessed st, _ ) ->
-            case Json.Decode.decodeString (Decode.scene cfg.config.shapeDecoder) st of
+            case Json.Decode.decodeString Decode.scene st of
                 Ok scene ->
                     m
                         |> M.pushScene scene
@@ -242,7 +245,7 @@ update_ cfg msg_ state_ m =
                 Just elem ->
                     let
                         updater _ =
-                            cfg.config.innerRemove elem.subKey elem.model
+                            Shape.Any.removeInside elem.subKey elem.model
                     in
                     m |> update cfg (OnFigureUpdate "delete-item" updater elem.key)
 

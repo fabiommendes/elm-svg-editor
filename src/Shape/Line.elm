@@ -1,42 +1,22 @@
 module Shape.Line exposing
-    ( Line
-    , insertMiddlePoint
+    ( insertMiddlePoint
     , movePoint
     , removePoint
-    , toolbar
     , vertices
-    , view
     , withValidSubkey
     )
 
-import Attributes as SA
-import Config exposing (Params)
-import Element exposing (Element)
 import Figure exposing (Figure)
-import Geometry exposing (Point, Vector, point)
+import Geometry exposing (Point, Vector)
 import Geometry.CtxPoint exposing (midpoint, pointCtx, translateBy)
-import Geometry.Svg as S
-import Html as H exposing (Html)
-import Html.Attributes as HA
-import Html.Events as HE
+import Geometry.Paths exposing (pairs)
 import Lens as L
 import List.Extra as List
-import Material.Icons as I
 import Monocle.Lens as L
 import Msg exposing (Msg(..))
-import Shape.Types exposing (Fill(..), Line)
-import Shape.View exposing (circle)
-import Svg as S exposing (Svg)
-import Svg.Attributes as SA
+import Shape.Type exposing (Any(..), Fill(..), Line)
 import Types exposing (..)
-import Ui
-import Util exposing (flip, iff)
 import Vector2d
-import Geometry.Paths exposing (pairs)
-
-
-type alias Line =
-    Shape.Types.Line
 
 
 {-| Extract vertices as points
@@ -48,16 +28,16 @@ vertices pt =
 
 {-| Move the i-th internal point by the given displacement
 -}
-movePoint : Int -> Vector -> Figure Line -> Figure Line
-movePoint i delta ({ shape } as fig) =
+movePoint : Int -> Vector -> Line -> Figure -> Figure
+movePoint i delta shape fig =
     if i == -1 then
         { fig
             | translation = Vector2d.sum [ fig.translation, delta ]
-            , shape = { shape | vertices = shape.vertices |> List.map (translateBy (Vector2d.reverse delta)) }
+            , shape = LineModel { shape | vertices = shape.vertices |> List.map (translateBy (Vector2d.reverse delta)) }
         }
 
     else
-        fig |> L.shape.set { shape | vertices = shape.vertices |> List.updateAt i (translateBy delta) }
+        { fig | shape = LineModel { shape | vertices = shape.vertices |> List.updateAt i (translateBy delta) } }
 
 
 {-| Add new point in the i-th position
@@ -89,55 +69,6 @@ insertMiddlePoint i line =
 removePoint : Int -> Line -> Line
 removePoint i =
     L.modify L.vertices (List.removeAt i)
-
-
-{-| Render line
--}
-view : Params -> Element Line -> Svg (Msg Line)
-view cfg elem =
-    let
-        subKey =
-            elem.subKey |> List.getAt 0 |> Maybe.withDefault -1
-
-        points =
-            flip List.indexedMap (pointCtx ( 0, 0 ) :: elem.model.shape.vertices) <|
-                \j { point } ->
-                    let
-                        i =
-                            j - 1
-
-                        attrs =
-                            SA.class (iff (i == subKey) "point selected-point" "point")
-                                :: SA.class ("key-" ++ String.fromInt i)
-                                :: SA.dragChild [ i ] elem
-                    in
-                    circle cfg.pointRadius point attrs []
-    in
-    S.g (SA.classes "line" elem :: SA.transformElement elem :: SA.styles elem) <|
-        List.concat
-            [ Shape.View.linePaths elem
-            , points
-            , Shape.View.labels [] elem
-            ]
-
-
-{-| Renders toolbar buttons
--}
-toolbar : Element Line -> List (Html (Msg Line))
-toolbar elem =
-    let
-        action : Description -> (Line -> Line) -> H.Attribute (Msg Line)
-        action name f =
-            HE.onClick <| OnFigureUpdate name (\_ -> Just <| Figure.map f elem.model) elem.key
-    in
-    [ Ui.toolbarBtn [ action "add-point" (withValidSubkey elem.subKey insertMiddlePoint) ] I.add
-    , Ui.toolbarBtn [ action "remove-point" (withValidSubkey elem.subKey removePoint) ] I.remove
-    , H.span [ HA.class "px-2" ] [ H.text "|" ]
-    , Ui.toolbarBtn [ action "close-line" (L.fill.set Closed) ] I.pentagon
-    , Ui.toolbarBtn [ action "open-line" (L.fill.set Open) ] I.show_chart
-    , Ui.toolbarBtn [ action "left-line" (L.fill.set Left) ] I.stacked_line_chart
-    , Ui.toolbarBtn [ action "right-line" (L.fill.set Right), HA.style "transform" "scaleX(-1)" ] I.stacked_line_chart
-    ]
 
 
 {-| Compute transformation with point, if subkey is valid

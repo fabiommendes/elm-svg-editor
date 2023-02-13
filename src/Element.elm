@@ -2,6 +2,7 @@ module Element exposing (..)
 
 import Figure exposing (Figure)
 import Group exposing (GroupInfo)
+import Shape.Type exposing (Any)
 import Types exposing (..)
 
 
@@ -11,17 +12,17 @@ Element de-normalize data in figure/scene to avoid passing uncessary scene objec
 re-querying for Key in many contexts
 
 -}
-type alias Element fig =
+type alias Element =
     { key : Key
     , subKey : SubKey
     , group : Maybe GroupInfo
     , isSelected : Bool
-    , model : Figure fig
-    , shape : fig -- a copy from model.shape
+    , model : Figure
+    , shape : Any
     }
 
 
-map : (a -> b) -> Element a -> Element b
+map : (Any -> Any) -> Element -> Element
 map f ({ model } as elem) =
     let
         new =
@@ -36,6 +37,6 @@ map f ({ model } as elem) =
     }
 
 
-withShape : fig -> Element fig -> Element fig
+withShape : Any -> Element -> Element
 withShape shape ({ model } as elem) =
     { elem | model = { model | shape = shape } }

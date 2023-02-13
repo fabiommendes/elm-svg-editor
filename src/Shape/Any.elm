@@ -1,8 +1,7 @@
 module Shape.Any exposing
     ( line, point, text, image
     , andThen, map, moveInside
-    , actionButtons, view
-    , connect, endConnection, mapShape, mapShapeId, replaceConst, unwrap, removeInside
+    , connect, endConnection, mapShape, mapShapeId, removeInside, replaceConst, unwrap
     )
 
 {-|
@@ -27,23 +26,16 @@ module Shape.Any exposing
 -}
 
 import BaseTypes exposing (Direction(..))
-import Config exposing (Params)
-import Element
-import Figure
+import Element exposing (Element)
+import Figure exposing (Figure)
 import Geometry as G exposing (Vector)
 import Geometry.CtxPoint as CtxPoint exposing (distanceFrom, origin, purePoint)
-import Html exposing (Html, a)
 import Length exposing (inMeters)
 import List.Extra as List
-import Msg exposing (Msg)
 import Point2d
 import Scene exposing (Scene)
-import Shape.Image
 import Shape.Line
-import Shape.Point
-import Shape.Text
-import Shape.Types exposing (Any(..), Element, Figure, Fill(..), Map, Replace)
-import Svg exposing (Svg)
+import Shape.Type exposing (Any(..), Fill(..), Map, Replace)
 import Types exposing (..)
 import Vector2d
 
@@ -147,10 +139,9 @@ unwrap mapper fig =
 moveInside : SubKey -> Vector -> Figure -> Figure
 moveInside sub by fig =
     case ( fig.shape, sub ) of
-        ( LineModel obj, [ i ] ) ->
-            (fig |> Figure.replace obj)
-                |> Shape.Line.movePoint i by
-                |> Figure.map LineModel
+        ( LineModel shape, [ i ] ) ->
+            (fig |> Figure.replace (LineModel shape))
+                |> Shape.Line.movePoint i by shape
 
         _ ->
             fig
@@ -207,7 +198,7 @@ connect ({ model } as target) src =
             Nothing
 
 
-endConnection : Element -> Scene Any -> Scene Any
+endConnection : Element -> Scene -> Scene
 endConnection elem scene =
     case elem.shape of
         LineModel ln ->
@@ -221,35 +212,3 @@ endConnection elem scene =
 
         _ ->
             scene
-
-
-view : Params -> Element -> Svg (Msg Any)
-view cfg fig =
-    let
-        render viewFn msg data =
-            viewFn cfg (Element.map (\_ -> data) fig)
-                |> Svg.map (Msg.map msg)
-    in
-    case fig.model.shape of
-        PointModel pt ->
-            render Shape.Point.view PointModel pt
-
-        LineModel ln ->
-            render Shape.Line.view LineModel ln
-
-        TextModel str ->
-            render Shape.Text.view TextModel str
-
-        ImageModel href ->
-            render Shape.Image.view ImageModel href
-
-
-actionButtons : Element -> List (Html (Msg Any))
-actionButtons fig =
-    case fig.model.shape of
-        LineModel obj ->
-            Shape.Line.toolbar (Element.map (\_ -> obj) fig)
-                |> List.map (Html.map (Msg.map LineModel))
-
-        _ ->
-            []

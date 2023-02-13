@@ -21,9 +21,10 @@ module Scene exposing
     , pop
     , put
     , select
+    , selectedFullKey
     , selectedKey
     , selectedSubKey
-    , update, selectedFullKey
+    , update
     )
 
 import BaseTypes exposing (Direction(..))
@@ -47,20 +48,20 @@ import Util exposing (flip, iff)
 
 {-| Represent an Svg scene
 -}
-type Scene a
+type Scene
     = Scene
-        { objects : Objects a
+        { objects : Objects
         , groups : GroupData Key
         , order : List Key
         , selected : Maybe ( Key, SubKey )
         }
 
 
-type alias Objects a =
-    Dict Key ( Figure a, Maybe GroupInfo )
+type alias Objects =
+    Dict Key ( Figure, Maybe GroupInfo )
 
 
-init : Scene a
+init : Scene
 init =
     Scene
         { objects = Dict.empty
@@ -76,22 +77,22 @@ init =
 --
 
 
-selectedFullKey : Scene a -> Maybe ( Key, SubKey )
+selectedFullKey : Scene -> Maybe ( Key, SubKey )
 selectedFullKey (Scene s) =
     s.selected
 
 
-selectedSubKey : Scene a -> Maybe SubKey
+selectedSubKey : Scene -> Maybe SubKey
 selectedSubKey (Scene s) =
     s.selected |> Maybe.map Tuple.second
 
 
-selectedKey : Scene a -> Maybe Key
+selectedKey : Scene -> Maybe Key
 selectedKey (Scene s) =
     s.selected |> Maybe.map Tuple.first
 
 
-select : ( Key, SubKey ) -> Scene a -> Scene a
+select : ( Key, SubKey ) -> Scene -> Scene
 select =
     Just >> (L.compose scene L.selected).set
 
@@ -102,14 +103,14 @@ select =
 --
 
 
-getElement : Key -> Scene a -> Maybe (Element a)
+getElement : Key -> Scene -> Maybe Element
 getElement key data =
     objects.get data
         |> Dict.get key
         |> Maybe.map (\( fig, grp ) -> makeElement data key grp fig)
 
 
-getSelected : Scene a -> Maybe (Element a)
+getSelected : Scene -> Maybe Element
 getSelected (Scene s) =
     case s.selected of
         Just ( key, subKey ) ->
@@ -133,7 +134,7 @@ getSelected (Scene s) =
 
 {-| Return all elements in scene in order.
 -}
-elements : Scene a -> List (Element a)
+elements : Scene -> List Element
 elements data =
     keys data |> List.filterMap (flip getElement data)
 
@@ -149,7 +150,7 @@ elements data =
 getElement wraps figure in an object with more information and is usually more useful
 
 -}
-get : Key -> Scene a -> Maybe (Figure a)
+get : Key -> Scene -> Maybe Figure
 get key =
     scene.get >> .objects >> Dict.get key >> Maybe.map Tuple.first
 
@@ -159,7 +160,7 @@ get key =
 It is a no-op if figure does not exist. If you don't want this behavior, use put instead.
 
 -}
-update : Key -> (Figure a -> Figure a) -> Scene a -> Scene a
+update : Key -> (Figure -> Figure) -> Scene -> Scene
 update key func =
     let
         updater ( fig, grp ) =
@@ -173,7 +174,7 @@ update key func =
 If figure is not present, insert at the outmost layer.
 
 -}
-put : Key -> Figure a -> Scene a -> Scene a
+put : Key -> Figure -> Scene -> Scene
 put key fig (Scene s) =
     Scene
         { s
@@ -187,7 +188,7 @@ put key fig (Scene s) =
 It returns the key and the updated scene
 
 -}
-insert : Figure a -> Scene a -> ( Key, Scene a )
+insert : Figure -> Scene -> ( Key, Scene )
 insert =
     insertAs "obj"
 
@@ -197,7 +198,7 @@ insert =
 The key uses the given string as its named part.
 
 -}
-insertAs : String -> Figure a -> Scene a -> ( Key, Scene a )
+insertAs : String -> Figure -> Scene -> ( Key, Scene )
 insertAs prefix fig ((Scene s) as ss) =
     let
         key_ =
@@ -211,14 +212,14 @@ insertAs prefix fig ((Scene s) as ss) =
 
 {-| Include many figures into scene.
 -}
-insertMany : List (Figure a) -> Scene a -> Scene a
+insertMany : List Figure -> Scene -> Scene
 insertMany =
     insertManyAs "obj"
 
 
 {-| Include many figures into scene, using the given key prefix.
 -}
-insertManyAs : String -> List (Figure a) -> Scene a -> Scene a
+insertManyAs : String -> List Figure -> Scene -> Scene
 insertManyAs prefix figures (Scene s) =
     let
         firstKey =
@@ -239,7 +240,7 @@ insertManyAs prefix figures (Scene s) =
 
 {-| Discard figure with given key
 -}
-discard : Key -> Scene a -> Scene a
+discard : Key -> Scene -> Scene
 discard key (Scene s) =
     Scene
         { s
@@ -250,7 +251,7 @@ discard key (Scene s) =
 
 {-| Remove figure with given key and return it
 -}
-pop : Key -> Scene a -> ( Scene a, Maybe (Figure a) )
+pop : Key -> Scene -> ( Scene, Maybe Figure )
 pop key data =
     case get key data of
         Just fig ->
@@ -262,7 +263,7 @@ pop key data =
 
 {-| List of keys, from bottom layer to top
 -}
-keys : Scene a -> List Key
+keys : Scene -> List Key
 keys (Scene s) =
     s.order
 
@@ -275,19 +276,19 @@ keys (Scene s) =
 
 {-| Get list of keys for the given group label
 -}
-getGroup : Label -> Scene a -> List Key
+getGroup : Label -> Scene -> List Key
 getGroup label =
     groups.get >> Dict.get label >> Maybe.withDefault []
 
 
 {-| Return GroupInfo associated with key
 -}
-getGroupOf : Key -> Scene a -> Maybe GroupInfo
+getGroupOf : Key -> Scene -> Maybe GroupInfo
 getGroupOf key =
     objects.get >> Dict.get key >> Maybe.andThen Tuple.second
 
 
-moveGroup : Direction -> Key -> Scene a -> Scene a
+moveGroup : Direction -> Key -> Scene -> Scene
 moveGroup direction key data =
     groups.get data
         |> Group.move direction key
@@ -296,14 +297,14 @@ moveGroup direction key data =
 
 {-| Register key to group
 -}
-group : Key -> Label -> Scene a -> Scene a
+group : Key -> Label -> Scene -> Scene
 group key label data =
     Group.remove key (groups.get data)
         |> Group.insert key label
         |> flip updateGroups data
 
 
-groupMany : Dict Key Label -> Scene a -> Scene a
+groupMany : Dict Key Label -> Scene -> Scene
 groupMany grps data =
     (Group.toList (groups.get data) ++ Dict.toList grps)
         |> Group.fromList
@@ -312,7 +313,7 @@ groupMany grps data =
 
 {-| Update inner structure from groupings
 -}
-updateGroups : GroupData Key -> Scene a -> Scene a
+updateGroups : GroupData Key -> Scene -> Scene
 updateGroups groups_ (Scene s) =
     Scene
         { s
@@ -327,7 +328,7 @@ updateGroups groups_ (Scene s) =
 --
 
 
-moveLayer : Direction -> Key -> Scene a -> Scene a
+moveLayer : Direction -> Key -> Scene -> Scene
 moveLayer direction key (Scene s) =
     let
         run objs =
@@ -354,7 +355,7 @@ moveLayer direction key (Scene s) =
         |> Scene
 
 
-moveFrom : List Key -> Direction -> Key -> Scene a -> Scene a
+moveFrom : List Key -> Direction -> Key -> Scene -> Scene
 moveFrom keyList direction key ((Scene s) as scene_) =
     let
         hasKey =
@@ -399,7 +400,7 @@ orderWithKey key lst =
         lst ++ [ key ]
 
 
-makeElement : Scene a -> Key -> Maybe GroupInfo -> Figure a -> Element a
+makeElement : Scene -> Key -> Maybe GroupInfo -> Figure -> Element
 makeElement (Scene s) key group_ fig =
     case s.selected of
         Just ( key_, subKey ) ->
@@ -433,8 +434,8 @@ makeElement (Scene s) key group_ fig =
 
 scene :
     Lens
-        (Scene a)
-        { objects : Objects a
+        Scene
+        { objects : Objects
         , groups : GroupData Key
         , order : List Key
         , selected : Maybe ( Key, SubKey )
@@ -443,11 +444,11 @@ scene =
     Lens (\(Scene s) -> s) (\s _ -> Scene s)
 
 
-objects : Lens (Scene a) (Objects a)
+objects : Lens Scene Objects
 objects =
     L.compose scene L.objects
 
 
-groups : Lens (Scene a) (GroupData Key)
+groups : Lens Scene (GroupData Key)
 groups =
     L.compose scene L.groups

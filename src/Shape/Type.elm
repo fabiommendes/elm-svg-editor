@@ -1,19 +1,10 @@
-module Shape.Types exposing (..)
+module Shape.Type exposing (..)
 
 import Geometry.CtxPoint exposing (CtxPoint)
-import Figure
-import Element
+
 
 type alias Point =
     ()
-
-
-type alias Figure =
-    Figure.Figure Any
-
-
-type alias Element =
-    Element.Element Any
 
 
 type Any

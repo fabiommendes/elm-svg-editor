@@ -8,6 +8,7 @@ import Figure exposing (Figure)
 import File exposing (File)
 import Geometry exposing (..)
 import Length exposing (inMeters)
+import Shape.Type exposing (Any)
 import State exposing (State)
 import Types exposing (..)
 
@@ -23,9 +24,9 @@ type KeyBoardCommands
     | PanDown
 
 
-type Msg a
+type Msg
     = NoOp
-    | Batch (List (Msg a))
+    | Batch (List Msg)
     | OnErrorDetected String String
     | OnDragMsg (Draggable.Msg ( Key, SubKey ))
     | OnDragBy Vector
@@ -35,10 +36,10 @@ type Msg a
     | OnKeyPress KeyBoardCommands
     | OnFigureChangeOrder Direction Key
     | OnSelectFigure Key SubKey
-    | OnFigureCreate (Figure a)
+    | OnFigureCreate Figure
     | OnFigureDiscard Key
-    | OnFigureReplace (Figure a) Key
-    | OnFigureUpdate Description (() -> Maybe (Figure a)) Key
+    | OnFigureReplace Figure Key
+    | OnFigureUpdate Description (() -> Maybe Figure) Key
     | OnGroupInclude Label Key
     | OnGroupOrderChange Direction Key
     | OnChangeViewBox Description (BBox -> BBox)
@@ -46,12 +47,12 @@ type Msg a
     | OnUploadRequest
     | OnUploadCompleted File
     | OnUploadProcessed String
-    | OnStateChange (State a)
+    | OnStateChange State
     | OnUndo
     | OnRedo
 
 
-map : (a -> b) -> Msg a -> Msg b
+map : (Any -> Any) -> Msg -> Msg
 map f msg =
     case msg of
         NoOp ->
@@ -130,7 +131,7 @@ map f msg =
             OnRedo
 
 
-changeDragMsgsTo : Msg fig -> Msg fig -> Msg fig
+changeDragMsgsTo : Msg -> Msg -> Msg
 changeDragMsgsTo default msg =
     case msg of
         OnDragMsg _ ->
@@ -155,27 +156,27 @@ pan x y bb =
     BBox.translateBy (vector ( -step * x, -step * y )) bb
 
 
-panUp : Msg a
+panUp : Msg
 panUp =
     OnChangeViewBox "pan.up" (pan 0 1)
 
 
-panDown : Msg a
+panDown : Msg
 panDown =
     OnChangeViewBox "pan.down" (pan 0 -1)
 
 
-panRight : Msg a
+panRight : Msg
 panRight =
     OnChangeViewBox "pan.right" (pan -1 0)
 
 
-panLeft : Msg a
+panLeft : Msg
 panLeft =
     OnChangeViewBox "pan.left" (pan 1 0)
 
 
-panArrow : KeyBoardCommands -> Msg a
+panArrow : KeyBoardCommands -> Msg
 panArrow cmd =
     case cmd of
         PanRight ->

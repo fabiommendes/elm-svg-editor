@@ -14,7 +14,7 @@ import Ui
 import Util exposing (flip)
 
 
-removeLastItem : Scene fig -> Html (Msg a)
+removeLastItem : Scene -> Html Msg
 removeLastItem scene =
     Scene.keys scene
         |> List.last

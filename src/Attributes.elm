@@ -27,7 +27,7 @@ viewBox bb =
         )
 
 
-dragRoot : Element a -> List (Attribute (Msg a))
+dragRoot : Element -> List (Attribute Msg)
 dragRoot { key, model } =
     if model.editable && model.editable then
         SA.class "drag-root" :: touch ( key, [] )
@@ -36,7 +36,7 @@ dragRoot { key, model } =
         [ SA.class "drag-root", onClick (OnSelectFigure key []) ]
 
 
-dragChild : SubKey -> Element a -> List (Attribute (Msg a))
+dragChild : SubKey -> Element -> List (Attribute Msg)
 dragChild subKey parent =
     if parent.model.editable && parent.model.editable then
         SA.class "drag-child" :: touch ( parent.key, subKey )
@@ -45,22 +45,22 @@ dragChild subKey parent =
         [ SA.class "drag-child" ]
 
 
-touch : ( Key, SubKey ) -> List (Attribute (Msg a))
+touch : ( Key, SubKey ) -> List (Attribute Msg)
 touch id =
     Draggable.mouseTrigger id OnDragMsg :: Draggable.touchTriggers id OnDragMsg
 
 
-click : ( Key, SubKey ) -> List (Attribute (Msg a))
+click : ( Key, SubKey ) -> List (Attribute Msg)
 click id =
     [ Draggable.mouseTrigger id OnDragMsg ]
 
 
-styles : Element a -> List (Attribute msg)
+styles : Element -> List (Attribute msg)
 styles { model } =
     model.style |> List.map (\{ attr, value } -> toAttribute attr value)
 
 
-classes : String -> Element a -> Attribute msg
+classes : String -> Element -> Attribute msg
 classes name elem =
     SA.class
         << String.join " "
@@ -95,7 +95,7 @@ transformFrom scale angle translation =
         )
 
 
-transformElement : Element a -> Attribute msg
+transformElement : Element -> Attribute msg
 transformElement fig =
     transformFrom fig.model.scale fig.model.rotation fig.model.translation
 
@@ -105,7 +105,7 @@ trans st nums =
     st ++ "(" ++ String.join " " (List.map String.fromFloat nums) ++ ") "
 
 
-rootElement : String -> Element a -> List (Attribute (Msg a))
+rootElement : String -> Element -> List (Attribute Msg)
 rootElement name elem =
     classes name elem
         :: transformElement elem
@@ -115,7 +115,7 @@ rootElement name elem =
             ]
 
 
-childPart : SubKey -> String -> Element a -> List (Attribute (Msg a))
+childPart : SubKey -> String -> Element -> List (Attribute Msg)
 childPart sub name fig =
     classes name fig
         :: transformElement fig

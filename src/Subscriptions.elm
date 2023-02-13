@@ -1,15 +1,15 @@
 module Subscriptions exposing (..)
 
 import Browser.Events
+import Config exposing (Config)
+import Decode exposing (keyPress)
 import Draggable
 import Model exposing (Model)
 import Msg exposing (Msg(..))
 import Types exposing (..)
-import Decode exposing (keyPress)
-import Config exposing (Config)
 
 
-subscriptions : Config a -> Model a -> Sub (Msg a)
+subscriptions : Config -> Model -> Sub Msg
 subscriptions _ model =
     Sub.batch
         [ Draggable.subscriptions OnDragMsg model.drag

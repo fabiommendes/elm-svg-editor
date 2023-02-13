@@ -2,12 +2,10 @@ module Ui exposing (..)
 
 import BoundingBox2d as BBox
 import Config exposing (Config)
-import Geometry exposing (vector)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
 import Html.Extra as Html
-import Length exposing (inMeters)
 import Material.Icons as I
 import Material.Icons.Types exposing (Coloring(..))
 import Msg exposing (Msg(..))
@@ -16,7 +14,7 @@ import Types exposing (..)
 
 {-| Zoom and pan controls
 -}
-controls : Config a -> Html (Msg a)
+controls : Config -> Html Msg
 controls cfg =
     div [ class "relative" ]
         [ if cfg.params.zoomControls then
@@ -37,7 +35,7 @@ controls cfg =
 Must be placed inside a container with `position: relative` (or class=relative, in tailwindcss)
 
 -}
-zoomButtons : Html (Msg a)
+zoomButtons : Html Msg
 zoomButtons =
     let
         btn attrs i =
@@ -62,23 +60,13 @@ zoomButtons =
 Must be placed inside a container with `position: relative` (or class=relative, in tailwindcss)
 
 -}
-panButtons : Html (Msg a)
+panButtons : Html Msg
 panButtons =
     let
         btn attrs i =
             div
                 (class "bg-white rounded-lg w-6 h-6 m-1 p1 shadow-lg text-lg text-center font-bold" :: attrs)
                 [ div [ class "m-auto" ] [ i 24 Inherit ] ]
-
-        move x y bb =
-            let
-                step =
-                    BBox.dimensions bb
-                        |> Tuple.first
-                        |> inMeters
-                        |> (*) 0.15
-            in
-            BBox.translateBy (vector ( -step * x, -step * y )) bb
     in
     div [ class "absolute right-0 bottom-0" ]
         [ div [ class "relative w-24 h-24" ]

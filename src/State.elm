@@ -6,18 +6,19 @@ module State exposing (..)
 import Figure exposing (Figure)
 import Geometry exposing (Point)
 import Types exposing (Key)
+import Shape.Type exposing (Any)
 
 
 {-| The current mode of operation
 -}
-type State fig
+type State
     = StandardEditor
     | ReadOnlyView
-    | ClickToInsert String (Point -> Figure fig)
+    | ClickToInsert String (Point -> Figure)
     | Connecting (Maybe Key)
 
 
-map : (a -> b) -> State a -> State b
+map : (Any -> Any) -> State -> State
 map f st =
     case st of
         StandardEditor ->
@@ -33,7 +34,7 @@ map f st =
             Connecting key
 
 
-isSimilarTo : State a -> State b -> Bool
+isSimilarTo : State -> State -> Bool
 isSimilarTo st1 st2 =
     case ( st1, st2 ) of
         ( StandardEditor, StandardEditor ) ->
@@ -52,7 +53,7 @@ isSimilarTo st1 st2 =
             False
 
 
-isClickToInsert : State fig -> Bool
+isClickToInsert : State -> Bool
 isClickToInsert state =
     case state of
         ClickToInsert _ _ ->
@@ -62,7 +63,7 @@ isClickToInsert state =
             False
 
 
-isConnecting : State fig -> Bool
+isConnecting : State -> Bool
 isConnecting state =
     case state of
         Connecting _ ->

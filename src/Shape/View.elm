@@ -1,17 +1,109 @@
 module Shape.View exposing (..)
 
 import Attributes as SA
-import Element exposing (Element)
-import Geometry exposing (fromPoint)
+import Config exposing (Params)
+import Element
+import Geometry exposing (fromPoint, point)
 import Geometry.CtxPoint exposing (CtxPoint, pointCtx)
 import Geometry.Paths exposing (smooth, smooth2)
 import Geometry.SvgPath exposing (ghostLinePath, pathD)
-import Html
-import Msg exposing (Msg)
-import Shape.Types exposing (Fill(..), Line)
+import Group exposing (GroupInfo)
+import Html as H
+import Html.Extra as H
+import List.Extra as List
+import Msg
+import Shape.Type exposing (..)
 import Svg as S exposing (Attribute, Svg)
 import Svg.Attributes as SA
 import Types exposing (..)
+import Util exposing (flip, iff)
+
+
+type alias Element =
+    Element.Element
+
+
+type alias Msg =
+    Msg.Msg
+
+
+view : Params -> Element -> Svg Msg
+view cfg elem =
+    case elem.shape of
+        PointModel _ ->
+            viewAsPoint cfg elem.group elem.model.label elem.isSelected (SA.rootElement "point" elem) (point ( 0, 0 ))
+
+        LineModel shape ->
+            let
+                subKey =
+                    elem.subKey |> List.getAt 0 |> Maybe.withDefault -1
+
+                points =
+                    flip List.indexedMap (pointCtx ( 0, 0 ) :: shape.vertices) <|
+                        \j { point } ->
+                            let
+                                i =
+                                    j - 1
+
+                                attrs =
+                                    SA.class (iff (i == subKey) "point selected-point" "point")
+                                        :: SA.class ("key-" ++ String.fromInt i)
+                                        :: SA.dragChild [ i ] elem
+                            in
+                            circle cfg.pointRadius point attrs []
+            in
+            S.g (SA.classes "line" elem :: SA.transformElement elem :: SA.styles elem) <|
+                List.concat
+                    [ linePaths (SA.dragRoot elem) shape
+                    , points
+                    , labels [] elem
+                    ]
+
+        TextModel shape ->
+            S.g (SA.rootElement "text" elem)
+                [ S.text_ [ SA.class "background" ] [ S.text shape.content ]
+                , S.text_ [] [ S.text shape.content ]
+                ]
+
+        ImageModel shape ->
+            let
+                attrs =
+                    SA.width (String.fromFloat shape.width)
+                        :: SA.xlinkHref shape.href
+                        :: SA.rootElement "image" elem
+            in
+            S.image attrs []
+
+
+viewAsPoint : Params -> Maybe GroupInfo -> String -> Bool -> List (Attribute Msg) -> Geometry.Point -> Svg Msg
+viewAsPoint cfg group name isSelected attrs pt =
+    case ( group, name ) of
+        ( Just { index, label }, _ ) ->
+            S.g attrs
+                [ circle cfg.pointRadius pt [] []
+                , S.text_ [ SA.class "group-index" ] [ S.text (String.fromInt (index + 1)) ]
+                , if isSelected && name == "" then
+                    S.text_ [ SA.class "group-label" ] [ S.text ("(" ++ label ++ ")") ]
+
+                  else if isSelected then
+                    S.text_ [ SA.class "group-label" ] [ S.text ("(" ++ label ++ " / " ++ name ++ ")") ]
+
+                  else
+                    H.nothing
+                ]
+
+        ( _, "" ) ->
+            circle cfg.pointRadius pt attrs []
+
+        ( _, _ ) ->
+            S.g attrs
+                [ circle cfg.pointRadius pt [] []
+                , if isSelected then
+                    S.text_ [ SA.class "group-label" ] [ S.text ("(" ++ name ++ ")") ]
+
+                  else
+                    H.nothing
+                ]
 
 
 circle : Float -> Geometry.Point -> List (Attribute msg) -> List (Svg msg) -> Svg msg
@@ -34,7 +126,7 @@ Usually, those will be placed alongside a circle sibling inside a g [][...] node
 necessary transforms.
 
 -}
-labels : List (Html.Attribute msg) -> Element a -> List (Svg msg)
+labels : List (H.Attribute msg) -> Element -> List (Svg msg)
 labels attrs elem =
     let
         indexLabel idx =
@@ -57,8 +149,8 @@ labels attrs elem =
             []
 
 
-linePaths : Element Line -> List (Svg (Msg Line))
-linePaths ({ shape } as elem) =
+linePaths : List (H.Attribute msg) -> Line -> List (Svg msg)
+linePaths attrs shape =
     let
         dAttribute =
             SA.d (pathD (shape.fill == Closed) line)
@@ -76,7 +168,7 @@ linePaths ({ shape } as elem) =
                 "foreground"
     in
     (S.path [ dAttribute, SA.class "background" ] [] :: ghostLinePaths shape.fill line)
-        ++ [ S.path (dAttribute :: SA.class foregroundClass :: SA.dragRoot elem) [] ]
+        ++ [ S.path (dAttribute :: SA.class foregroundClass :: attrs) [] ]
 
 
 ghostLinePaths : Fill -> List CtxPoint -> List (Svg msg)

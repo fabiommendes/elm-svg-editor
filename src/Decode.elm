@@ -11,11 +11,7 @@ import Json.Decode.Pipeline exposing (..)
 import Length exposing (meters)
 import Msg exposing (KeyBoardCommands(..), Msg(..))
 import Scene exposing (Scene)
-import Shape.Image
-import Shape.Line
-import Shape.Point
-import Shape.Text
-import Shape.Types as Shape
+import Shape.Type as Shape
 import Types exposing (..)
 import Util exposing (flip)
 
@@ -63,7 +59,7 @@ label =
     string
 
 
-keyPress : Decoder (Msg a)
+keyPress : Decoder Msg
 keyPress =
     map3 (\x y z -> ( x, y, z ))
         (field "ctrlKey" bool)
@@ -131,7 +127,7 @@ shape =
             )
 
 
-image : Decoder Shape.Image.Image
+image : Decoder Shape.Image
 image =
     withType "image" <|
         (succeed Shape.Image
@@ -140,7 +136,7 @@ image =
         )
 
 
-line : Decoder Shape.Line.Line
+line : Decoder Shape.Line
 line =
     withType "line" <|
         (succeed Shape.Line
@@ -184,13 +180,13 @@ lineFill =
             )
 
 
-point : Decoder Shape.Point.Point
+point : Decoder Shape.Point
 point =
     withType "point" <|
         succeed ()
 
 
-text : Decoder Shape.Text.Text
+text : Decoder Shape.Text
 text =
     withType "text" <|
         (succeed Shape.Text
@@ -204,8 +200,8 @@ text =
 ---
 
 
-figure : Decoder a -> Decoder (Figure a)
-figure shapeDec =
+figure : Decoder Figure
+figure =
     let
         style =
             list string
@@ -227,18 +223,18 @@ figure shapeDec =
         |> required "editable" bool
         |> required "visible" bool
         |> required "style" (list style)
-        |> required "data" shapeDec
+        |> required "data" shape
 
 
-scene : Decoder a -> Decoder (Scene a)
-scene shapeDec =
+scene : Decoder Scene
+scene =
     let
-        keyfig : Decoder ( Key, Figure a )
+        keyfig : Decoder ( Key, Figure )
         keyfig =
             field "key" key
-                |> andThen (\k -> map (Tuple.pair k) (figure shapeDec))
+                |> andThen (\k -> map (Tuple.pair k) figure)
 
-        makeScene : List ( Key, Figure a ) -> GroupData Key -> Scene a
+        makeScene : List ( Key, Figure ) -> GroupData Key -> Scene
         makeScene figs grps =
             let
                 expand lst =

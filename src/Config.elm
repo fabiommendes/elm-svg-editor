@@ -1,7 +1,6 @@
 module Config exposing
     ( Config
     , Params
-    , ViewFunction
     , init
     , makeDragConfig
     , withActionButtons
@@ -9,11 +8,8 @@ module Config exposing
     , withControls
     , withDefaultFigure
     , withGroups
-    , withInnerMove
-    , withInnerRemove
     , withJson
     , withPointRadius
-    , withViewFunction
     )
 
 import Draggable
@@ -28,32 +24,20 @@ import Lens as L
 import Monocle.Lens as L
 import Msg exposing (Msg(..))
 import Scene exposing (Scene)
+import Shape.Type exposing (Any)
 import State exposing (State(..))
-import Svg exposing (Svg)
 import Types exposing (Key, SubKey)
 
 
-type alias ViewFunction fig =
-    Params -> Element fig -> Svg (Msg fig)
-
-
-type alias InnerMoveFunction fig =
-    SubKey -> Vector -> Figure fig -> Figure fig
-
-
-type alias InnerRemoveFunction fig =
-    SubKey -> Figure fig -> Maybe (Figure fig)
-
-
-type alias FigureConnection fig =
-    { connect : Element fig -> Element fig -> Maybe (Figure fig)
-    , end : Element fig -> Scene fig -> Scene fig
-    , canConnect : Element fig -> Bool
+type alias FigureConnection =
+    { connect : Element -> Element -> Maybe Figure
+    , end : Element -> Scene -> Scene
+    , canConnect : Element -> Bool
     }
 
 
-type alias Config fig =
-    { config : Cfg fig
+type alias Config =
+    { config : Cfg
     , params : Params
     }
 
@@ -65,16 +49,13 @@ It is necessary to make Model and Msg generic on figure type in order to avoid c
 Most users will probably not care about these.
 
 -}
-type alias Cfg fig =
-    { drag : Draggable.Config ( Key, SubKey ) (Msg fig)
-    , view : ViewFunction fig
-    , innerMove : InnerMoveFunction fig
-    , innerRemove : InnerRemoveFunction fig
-    , actionButtons : Element fig -> List (Html (Msg fig))
-    , shapeEncoder : fig -> Value
-    , shapeDecoder : Decoder fig
-    , defaultFigure : Figure fig
-    , connection : FigureConnection fig
+type alias Cfg =
+    { drag : Draggable.Config ( Key, SubKey ) (Msg)
+    , actionButtons : Element -> List (Html (Msg))
+    , shapeEncoder : Any -> Value
+    , shapeDecoder : Decoder Any
+    , defaultFigure : Figure
+    , connection : FigureConnection
     }
 
 
@@ -93,7 +74,7 @@ type alias Params =
     }
 
 
-init : Figure fig -> Config fig
+init : Figure -> Config
 init fig =
     { params = initParams
     , config = initConfig fig
@@ -111,14 +92,11 @@ initParams =
     }
 
 
-initConfig : Figure fig -> Cfg fig
+initConfig : Figure -> Cfg
 initConfig fig =
     { drag = makeDragConfig OnDragBy OnSelectFigure
     , shapeEncoder = \_ -> Json.Encode.null
     , shapeDecoder = Json.Decode.fail "no shape decoder provided"
-    , view = \_ _ -> Svg.text_ [] [ Svg.text "no view function was provided" ]
-    , innerMove = \_ _ x -> x
-    , innerRemove = \_ _ -> Nothing
     , actionButtons = \_ -> []
     , defaultFigure = fig
     , connection =
@@ -129,52 +107,37 @@ initConfig fig =
     }
 
 
-withViewFunction : ViewFunction fig -> Config fig -> Config fig
-withViewFunction move ({ config } as cfg) =
-    { cfg | config = { config | view = move } }
-
-
-withInnerMove : InnerMoveFunction fig -> Config fig -> Config fig
-withInnerMove move ({ config } as cfg) =
-    { cfg | config = { config | innerMove = move } }
-
-
-withInnerRemove : InnerRemoveFunction fig -> Config fig -> Config fig
-withInnerRemove remove ({ config } as cfg) =
-    { cfg | config = { config | innerRemove = remove } }
-
-
-withActionButtons : (Element fig -> List (Html (Msg fig))) -> Config fig -> Config fig
+withActionButtons : (Element -> List (Html (Msg))) -> Config -> Config
 withActionButtons buttons ({ config } as cfg) =
     { cfg | config = { config | actionButtons = buttons } }
 
 
-withDefaultFigure : Figure fig -> Config fig -> Config fig
+withDefaultFigure : Figure -> Config -> Config
 withDefaultFigure fig ({ config } as cfg) =
     { cfg | config = { config | defaultFigure = fig } }
 
 
-withConnector : FigureConnection fig -> Config fig -> Config fig
+withConnector : FigureConnection -> Config -> Config
 withConnector conn ({ config } as cfg) =
     { cfg | config = { config | connection = conn } }
 
 
-withJson : { decoder : Decoder fig, encoder : fig -> Json.Encode.Value } -> Config fig -> Config fig
+withJson : { decoder : Decoder Any, encoder : Any -> Json.Encode.Value } -> Config -> Config
 withJson data ({ config } as cfg) =
     { cfg | config = { config | shapeDecoder = data.decoder, shapeEncoder = data.encoder } }
 
 
-withGroups : List Key -> Config fig -> Config fig
+withGroups : List Key -> Config -> Config
 withGroups =
     (L.compose L.params L.groups).set
 
 
-withPointRadius : Float -> Config fig -> Config fig
+withPointRadius : Float -> Config -> Config
 withPointRadius r =
     L.modify L.params <| \p -> { p | pointRadius = r }
 
 
-withControls : { zoom : Bool, pan : Bool, drag : Bool } -> Config fig -> Config fig
+withControls : { zoom : Bool, pan : Bool, drag : Bool } -> Config -> Config
 withControls value =
     L.modify L.params <| \p -> { p | zoomControls = value.zoom, panControls = value.pan, panWithTouch = value.drag }
 

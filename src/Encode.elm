@@ -11,11 +11,7 @@ import List.Extra as List
 import Maybe.Extra as Maybe
 import Scene exposing (Scene)
 import Shape.Any
-import Shape.Image
-import Shape.Line
-import Shape.Point
-import Shape.Text
-import Shape.Types as Shape
+import Shape.Type as Shape
 import Types exposing (..)
 
 
@@ -58,7 +54,7 @@ shape =
     Shape.Any.unwrap { line = line, text = text, point = point, image = image }
 
 
-image : Shape.Image.Image -> Value
+image : Shape.Image -> Value
 image obj =
     object
         [ ( "type", string "image" )
@@ -67,7 +63,7 @@ image obj =
         ]
 
 
-line : Shape.Line.Line -> Value
+line : Shape.Line -> Value
 line obj =
     object
         [ ( "type", string "line" )
@@ -86,13 +82,13 @@ pointExt pt =
             ]
 
 
-point : Shape.Point.Point -> Value
+point : Shape.Point -> Value
 point _ =
     object
         [ ( "type", string "point" ) ]
 
 
-text : Shape.Text.Text -> Value
+text : Shape.Text -> Value
 text obj =
     object
         [ ( "type", string "text" )
@@ -106,8 +102,8 @@ text obj =
 ---
 
 
-figure : (a -> Value) -> Figure a -> Value
-figure shapeEnc obj =
+figure : Figure -> Value
+figure obj =
     object
         [ ( "label", string obj.label )
         , ( "scale", float obj.scale )
@@ -116,12 +112,12 @@ figure shapeEnc obj =
         , ( "editable", bool obj.editable )
         , ( "visible", bool obj.visible )
         , ( "style", list (list string) (obj.style |> List.map (\{ attr, value } -> [ attr, value ])) )
-        , ( "data", shapeEnc obj.shape )
+        , ( "data", shape obj.shape )
         ]
 
 
-scene : (a -> Value) -> Scene a -> Value
-scene shapeEnc obj =
+scene : Scene -> Value
+scene obj =
     let
         elements =
             Scene.elements obj
@@ -139,7 +135,7 @@ scene shapeEnc obj =
         objects : List Value
         objects =
             elements
-                |> List.map (\e -> figure shapeEnc e.model |> withKey e.key)
+                |> List.map (\e -> figure e.model |> withKey e.key)
 
         withKey k value =
             D.decodeValue (D.keyValuePairs D.value) value
