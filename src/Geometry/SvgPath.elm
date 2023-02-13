@@ -2,7 +2,7 @@ module Geometry.SvgPath exposing (..)
 
 import Geometry exposing (fromPoint)
 import Geometry.Paths exposing (ghostLine)
-import Geometry.CtxPoint exposing (CtxPoint, pointEx)
+import Geometry.CtxPoint exposing (CtxPoint, pointCtx)
 import List.Extra as List
 import Svg.PathD as D
 import Util exposing (iff)
@@ -19,7 +19,7 @@ pathD fill line =
                 |> D.pathD
 
         _ ->
-            pathD fill [ pointEx ( 0, 0 ) ]
+            pathD fill [ pointCtx ( 0, 0 ) ]
 
 
 closePath : List D.Segment -> List D.Segment
@@ -38,7 +38,7 @@ ghostLinePath factor pts =
         ( origin, vertices ) =
             ghostLine factor pts
                 |> List.uncons
-                |> Maybe.withDefault ( pointEx ( 0, 0 ), [] )
+                |> Maybe.withDefault ( pointCtx ( 0, 0 ), [] )
     in
     D.pathD <|
         (D.M (fromPoint origin.point) :: List.map (.point >> fromPoint >> D.L) vertices)

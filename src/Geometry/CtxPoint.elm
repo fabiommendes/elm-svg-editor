@@ -29,8 +29,8 @@ type alias Props =
     }
 
 
-pointEx : ( Float, Float ) -> CtxPoint
-pointEx =
+pointCtx : ( Float, Float ) -> CtxPoint
+pointCtx =
     point >> purePoint
 
 

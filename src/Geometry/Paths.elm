@@ -2,8 +2,9 @@ module Geometry.Paths exposing (..)
 
 import Direction2d
 import Geometry exposing (vector)
-import Geometry.CtxPoint as PointExt exposing (CtxPoint, pointEx)
+import Geometry.CtxPoint as PointExt exposing (CtxPoint, pointCtx)
 import Length exposing (inMeters, meters)
+import Lens exposing (vertices)
 import Vector2d
 
 
@@ -143,7 +144,7 @@ ghostLine factor line =
                 _ ->
                     []
     in
-    do Nothing (pointEx ( 0, 0 ) :: line)
+    do Nothing (pointCtx ( 0, 0 ) :: line)
 
 
 pairsWithExtrapolation : List CtxPoint -> List ( CtxPoint, CtxPoint )
@@ -160,3 +161,20 @@ pairsWithExtrapolation vertices =
 
         [] ->
             []
+
+
+pairsClosing : List CtxPoint -> List ( CtxPoint, CtxPoint )
+pairsClosing pts =
+    let
+        do first vertices =
+            case ( first, vertices ) of
+                ( Just _, pt1 :: pt2 :: rest ) ->
+                    ( pt1, pt2 ) :: do first (pt2 :: rest)
+
+                ( Just start, [ pt1 ] ) ->
+                    [ ( pt1, start ) ]
+
+                _ ->
+                    pairsWithExtrapolation vertices
+    in
+    do (List.head pts) pts

@@ -27,6 +27,8 @@ withExample m =
             [ F.image 20 "https://i.imgur.com/RyBdN56.jpeg"
                 |> F.move (vector ( 0, 0 ))
                 |> F.editable False
+
+                , F.line [(3, 3), (5, 5), (10, 2), (5, 15)]
             ]
 
 

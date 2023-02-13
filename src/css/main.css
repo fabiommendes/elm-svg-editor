@@ -38,10 +38,15 @@ body {
     transition: fill stroke-width stroke-opacity 250ms;
 }
 
+.line-figure .point {
+    filter: brightness(150%)
+}
+
 .point-figure .group-index,
 .point .group-index,
 .point-figure .group-label,
-.point .group-label {
+.point .group-label,
+.label {
     fill: var(--color-contrast);
     stroke: none;
     font-size: 0.4;
@@ -54,8 +59,9 @@ body {
     transform: translate(0, 0.15px);
 }
 
-.point-figure .group-label,
-.point .group-label {
+.point-figure .label,
+.point .label,
+.label {
     transform: translate(0.0px, 0.55px);
     fill: var(--color-selected);
 }
@@ -91,6 +97,14 @@ body {
     stroke: var(--color-contrast);
     filter: blur(0.05px);
     stroke-width: 0.25;
+}
+
+.line-figure.selected-figure .line-closed {
+    fill: var(--color-selected);
+}
+
+.line-figure .line-closed {
+    fill: var(--color-primary);
 }
 
 .line-figure.selected-figure {

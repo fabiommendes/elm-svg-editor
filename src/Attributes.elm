@@ -60,20 +60,23 @@ styles { model } =
     model.style |> List.map (\{ attr, value } -> toAttribute attr value)
 
 
-classes : String -> Element a -> List (Attribute msg)
+classes : String -> Element a -> Attribute msg
 classes name elem =
-    SA.class ("key-" ++ showKey elem.key)
-        :: SA.class (name ++ "-figure")
-        :: (if elem.isSelected then
-                if elem.subKey == [] then
-                    [ SA.class "selected-figure selected-root" ]
+    SA.class
+        << String.join " "
+    <|
+        ("key-" ++ showKey elem.key)
+            :: (name ++ "-figure")
+            :: (if elem.isSelected then
+                    if elem.subKey == [] then
+                        [ "selected-figure selected-root" ]
+
+                    else
+                        [ "selected-figure selected-child" ]
 
                 else
-                    [ SA.class "selected-figure selected-child" ]
-
-            else
-                []
-           )
+                    []
+               )
 
 
 transformFrom : Float -> Angle -> Vector -> Attribute msg
@@ -104,20 +107,20 @@ trans st nums =
 
 rootElement : String -> Element a -> List (Attribute (Msg a))
 rootElement name elem =
-    transformElement elem
+    classes name elem
+        :: transformElement elem
         :: List.concat
             [ dragRoot elem
-            , classes name elem
             , styles elem
             ]
 
 
 childPart : SubKey -> String -> Element a -> List (Attribute (Msg a))
 childPart sub name fig =
-    transformElement fig
+    classes name fig
+        :: transformElement fig
         :: SA.class "child"
         :: List.concat
             [ dragChild sub fig
-            , classes name fig
             , styles fig
             ]

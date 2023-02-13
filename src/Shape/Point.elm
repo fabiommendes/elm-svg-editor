@@ -1,19 +1,21 @@
-module Shape.Point exposing (Point, circle, view, viewAsPoint)
+module Shape.Point exposing (Point, view, viewAsPoint)
 
 import Attributes as SA
 import Config exposing (Params)
 import Element exposing (Element)
-import Geometry exposing (fromPoint, point)
+import Geometry exposing (point)
 import Group exposing (GroupInfo)
 import Html.Extra as H
 import Msg exposing (Msg)
+import Shape.Types
+import Shape.View exposing (circle)
 import Svg as S exposing (Attribute, Svg)
 import Svg.Attributes as SA
 import Types exposing (..)
 
 
 type alias Point =
-    ()
+    Shape.Types.Point
 
 
 view : Params -> Element a -> Svg (Msg a)
@@ -50,15 +52,3 @@ viewAsPoint cfg group name isSelected attrs pt =
                   else
                     H.nothing
                 ]
-
-
-circle : Float -> Geometry.Point -> List (Attribute msg) -> List (Svg msg) -> Svg msg
-circle r pt attrs =
-    let
-        ( x, y ) =
-            fromPoint pt
-
-        num =
-            String.fromFloat
-    in
-    S.circle ([ SA.cx (num x), SA.cy (num y), SA.r (num r) ] ++ attrs)

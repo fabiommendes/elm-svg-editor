@@ -4,15 +4,14 @@ import Attributes as A
 import Config exposing (Params)
 import Element exposing (Element)
 import Msg exposing (Msg)
+import Shape.Types
 import Svg as S exposing (Svg)
 import Svg.Attributes as SA
 import Types exposing (..)
 
 
 type alias Image =
-    { href : String
-    , width : Float
-    }
+    Shape.Types.Image
 
 
 view : Params -> Element Image -> Svg (Msg Image)

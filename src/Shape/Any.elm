@@ -3,7 +3,7 @@ module Shape.Any exposing
     , line, point, text, image
     , andThen, map, moveInside
     , actionButtons, view
-    , connect, endConnection, mapShapeId, mapShape, unwrap, replaceConst
+    , connect, endConnection, mapShape, mapShapeId, replaceConst, unwrap
     )
 
 {-|
@@ -35,14 +35,15 @@ import Geometry as G exposing (Point, Vector)
 import Geometry.CtxPoint as CtxPoint exposing (distanceFrom, origin, purePoint)
 import Html exposing (Html, a)
 import Length exposing (inMeters)
-import Lens as L
-import Monocle.Lens as L
+import List.Extra as List
 import Msg exposing (Msg)
+import Point2d
 import Scene exposing (Scene)
-import Shape.Image exposing (Image)
-import Shape.Line exposing (Fill(..), Line)
+import Shape.Image
+import Shape.Line
 import Shape.Point exposing (Point)
 import Shape.Text exposing (Text)
+import Shape.Types exposing (Fill(..), Image, Line, Point, Text)
 import Svg exposing (Svg)
 import Types exposing (..)
 import Vector2d
@@ -106,13 +107,20 @@ point pt =
 
 line : List ( Float, Float ) -> Figure
 line data =
+    let
+        ( head, tail ) =
+            List.uncons data
+                |> Maybe.withDefault ( ( 0, 0 ), [] )
+                |> Tuple.mapBoth G.vector (List.map G.point)
+    in
     Figure.new
         (LineModel
-            { vertices = List.map (G.point >> purePoint) data
+            { vertices = List.map (Point2d.translateBy (Vector2d.reverse head) >> purePoint) tail
             , duplicateLast = True
-            , fill = Open
+            , fill = Closed
             }
         )
+        |> Figure.move head
 
 
 image : Float -> String -> Figure
@@ -171,8 +179,9 @@ moveInside : SubKey -> Vector -> Figure -> Figure
 moveInside sub by fig =
     case ( fig.shape, sub ) of
         ( LineModel obj, [ i ] ) ->
-            fig
-                |> L.shape.set (LineModel <| Shape.Line.movePoint i by obj)
+            (fig |> Figure.replace obj)
+                |> Shape.Line.movePoint i by
+                |> Figure.map LineModel
 
         _ ->
             fig
@@ -260,7 +269,7 @@ actionButtons : Element -> List (Html (Msg Any))
 actionButtons fig =
     case fig.model.shape of
         LineModel obj ->
-            Shape.Line.actionButtons obj (Element.map (\_ -> obj) fig)
+            Shape.Line.actionButtons (Element.map (\_ -> obj) fig)
                 |> List.map (Html.map (Msg.map LineModel))
 
         _ ->

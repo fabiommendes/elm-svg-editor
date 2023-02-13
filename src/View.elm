@@ -150,20 +150,19 @@ contextToolbar cfg scene elem =
                 ]
 
         lockButtonAttrs =
-            (updateFigureMsg "editable.toggle" <| L.modify editable not) :: iff elem.model.editable [] [ HA.class "btn-active" ]
+            [ updateFigureMsg "editable.toggle" <| L.modify editable not ]
     in
     div []
         [ div [ class "shadow-lg bg-slate-900 text-white z-10" ]
             [ div [ class "p-2 flex max-w-2xl m-auto" ]
                 [ div []
-                    [ text <| "selected key: " ++ showKey elem.key
-                    ]
+                    (cfg.config.actionButtons elem)
                 , div [ class "flex-1 text-slate-300 text-right px-2" ] [ text "" ]
                 , div [ class "" ]
                     [ Ui.toolbarBtn [ selectedMsg (OnFigureChangeOrder Up) ] IR.move_up
                     , Ui.toolbarBtn [ selectedMsg (OnFigureChangeOrder Down) ] IR.move_down
                     , Ui.toolbarBtn [ selectedMsg OnFigureDiscard ] I.delete
-                    , Ui.toolbarBtn lockButtonAttrs I.lock
+                    , Ui.selectedToolbarBtn (not elem.model.editable) lockButtonAttrs I.lock
                     ]
                 ]
             ]
@@ -174,7 +173,6 @@ contextToolbar cfg scene elem =
             |> text
             |> List.singleton
             |> div []
-        , div [] (cfg.config.actionButtons elem)
         , Maybe.unwrap selectGroup showGroup elem.group
         ]
 
@@ -185,30 +183,24 @@ toolbar cfg m =
         insertFigure pt =
             cfg.config.defaultFigure |> Figure.move (vector (fromPoint pt))
 
-        stateMsg msg =
-            onClick (OnStateChange msg)
-                :: (if m.state |> State.isSimilarTo msg then
-                        [ class "glass" ]
-
-                    else
-                        [ class "text-info" ]
-                   )
+        stateBtn st icon =
+            Ui.selectedToolbarBtn (m.state |> State.isSimilarTo st) [ onClick (OnStateChange st) ] icon
     in
     div [ class "shadow-lg bg-slate-900 text-white z-10" ]
         [ div [ class "p-2 flex max-w-2xl m-auto" ]
-            [ div []
-                [ Ui.toolbarBtn (stateMsg <| State.StandardEditor) I.edit
-                , Ui.toolbarBtn (stateMsg <| State.ClickToInsert "ref" insertFigure) I.add_circle_outline
-                , Ui.toolbarBtn (stateMsg <| State.Connecting Nothing) I.timeline
-                , Ui.toolbarBtn (stateMsg <| State.ReadOnlyView) I.landscape
+            [ div [ class "btn-group" ]
+                [ stateBtn State.StandardEditor I.edit
+                , stateBtn (State.ClickToInsert "ref" insertFigure) I.add_circle_outline
+                , stateBtn (State.Connecting Nothing) I.timeline
+                , stateBtn State.ReadOnlyView I.landscape
                 ]
             , div [ class "flex-1 text-slate-300 text-right px-2" ] [ text "" ]
-            , div []
+            , div [ class "btn-group" ]
                 [ Ui.toolbarBtn [ onClick OnUndo ] I.undo
                 , Ui.toolbarBtn [ onClick OnRedo ] I.redo
                 ]
             , div [ class "text-slate-300 text-right px-2" ] [ text "" ]
-            , div []
+            , div [ class "btn-group" ]
                 [ if State.isClickToInsert m.state then
                     Toolbars.removeLastItem (Model.scene m)
 

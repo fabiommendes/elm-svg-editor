@@ -4,13 +4,14 @@ import Attributes as A
 import Config exposing (Params)
 import Element exposing (Element)
 import Msg exposing (Msg)
+import Shape.Types exposing (Text)
 import Svg as S exposing (Svg)
 import Svg.Attributes as SA
 import Types exposing (..)
 
 
 type alias Text =
-    { content : String }
+    Shape.Types.Text
 
 
 view : Params -> Element Text -> Svg (Msg Text)

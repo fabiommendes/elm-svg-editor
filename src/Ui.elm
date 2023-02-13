@@ -115,4 +115,13 @@ navbar =
 
 toolbarBtn : List (Attribute msg) -> (number -> Coloring -> Html msg) -> Html msg
 toolbarBtn attrs i =
-    button (class "btn-sm px-2 hover:glass focus:glass" :: attrs) [ i 20 Inherit ]
+    button (class "btn-sm px-2 w-9 hover:btn-accent focus:btn-ghost no-animation" :: attrs) [ i 20 Inherit ]
+
+
+selectedToolbarBtn : Bool -> List (Attribute msg) -> (number -> Coloring -> Html msg) -> Html msg
+selectedToolbarBtn selected attrs i =
+    if selected then
+        toolbarBtn (class "glass focus:border" :: attrs) i
+
+    else
+        toolbarBtn attrs i

@@ -16,6 +16,7 @@ import Shape.Image
 import Shape.Line
 import Shape.Point
 import Shape.Text
+import Shape.Types as Shape
 import Types exposing (..)
 import Util exposing (flip)
 
@@ -122,7 +123,7 @@ shape =
 image : Decoder Shape.Image.Image
 image =
     withType "image" <|
-        (succeed Shape.Image.Image
+        (succeed Shape.Image
             |> required "href" string
             |> required "width" float
         )
@@ -131,10 +132,10 @@ image =
 line : Decoder Shape.Line.Line
 line =
     withType "line" <|
-        (succeed Shape.Line.Line
+        (succeed Shape.Line
             |> required "vertices" (list pointExt)
             |> optional "duplicate_last" bool False
-            |> optional "fill" lineFill Shape.Line.Open
+            |> optional "fill" lineFill Shape.Open
         )
 
 
@@ -149,23 +150,23 @@ pointExt =
         (map G.point pair)
 
 
-lineFill : Decoder Shape.Line.Fill
+lineFill : Decoder Shape.Fill
 lineFill =
     string
         |> andThen
             (\s ->
                 case s of
                     "open" ->
-                        succeed Shape.Line.Open
+                        succeed Shape.Open
 
                     "closed" ->
-                        succeed Shape.Line.Closed
+                        succeed Shape.Closed
 
                     "left" ->
-                        succeed Shape.Line.Left
+                        succeed Shape.Left
 
                     "right" ->
-                        succeed Shape.Line.Right
+                        succeed Shape.Right
 
                     _ ->
                         fail "invalid fill type"
@@ -181,7 +182,7 @@ point =
 text : Decoder Shape.Text.Text
 text =
     withType "text" <|
-        (succeed Shape.Text.Text
+        (succeed Shape.Text
             |> required "content" string
         )
 

@@ -59,9 +59,15 @@ editable =
     lens .editable (\x m -> { m | editable = x })
 
 
+fill : Lens { a | fill : b } b
+fill =
+    lens .fill (\x m -> { m | fill = x })
+
+
 from : Lens { a | from : b } b
 from =
     lens .from (\x m -> { m | from = x })
+
 
 figure : Lens { a | figure : b } b
 figure =

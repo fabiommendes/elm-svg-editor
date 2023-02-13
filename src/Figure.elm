@@ -9,7 +9,7 @@ module Figure exposing
     , new
     , rotate
     , setLabel
-    , visible
+    , visible, replace
     )
 
 {-| Generic figure utilities
@@ -59,6 +59,11 @@ map f fig =
     , style = fig.style
     , shape = f fig.shape
     }
+
+
+replace : a -> Figure b -> Figure a
+replace x =
+    map (\_ -> x)
 
 
 andThen : (a -> Figure b) -> Figure a -> Figure b
