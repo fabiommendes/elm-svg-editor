@@ -70,7 +70,7 @@ changeState cfg st m =
                         (\s ->
                             s
                                 |> Scene.getElement key
-                                |> Maybe.map (flip cfg.config.endConnection s)
+                                |> Maybe.map (flip cfg.config.connection.end s)
                                 |> Maybe.withDefault s
                         )
                     |> withState st

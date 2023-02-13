@@ -54,7 +54,7 @@ label =
 
 shape : Shape.Any.Any -> Value
 shape =
-    Shape.Any.replace { line = line, text = text, point = point, image = image }
+    Shape.Any.unwrap { line = line, text = text, point = point, image = image }
 
 
 image : Shape.Image.Image -> Value

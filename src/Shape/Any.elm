@@ -1,9 +1,9 @@
 module Shape.Any exposing
     ( Any(..), Element, Figure, Map, Replace
     , line, point, text, image
-    , andThen, map, replace, moveInside
+    , andThen, map, moveInside
     , actionButtons, view
-    , connect, endConnection, mapId
+    , connect, endConnection, mapShapeId, mapShape, unwrap, replaceConst
     )
 
 {-|
@@ -27,12 +27,13 @@ module Shape.Any exposing
 
 -}
 
+import BaseTypes exposing (Direction(..))
 import Config exposing (Params)
 import Element
 import Figure
 import Geometry as G exposing (Point, Vector)
 import Geometry.CtxPoint as CtxPoint exposing (distanceFrom, origin, purePoint)
-import Html exposing (Html)
+import Html exposing (Html, a)
 import Length exposing (inMeters)
 import Lens as L
 import Monocle.Lens as L
@@ -45,7 +46,6 @@ import Shape.Text exposing (Text)
 import Svg exposing (Svg)
 import Types exposing (..)
 import Vector2d
-import BaseTypes exposing (Direction(..))
 
 
 type alias Figure =
@@ -78,11 +78,24 @@ type alias Replace a =
     }
 
 
-mapId : Map
-mapId =
+mapShapeId : Map
+mapShapeId =
     { line = identity
     , text = identity
     , image = identity
+    }
+
+
+replaceConst : a -> Replace a
+replaceConst a =
+    let
+        const =
+            \_ -> a
+    in
+    { line = const
+    , text = const
+    , image = const
+    , point = const
     }
 
 
@@ -112,13 +125,18 @@ text src =
     Figure.new (TextModel { content = src })
 
 
-andThen : Replace Any -> Any -> Any
-andThen =
-    replace
-
-
-map : Map -> Any -> Any
+map : Map -> Figure -> Figure
 map mapper fig =
+    { fig | shape = mapShape mapper fig.shape }
+
+
+andThen : Replace Figure -> Figure -> Figure
+andThen mapper fig =
+    { fig | shape = (unwrap mapper fig.shape).shape }
+
+
+mapShape : Map -> Any -> Any
+mapShape mapper fig =
     case fig of
         PointModel _ ->
             PointModel ()
@@ -133,8 +151,8 @@ map mapper fig =
             ImageModel (mapper.image href)
 
 
-replace : Replace a -> Any -> a
-replace mapper fig =
+unwrap : Replace a -> Any -> a
+unwrap mapper fig =
     case fig of
         PointModel _ ->
             mapper.point ()
@@ -187,7 +205,7 @@ connect ({ model } as target) src =
                 targetAsLine =
                     Element.map (\_ -> (line []).shape) target
             in
-            connect (Debug.log "target" targetAsLine) src
+            connect targetAsLine src
 
         -- ( LineModel ln, LineModel ln2 ) ->
         --     let
@@ -210,8 +228,8 @@ endConnection elem scene =
                     ln.vertices
                         |> List.filterMap (.ctx >> .from)
             in
-            scene |> 
-                Scene.moveFrom keys Down elem.key
+            scene
+                |> Scene.moveFrom keys Down elem.key
 
         _ ->
             scene

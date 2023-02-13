@@ -43,8 +43,18 @@ defaulConfig =
         |> Config.withInnerMove Shape.Any.moveInside
         |> Config.withActionButtons Shape.Any.actionButtons
         |> Config.withJson { encoder = Encode.shape, decoder = Decode.shape }
-        |> Config.withDefaultTarget (Shape.Any.line [])
-        |> Config.withConnector { connect = Shape.Any.connect, end = Shape.Any.endConnection }
+        |> Config.withConnector
+            { connect = Shape.Any.connect
+            , canConnect =
+                .shape
+                    >> Shape.Any.unwrap
+                        { line = \_ -> False
+                        , text = \_ -> False
+                        , point = \_ -> True
+                        , image = \_ -> False
+                        }
+            , end = Shape.Any.endConnection
+            }
 
 
 update : Config -> Msg -> Model -> ( Model, Cmd Msg )

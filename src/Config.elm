@@ -8,7 +8,6 @@ module Config exposing
     , withConnector
     , withControls
     , withDefaultFigure
-    , withDefaultTarget
     , withGroups
     , withInnerMove
     , withJson
@@ -27,10 +26,10 @@ import Json.Encode exposing (Value)
 import Lens as L
 import Monocle.Lens as L
 import Msg exposing (Msg(..))
+import Scene exposing (Scene)
 import State exposing (State(..))
 import Svg exposing (Svg)
 import Types exposing (Key, SubKey)
-import Scene exposing (Scene)
 
 
 type alias ViewFunction fig =
@@ -41,12 +40,11 @@ type alias InnerMoveFunction fig =
     SubKey -> Vector -> Figure fig -> Figure fig
 
 
-type alias FigureConnector fig =
-    Element fig -> Element fig -> Maybe (Figure fig)
-
-
-type alias FigureEndConnection fig =
-    Element fig -> Scene fig -> Scene fig
+type alias FigureConnection fig =
+    { connect : Element fig -> Element fig -> Maybe (Figure fig)
+    , end : Element fig -> Scene fig -> Scene fig
+    , canConnect : Element fig -> Bool
+    }
 
 
 type alias Config fig =
@@ -70,9 +68,7 @@ type alias Cfg fig =
     , shapeEncoder : fig -> Value
     , shapeDecoder : Decoder fig
     , defaultFigure : Figure fig
-    , defaultTarget : Figure fig
-    , connectFigures : FigureConnector fig
-    , endConnection : FigureEndConnection fig
+    , connection : FigureConnection fig
     }
 
 
@@ -118,9 +114,11 @@ initConfig fig =
     , innerMove = \_ _ x -> x
     , actionButtons = \_ -> []
     , defaultFigure = fig
-    , defaultTarget = fig
-    , connectFigures = \_ _ -> Nothing
-    , endConnection = \ _ -> identity 
+    , connection =
+        { connect = \_ _ -> Nothing
+        , end = \_ -> identity
+        , canConnect = \_ -> False
+        }
     }
 
 
@@ -144,14 +142,9 @@ withDefaultFigure fig ({ config } as cfg) =
     { cfg | config = { config | defaultFigure = fig } }
 
 
-withDefaultTarget : Figure fig -> Config fig -> Config fig
-withDefaultTarget fig ({ config } as cfg) =
-    { cfg | config = { config | defaultTarget = fig } }
-
-
-withConnector : { connect : FigureConnector fig, end : FigureEndConnection fig } -> Config fig -> Config fig
-withConnector { connect, end } ({ config } as cfg) =
-    { cfg | config = { config | connectFigures = connect, endConnection = end } }
+withConnector : FigureConnection fig -> Config fig -> Config fig
+withConnector conn ({ config } as cfg) =
+    { cfg | config = { config | connection = conn } }
 
 
 withJson : { decoder : Decoder fig, encoder : fig -> Json.Encode.Value } -> Config fig -> Config fig

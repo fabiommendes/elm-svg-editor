@@ -6,6 +6,7 @@ import Browser.Dom
 import Config exposing (Config)
 import Decode
 import Draggable
+import Element as E
 import Encode
 import Figure
 import File
@@ -15,6 +16,7 @@ import Json.Decode
 import Json.Encode
 import Length exposing (inMeters)
 import Lens exposing (scene)
+import Maybe.Extra as Maybe
 import Model as M exposing (Model)
 import Msg exposing (KeyBoardCommands(..), Msg(..))
 import Scene as S
@@ -26,7 +28,7 @@ import Vector2d
 
 update : Config a -> Msg a -> Model a -> ( Model a, Cmd (Msg a) )
 update cfg msg_ m =
-    update_ cfg (Debug.log "UPDATE" msg_) m.state (M.trimHistory m)
+    update_ cfg msg_ m.state (M.trimHistory m)
 
 
 update_ : Config a -> Msg a -> State a -> Model a -> ( Model a, Cmd (Msg a) )
@@ -98,7 +100,7 @@ update_ cfg msg_ state_ m =
                 delta =
                     rawDelta |> Vector2d.scaleBy m.scale
             in
-            case m |> M.onScene S.selected of
+            case m |> M.onScene S.selectedFullKey of
                 Just ( key, [] ) ->
                     if key == backgroundKey && m.state == State.ReadOnlyView then
                         update cfg
@@ -126,7 +128,7 @@ update_ cfg msg_ state_ m =
             else
                 case ( S.getElement k (M.scene m), S.getElement key (M.scene m) ) of
                     ( Just target, Just dest ) ->
-                        case cfg.config.connectFigures target dest of
+                        case cfg.config.connection.connect target dest of
                             Just changed ->
                                 onScene (S.put k changed >> S.select ( k, [] ))
 
@@ -140,25 +142,30 @@ update_ cfg msg_ state_ m =
 
         ( OnSelectFigure key _, Connecting Nothing ) ->
             let
-                target =
-                    S.get key (M.scene m)
-                        |> Maybe.withDefault cfg.config.defaultTarget
-                        |> Figure.editable True
+                scene : E.Element a -> Maybe (S.Scene a)
+                scene elem =
+                    let
+                        target =
+                            { elem | model = elem.model |> Figure.editable True }
+                    in
+                    if key == backgroundKey then
+                        Nothing
 
-                ( k, scene_ ) =
-                    S.insert target (M.scene m)
+                    else if cfg.config.connection.canConnect elem then
+                        Just <| (S.insert target.model (M.scene m) |> (\( k, scn ) -> S.select ( k, [] ) scn))
 
-                scene =
-                    S.select ( k, [] ) scene_
+                    else
+                        Nothing
             in
-            if key == backgroundKey then
-                return m
+            case S.getElement key (M.scene m) |> Maybe.andThen scene of
+                Just scn ->
+                    m
+                        |> M.pushScene scn
+                        |> M.withState (Connecting (S.selectedKey scn))
+                        |> return
 
-            else
-                m
-                    |> M.pushScene scene
-                    |> M.withState (Connecting (Just k))
-                    |> return
+                _ ->
+                    return m
 
         ( OnSelectFigure key subKey, _ ) ->
             onScene <| S.select ( key, subKey )
@@ -223,8 +230,8 @@ update_ cfg msg_ state_ m =
             return (m |> M.changeState cfg st)
 
         ( OnKeyPress Delete, _ ) ->
-            case m |> M.onScene S.selected of
-                Just ( key, _ ) ->
+            case m |> M.onScene S.selectedKey of
+                Just key ->
                     update cfg (OnFigureDiscard key) m
 
                 Nothing ->

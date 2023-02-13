@@ -21,8 +21,9 @@ module Scene exposing
     , pop
     , put
     , select
-    , selected
-    , update
+    , selectedKey
+    , selectedSubKey
+    , update, selectedFullKey
     )
 
 import BaseTypes exposing (Direction(..))
@@ -75,9 +76,19 @@ init =
 --
 
 
-selected : Scene a -> Maybe ( Key, SubKey )
-selected (Scene s) =
+selectedFullKey : Scene a -> Maybe ( Key, SubKey )
+selectedFullKey (Scene s) =
     s.selected
+
+
+selectedSubKey : Scene a -> Maybe SubKey
+selectedSubKey (Scene s) =
+    s.selected |> Maybe.map Tuple.second
+
+
+selectedKey : Scene a -> Maybe Key
+selectedKey (Scene s) =
+    s.selected |> Maybe.map Tuple.first
 
 
 select : ( Key, SubKey ) -> Scene a -> Scene a
