@@ -82,10 +82,10 @@ panButtons =
     in
     div [ class "absolute right-0 bottom-0" ]
         [ div [ class "relative w-24 h-24" ]
-            [ btn [ onClick <| OnChangeViewBox "pan.up" (move 0 1), class "absolute top-1 right-8" ] I.keyboard_arrow_up
-            , btn [ onClick <| OnChangeViewBox "pan.down" (move 0 -1), class "absolute bottom-1 right-8" ] I.keyboard_arrow_down
-            , btn [ onClick <| OnChangeViewBox "pan.right" (move -1 0), class "absolute right-1 top-8" ] I.keyboard_arrow_right
-            , btn [ onClick <| OnChangeViewBox "pan.left" (move 1 0), class "absolute left-1 top-8" ] I.keyboard_arrow_left
+            [ btn [ onClick Msg.panUp, class "absolute top-1 right-8" ] I.keyboard_arrow_up
+            , btn [ onClick Msg.panDown, class "absolute bottom-1 right-8" ] I.keyboard_arrow_down
+            , btn [ onClick Msg.panRight, class "absolute right-1 top-8" ] I.keyboard_arrow_right
+            , btn [ onClick Msg.panLeft, class "absolute left-1 top-8" ] I.keyboard_arrow_left
             ]
         ]
 

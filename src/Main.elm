@@ -2,7 +2,7 @@ module Main exposing (main)
 
 import Browser
 import Config
-import Editor exposing (..)
+import Svg.Editor exposing (..)
 import Figure as F
 import Geometry exposing (vector)
 import Model
@@ -16,7 +16,7 @@ main =
         { init = \_ -> ( init |> withExample, cmd )
         , update = update config
         , view = view config
-        , subscriptions = subscriptions
+        , subscriptions = subscriptions config
         }
 
 

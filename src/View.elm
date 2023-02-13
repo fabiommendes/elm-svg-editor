@@ -79,7 +79,7 @@ viewScene cfg state bbox data =
         supressDrag =
             mapMsg (Msg.changeDragMsgsTo Msg.NoOp)
     in
-    div [ HA.class "container bg-slate-100", HA.class "scene", HA.id cfg.params.sceneId ]
+    div [ HA.class "container bg-slate-500", HA.class "scene", HA.id cfg.params.sceneId ]
         [ S.svg
             (SA.width "100%" :: SA.class "scene" :: A.viewBox bbox :: pointerEvents state cfg.params.panWithTouch)
             (case state of

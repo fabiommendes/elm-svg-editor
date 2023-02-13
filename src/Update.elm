@@ -237,11 +237,26 @@ update_ cfg msg_ state_ m =
                 Nothing ->
                     return m
 
+        ( OnKeyPress DeletePart, _ ) ->
+            case m |> M.onScene S.getSelected of
+                Just elem ->
+                    let
+                        updater _ =
+                            cfg.config.innerRemove elem.subKey elem.model
+                    in
+                    m |> update cfg (OnFigureUpdate "delete-item" updater elem.key)
+
+                Nothing ->
+                    return m
+
         ( OnKeyPress Undo, _ ) ->
             update cfg OnUndo m
 
         ( OnKeyPress Redo, _ ) ->
             update cfg OnRedo m
+
+        ( OnKeyPress arrow, _ ) ->
+            update cfg (Msg.panArrow arrow) m
 
         ( OnUndo, _ ) ->
             return (M.undo m)

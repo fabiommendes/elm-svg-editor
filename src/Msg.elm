@@ -1,19 +1,26 @@
 module Msg exposing (..)
 
 import BaseTypes exposing (Direction)
+import BoundingBox2d as BBox
 import Browser.Dom exposing (Element)
 import Draggable
 import Figure exposing (Figure)
 import File exposing (File)
 import Geometry exposing (..)
+import Length exposing (inMeters)
 import State exposing (State)
 import Types exposing (..)
 
 
 type KeyBoardCommands
     = Delete
+    | DeletePart
     | Undo
     | Redo
+    | PanRight
+    | PanLeft
+    | PanUp
+    | PanDown
 
 
 type Msg a
@@ -134,3 +141,54 @@ changeDragMsgsTo default msg =
 
         _ ->
             msg
+
+
+pan : Float -> Float -> BBox -> BBox
+pan x y bb =
+    let
+        step =
+            BBox.dimensions bb
+                |> Tuple.first
+                |> inMeters
+                |> (*) 0.15
+    in
+    BBox.translateBy (vector ( -step * x, -step * y )) bb
+
+
+panUp : Msg a
+panUp =
+    OnChangeViewBox "pan.up" (pan 0 1)
+
+
+panDown : Msg a
+panDown =
+    OnChangeViewBox "pan.down" (pan 0 -1)
+
+
+panRight : Msg a
+panRight =
+    OnChangeViewBox "pan.right" (pan -1 0)
+
+
+panLeft : Msg a
+panLeft =
+    OnChangeViewBox "pan.left" (pan 1 0)
+
+
+panArrow : KeyBoardCommands -> Msg a
+panArrow cmd =
+    case cmd of
+        PanRight ->
+            panRight
+
+        PanLeft ->
+            panLeft
+
+        PanUp ->
+            panUp
+
+        PanDown ->
+            panDown
+
+        _ ->
+            NoOp

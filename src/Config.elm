@@ -10,6 +10,7 @@ module Config exposing
     , withDefaultFigure
     , withGroups
     , withInnerMove
+    , withInnerRemove
     , withJson
     , withPointRadius
     , withViewFunction
@@ -40,6 +41,10 @@ type alias InnerMoveFunction fig =
     SubKey -> Vector -> Figure fig -> Figure fig
 
 
+type alias InnerRemoveFunction fig =
+    SubKey -> Figure fig -> Maybe (Figure fig)
+
+
 type alias FigureConnection fig =
     { connect : Element fig -> Element fig -> Maybe (Figure fig)
     , end : Element fig -> Scene fig -> Scene fig
@@ -64,6 +69,7 @@ type alias Cfg fig =
     { drag : Draggable.Config ( Key, SubKey ) (Msg fig)
     , view : ViewFunction fig
     , innerMove : InnerMoveFunction fig
+    , innerRemove : InnerRemoveFunction fig
     , actionButtons : Element fig -> List (Html (Msg fig))
     , shapeEncoder : fig -> Value
     , shapeDecoder : Decoder fig
@@ -112,6 +118,7 @@ initConfig fig =
     , shapeDecoder = Json.Decode.fail "no shape decoder provided"
     , view = \_ _ -> Svg.text_ [] [ Svg.text "no view function was provided" ]
     , innerMove = \_ _ x -> x
+    , innerRemove = \_ _ -> Nothing
     , actionButtons = \_ -> []
     , defaultFigure = fig
     , connection =
@@ -130,6 +137,11 @@ withViewFunction move ({ config } as cfg) =
 withInnerMove : InnerMoveFunction fig -> Config fig -> Config fig
 withInnerMove move ({ config } as cfg) =
     { cfg | config = { config | innerMove = move } }
+
+
+withInnerRemove : InnerRemoveFunction fig -> Config fig -> Config fig
+withInnerRemove remove ({ config } as cfg) =
+    { cfg | config = { config | innerRemove = remove } }
 
 
 withActionButtons : (Element fig -> List (Html (Msg fig))) -> Config fig -> Config fig

@@ -11,7 +11,6 @@ import Json.Decode.Pipeline exposing (..)
 import Length exposing (meters)
 import Msg exposing (KeyBoardCommands(..), Msg(..))
 import Scene exposing (Scene)
-import Shape.Any exposing (Any(..))
 import Shape.Image
 import Shape.Line
 import Shape.Point
@@ -67,27 +66,39 @@ label =
 keyPress : Decoder (Msg a)
 keyPress =
     map3 (\x y z -> ( x, y, z ))
-        (field "key" string)
         (field "ctrlKey" bool)
         (field "shiftKey" bool)
+        (field "key" string)
         |> andThen
             (\p ->
                 case p of
-                    ( "Delete", _, _ ) ->
+                    ( False, _, "Delete" ) ->
                         succeed (OnKeyPress Delete)
 
-                    ( "z", True, False ) ->
+                    ( True, _, "Delete" ) ->
+                        succeed (OnKeyPress DeletePart)
+
+                    ( True, False, "z" ) ->
                         succeed (OnKeyPress Undo)
 
-                    ( "z", True, True ) ->
+                    -- shift capitalize Z
+                    ( True, True, "Z" ) ->
                         succeed (OnKeyPress Redo)
 
-                    -- shift may capitalize Z
-                    ( "Z", True, True ) ->
-                        succeed (OnKeyPress Redo)
+                    ( _, _, "ArrowUp" ) ->
+                        succeed Msg.panUp
 
-                    ( k, _, _ ) ->
-                        fail k
+                    ( _, _, "ArrowDown" ) ->
+                        succeed Msg.panDown
+
+                    ( _, _, "ArrowLeft" ) ->
+                        succeed Msg.panLeft
+
+                    ( _, _, "ArrowRight" ) ->
+                        succeed Msg.panRight
+
+                    ( _, _, k ) ->
+                        fail (Debug.log "k" k)
             )
 
 
@@ -97,23 +108,23 @@ keyPress =
 ---
 
 
-shape : Decoder Any
+shape : Decoder Shape.Any
 shape =
     field "type" string
         |> andThen
             (\s ->
                 case s of
                     "point" ->
-                        map PointModel point
+                        map Shape.PointModel point
 
                     "text" ->
-                        map TextModel text
+                        map Shape.TextModel text
 
                     "image" ->
-                        map ImageModel image
+                        map Shape.ImageModel image
 
                     "line" ->
-                        map LineModel line
+                        map Shape.LineModel line
 
                     _ ->
                         fail ("invalid type: " ++ s)

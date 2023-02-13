@@ -1,7 +1,9 @@
 module Shape.Line exposing
     ( Line
-    , actionButtons
+    , insertMiddlePoint
     , movePoint
+    , removePoint
+    , toolbar
     , vertices
     , view
     , withValidSubkey
@@ -13,7 +15,6 @@ import Element exposing (Element)
 import Figure exposing (Figure)
 import Geometry exposing (Point, Vector, point)
 import Geometry.CtxPoint exposing (midpoint, pointCtx, translateBy)
-import Geometry.Paths exposing (pairsClosing, pairsWithExtrapolation)
 import Geometry.Svg as S
 import Html as H exposing (Html)
 import Html.Attributes as HA
@@ -31,12 +32,15 @@ import Types exposing (..)
 import Ui
 import Util exposing (flip, iff)
 import Vector2d
+import Geometry.Paths exposing (pairs)
 
 
 type alias Line =
     Shape.Types.Line
 
 
+{-| Extract vertices as points
+-}
 vertices : Line -> List Point
 vertices pt =
     pt.vertices |> List.map .point
@@ -63,7 +67,7 @@ insertMiddlePoint i line =
     let
         ( before, after ) =
             (pointCtx ( 0, 0 ) :: line.vertices)
-                |> iff (line.fill == Closed) pairsClosing pairsWithExtrapolation
+                |> pairs line.fill
                 |> List.splitAt (i + 1)
 
         before_ =
@@ -117,8 +121,10 @@ view cfg elem =
             ]
 
 
-actionButtons : Element Line -> List (Html (Msg Line))
-actionButtons elem =
+{-| Renders toolbar buttons
+-}
+toolbar : Element Line -> List (Html (Msg Line))
+toolbar elem =
     let
         action : Description -> (Line -> Line) -> H.Attribute (Msg Line)
         action name f =
@@ -134,6 +140,8 @@ actionButtons elem =
     ]
 
 
+{-| Compute transformation with point, if subkey is valid
+-}
 withValidSubkey : SubKey -> (Int -> Line -> Line) -> Line -> Line
 withValidSubkey subKey func line =
     case subKey of

@@ -1,9 +1,8 @@
 module Shape.Any exposing
-    ( Any(..), Element, Figure, Map, Replace
-    , line, point, text, image
+    ( line, point, text, image
     , andThen, map, moveInside
     , actionButtons, view
-    , connect, endConnection, mapShape, mapShapeId, replaceConst, unwrap
+    , connect, endConnection, mapShape, mapShapeId, replaceConst, unwrap, removeInside
     )
 
 {-|
@@ -31,7 +30,7 @@ import BaseTypes exposing (Direction(..))
 import Config exposing (Params)
 import Element
 import Figure
-import Geometry as G exposing (Point, Vector)
+import Geometry as G exposing (Vector)
 import Geometry.CtxPoint as CtxPoint exposing (distanceFrom, origin, purePoint)
 import Html exposing (Html, a)
 import Length exposing (inMeters)
@@ -41,42 +40,12 @@ import Point2d
 import Scene exposing (Scene)
 import Shape.Image
 import Shape.Line
-import Shape.Point exposing (Point)
-import Shape.Text exposing (Text)
-import Shape.Types exposing (Fill(..), Image, Line, Point, Text)
+import Shape.Point
+import Shape.Text
+import Shape.Types exposing (Any(..), Element, Figure, Fill(..), Map, Replace)
 import Svg exposing (Svg)
 import Types exposing (..)
 import Vector2d
-
-
-type alias Figure =
-    Figure.Figure Any
-
-
-type alias Element =
-    Element.Element Any
-
-
-type Any
-    = PointModel Point
-    | LineModel Line
-    | TextModel Text
-    | ImageModel Image
-
-
-type alias Map =
-    { line : Line -> Line
-    , text : Text -> Text
-    , image : Image -> Image
-    }
-
-
-type alias Replace a =
-    { line : Line -> a
-    , text : Text -> a
-    , point : Point -> a
-    , image : Image -> a
-    }
 
 
 mapShapeId : Map
@@ -187,6 +156,16 @@ moveInside sub by fig =
             fig
 
 
+removeInside : SubKey -> Figure -> Maybe Figure
+removeInside sub fig =
+    case ( fig.shape, sub ) of
+        ( LineModel shape, [ i ] ) ->
+            Just { fig | shape = LineModel (Shape.Line.removePoint i shape) }
+
+        _ ->
+            Just fig
+
+
 connect : Element -> Element -> Maybe Figure
 connect ({ model } as target) src =
     let
@@ -269,7 +248,7 @@ actionButtons : Element -> List (Html (Msg Any))
 actionButtons fig =
     case fig.model.shape of
         LineModel obj ->
-            Shape.Line.actionButtons (Element.map (\_ -> obj) fig)
+            Shape.Line.toolbar (Element.map (\_ -> obj) fig)
                 |> List.map (Html.map (Msg.map LineModel))
 
         _ ->

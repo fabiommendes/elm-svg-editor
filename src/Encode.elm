@@ -15,6 +15,7 @@ import Shape.Image
 import Shape.Line
 import Shape.Point
 import Shape.Text
+import Shape.Types as Shape
 import Types exposing (..)
 
 
@@ -52,7 +53,7 @@ label =
 ---
 
 
-shape : Shape.Any.Any -> Value
+shape : Shape.Any -> Value
 shape =
     Shape.Any.unwrap { line = line, text = text, point = point, image = image }
 

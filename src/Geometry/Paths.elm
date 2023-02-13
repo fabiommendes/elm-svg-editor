@@ -5,6 +5,7 @@ import Geometry exposing (vector)
 import Geometry.CtxPoint as PointExt exposing (CtxPoint, pointCtx)
 import Length exposing (inMeters, meters)
 import Lens exposing (vertices)
+import Shape.Types exposing (Fill(..))
 import Vector2d
 
 
@@ -145,6 +146,16 @@ ghostLine factor line =
                     []
     in
     do Nothing (pointCtx ( 0, 0 ) :: line)
+
+
+pairs : Fill -> List CtxPoint -> List ( CtxPoint, CtxPoint )
+pairs fill =
+    case fill of
+        Closed ->
+            pairsClosing
+
+        _ ->
+            pairsWithExtrapolation
 
 
 pairsWithExtrapolation : List CtxPoint -> List ( CtxPoint, CtxPoint )
