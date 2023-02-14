@@ -17,26 +17,26 @@ type alias Element =
     , subKey : SubKey
     , group : Maybe GroupInfo
     , isSelected : Bool
-    , model : Figure
+    , figure : Figure
     , shape : Any
     }
 
 
 map : (Any -> Any) -> Element -> Element
-map f ({ model } as elem) =
+map f ({ figure } as elem) =
     let
         new =
-            Figure.map f model
+            Figure.map f figure
     in
     { key = elem.key
     , subKey = elem.subKey
     , group = elem.group
     , isSelected = elem.isSelected
-    , model = new
+    , figure = new
     , shape = new.shape
     }
 
 
 withShape : Any -> Element -> Element
-withShape shape ({ model } as elem) =
-    { elem | model = { model | shape = shape } }
+withShape shape ({ figure } as elem) =
+    { elem | figure = { figure | shape = shape } }

@@ -18,13 +18,13 @@ import Ui
 
 
 toolbar : Element -> List (Html Msg)
-toolbar ({ model } as elem) =
+toolbar ({ figure } as elem) =
     case elem.shape of
         LineModel shape ->
             let
                 action : Description -> (Line -> Line) -> H.Attribute Msg
                 action name f =
-                    HE.onClick <| OnFigureUpdate name (\_ -> Just <| { model | shape = LineModel (f shape) }) elem.key
+                    HE.onClick <| OnFigureUpdate name (\_ -> Just <| { figure | shape = LineModel (f shape) }) elem.key
             in
             [ Ui.toolbarBtn [ action "add-point" (Line.withValidSubkey elem.subKey Line.insertMiddlePoint) ] I.add
             , Ui.toolbarBtn [ action "remove-point" (Line.withValidSubkey elem.subKey Line.removePoint) ] I.remove

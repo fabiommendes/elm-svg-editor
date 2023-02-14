@@ -121,7 +121,7 @@ getSelected (Scene s) =
                         , subKey = subKey
                         , isSelected = True
                         , group = group_
-                        , model = fig
+                        , figure = fig
                         , shape = fig.shape
                         }
 
@@ -409,7 +409,7 @@ makeElement (Scene s) key group_ fig =
                 , subKey = subKey
                 , group = group_
                 , isSelected = True
-                , model = fig
+                , figure = fig
                 , shape = fig.shape
                 }
 
@@ -418,7 +418,7 @@ makeElement (Scene s) key group_ fig =
                 , subKey = []
                 , group = group_
                 , isSelected = False
-                , model = fig
+                , figure = fig
                 , shape = fig.shape
                 }
 
@@ -427,7 +427,7 @@ makeElement (Scene s) key group_ fig =
             , subKey = []
             , group = group_
             , isSelected = False
-            , model = fig
+            , figure = fig
             , shape = fig.shape
             }
 

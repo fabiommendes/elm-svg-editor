@@ -10,7 +10,7 @@ import Json.Encode exposing (..)
 import List.Extra as List
 import Maybe.Extra as Maybe
 import Scene exposing (Scene)
-import Shape.Any
+import Shape
 import Shape.Type as Shape
 import Types exposing (..)
 
@@ -51,7 +51,7 @@ label =
 
 shape : Shape.Any -> Value
 shape =
-    Shape.Any.unwrap { line = line, text = text, point = point, image = image }
+    Shape.unwrap { line = line, text = text, point = point, image = image }
 
 
 image : Shape.Image -> Value
@@ -135,7 +135,7 @@ scene obj =
         objects : List Value
         objects =
             elements
-                |> List.map (\e -> figure e.model |> withKey e.key)
+                |> List.map (\e -> figure e.figure |> withKey e.key)
 
         withKey k value =
             D.decodeValue (D.keyValuePairs D.value) value

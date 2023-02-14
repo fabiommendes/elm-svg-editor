@@ -1,13 +1,13 @@
 module Model exposing (..)
 
 import BoundingBox2d
-import Config exposing (Config)
 import Draggable
 import Figure exposing (Figure)
 import Geometry exposing (BBox, Point, Vector, point, vector)
 import Point2d
 import Quantity as Q
 import Scene exposing (Scene)
+import Shape
 import State exposing (State(..))
 import Types exposing (..)
 import UndoList exposing (UndoList)
@@ -57,8 +57,8 @@ init =
     }
 
 
-changeState : Config -> State -> Model -> Model
-changeState cfg st m =
+changeState : State -> Model -> Model
+changeState st m =
     if st == m.state then
         m
 
@@ -70,7 +70,7 @@ changeState cfg st m =
                         (\s ->
                             s
                                 |> Scene.getElement key
-                                |> Maybe.map (flip cfg.config.connection.end s)
+                                |> Maybe.map (flip Shape.endConnection s)
                                 |> Maybe.withDefault s
                         )
                     |> withState st

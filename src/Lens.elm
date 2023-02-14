@@ -86,11 +86,6 @@ ith i =
     }
 
 
-model : Lens { a | model : b } b
-model =
-    lens .model (\x m -> { m | model = x })
-
-
 label : Lens { a | label : b } b
 label =
     lens .label (\x m -> { m | label = x })

@@ -3,7 +3,7 @@ module Update exposing (..)
 import BaseTypes exposing (Direction(..))
 import BoundingBox2d
 import Browser.Dom
-import Config exposing (Config)
+import Svg.Editor.Config exposing (Config)
 import Decode
 import Draggable
 import Encode
@@ -19,7 +19,7 @@ import Maybe.Extra as Maybe
 import Model as M exposing (Model)
 import Msg exposing (KeyBoardCommands(..), Msg(..))
 import Scene as S
-import Shape.Any
+import Shape
 import State exposing (State(..))
 import Task
 import Types exposing (..)
@@ -67,7 +67,7 @@ update_ cfg msg_ state_ m =
 
         ( OnWindowResize, _ ) ->
             ( m
-            , Browser.Dom.getElement cfg.params.sceneId
+            , Browser.Dom.getElement cfg.sceneId
                 |> Task.attempt
                     (\res ->
                         case res of
@@ -93,7 +93,7 @@ update_ cfg msg_ state_ m =
             return { m | scale = factor }
 
         ( OnDragMsg msg, _ ) ->
-            Draggable.update cfg.config.drag msg m
+            Draggable.update cfg.drag msg m
 
         ( OnDragBy rawDelta, _ ) ->
             let
@@ -116,7 +116,7 @@ update_ cfg msg_ state_ m =
                         onSceneTransform <| S.update key (Figure.move delta)
 
                 Just ( key, subKey ) ->
-                    onSceneTransform <| S.update key (Shape.Any.moveInside subKey delta)
+                    onSceneTransform <| S.update key (Shape.moveInside subKey delta)
 
                 _ ->
                     return m
@@ -128,7 +128,7 @@ update_ cfg msg_ state_ m =
             else
                 case ( S.getElement k (M.scene m), S.getElement key (M.scene m) ) of
                     ( Just target, Just dest ) ->
-                        case cfg.config.connection.connect target dest of
+                        case Shape.connect target dest of
                             Just changed ->
                                 onScene (S.put k changed >> S.select ( k, [] ))
 
@@ -145,15 +145,15 @@ update_ cfg msg_ state_ m =
                 scene elem =
                     let
                         target =
-                            { elem | model = elem.model |> Figure.editable True }
+                            { elem | figure = elem.figure |> Figure.editable True }
                     in
                     if key == backgroundKey then
                         Nothing
 
-                    else if cfg.config.connection.canConnect elem then
+                    else if Shape.canConnect elem.figure then
                         let
                             ( k, scn ) =
-                                S.insert target.model (M.scene m)
+                                S.insert target.figure (M.scene m)
                         in
                         Just <| S.select ( k, [] ) scn
 
@@ -230,7 +230,7 @@ update_ cfg msg_ state_ m =
             return (M.notifyClick pt m)
 
         ( OnStateChange st, _ ) ->
-            return (m |> M.changeState cfg st)
+            return (m |> M.changeState st)
 
         ( OnKeyPress Delete, _ ) ->
             case m |> M.onScene S.selectedKey of
@@ -245,7 +245,7 @@ update_ cfg msg_ state_ m =
                 Just elem ->
                     let
                         updater _ =
-                            Shape.Any.removeInside elem.subKey elem.model
+                            Shape.removeInside elem.subKey elem.figure
                     in
                     m |> update cfg (OnFigureUpdate "delete-item" updater elem.key)
 

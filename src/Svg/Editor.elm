@@ -14,17 +14,11 @@ module Svg.Editor exposing
 
 -}
 
-import Config
-import Decode
-import Encode
-import Geometry exposing (point)
 import Html exposing (Html)
-import Lens as L
 import Model
 import Msg
-import Shape.Any
-import Shape.Toolbar
 import Subscriptions
+import Svg.Editor.Config as Config
 import Task
 import Types exposing (..)
 import Update
@@ -61,23 +55,6 @@ init =
 defaulConfig : Config
 defaulConfig =
     Config.init
-        (Shape.Any.point (point ( 0, 0 ))
-            |> L.editable.set False
-        )
-        |> Config.withActionButtons Shape.Toolbar.toolbar
-        |> Config.withJson { encoder = Encode.shape, decoder = Decode.shape }
-        |> Config.withConnector
-            { connect = Shape.Any.connect
-            , canConnect =
-                .shape
-                    >> Shape.Any.unwrap
-                        { line = \_ -> False
-                        , text = \_ -> False
-                        , point = \_ -> True
-                        , image = \_ -> False
-                        }
-            , end = Shape.Any.endConnection
-            }
 
 
 {-| Update function in TEA

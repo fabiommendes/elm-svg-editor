@@ -2,10 +2,9 @@ module View exposing (..)
 
 import Attributes as A
 import BaseTypes exposing (Direction(..))
-import Config exposing (Config)
+import Svg.Editor.Config exposing (Config)
 import Element exposing (Element)
-import Figure
-import Geometry exposing (BBox, fromPoint, point, vector)
+import Geometry exposing (BBox, point)
 import Group exposing (GroupInfo)
 import Html exposing (..)
 import Html.Attributes as HA exposing (..)
@@ -21,7 +20,8 @@ import Model exposing (Model)
 import Monocle.Lens as L
 import Msg exposing (Msg(..))
 import Scene exposing (Scene)
-import Shape.Type exposing (Any)
+import Shape
+import Shape.Toolbar
 import Shape.View
 import State exposing (State(..))
 import Svg as S
@@ -43,7 +43,7 @@ view cfg m =
         , attribute "data-theme" "lemonade"
         ]
         [ Ui.navbar
-        , toolbar cfg m
+        , toolbar m
         , div [ class "max-w-xl m-auto" ] <|
             case m.error of
                 Just err ->
@@ -51,7 +51,7 @@ view cfg m =
 
                 Nothing ->
                     [ main_ [] [ viewScene cfg m.state m.bbox (Model.scene m) ]
-                    , Maybe.unpack notSelectedContext (contextToolbar cfg (Model.scene m)) selected
+                    , Maybe.unpack notSelectedContext (contextToolbar (Model.scene m)) selected
                     ]
         ]
 
@@ -61,8 +61,8 @@ viewScene cfg state bbox data =
     let
         elementsSvg =
             Scene.elements data
-                |> List.filter (.model >> .visible)
-                |> List.map (Shape.View.view cfg.params)
+                |> List.filter (.figure >> .visible)
+                |> List.map (Shape.View.view cfg)
 
         mapMsg f =
             List.map (S.map f)
@@ -81,9 +81,9 @@ viewScene cfg state bbox data =
         supressDrag =
             mapMsg (Msg.changeDragMsgsTo Msg.NoOp)
     in
-    div [ HA.class "container bg-slate-500", HA.class "scene", HA.id cfg.params.sceneId ]
+    div [ HA.class "container bg-slate-500", HA.class "scene", HA.id cfg.sceneId ]
         [ S.svg
-            (SA.width "100%" :: SA.class "scene" :: A.viewBox bbox :: pointerEvents state cfg.params.panWithTouch)
+            (SA.width "100%" :: SA.class "scene" :: A.viewBox bbox :: pointerEvents state cfg.panWithTouch)
             (case state of
                 ReadOnlyView ->
                     supressDrag elementsSvg
@@ -103,11 +103,11 @@ notSelectedContext _ =
     div [] [ text "no key selected" ]
 
 
-contextToolbar : Config -> Scene -> Element -> Html Msg
-contextToolbar cfg scene elem =
+contextToolbar : Scene -> Element -> Html Msg
+contextToolbar scene elem =
     let
         updateFigureMsg msg updater =
-            selectedMsg (OnFigureUpdate msg (\_ -> Just (updater elem.model)))
+            selectedMsg (OnFigureUpdate msg (\_ -> Just (updater elem.figure)))
 
         selectedMsg msg =
             onClick (msg elem.key)
@@ -158,13 +158,13 @@ contextToolbar cfg scene elem =
         [ div [ class "shadow-lg bg-slate-900 text-white z-10" ]
             [ div [ class "p-2 flex max-w-2xl m-auto" ]
                 [ div []
-                    (cfg.config.actionButtons elem)
+                    (Shape.Toolbar.toolbar elem)
                 , div [ class "flex-1 text-slate-300 text-right px-2" ] [ text "" ]
                 , div [ class "" ]
                     [ Ui.toolbarBtn [ selectedMsg (OnFigureChangeOrder Up) ] IR.move_up
                     , Ui.toolbarBtn [ selectedMsg (OnFigureChangeOrder Down) ] IR.move_down
                     , Ui.toolbarBtn [ selectedMsg OnFigureDiscard ] I.delete
-                    , Ui.selectedToolbarBtn (not elem.model.editable) lockButtonAttrs I.lock
+                    , Ui.selectedToolbarBtn (not elem.figure.editable) lockButtonAttrs I.lock
                     ]
                 ]
             ]
@@ -179,11 +179,11 @@ contextToolbar cfg scene elem =
         ]
 
 
-toolbar : Config -> Model -> Html Msg
-toolbar cfg m =
+toolbar : Model -> Html Msg
+toolbar m =
     let
         insertFigure pt =
-            cfg.config.defaultFigure |> Figure.move (vector (fromPoint pt))
+            Shape.point pt
 
         stateBtn st icon =
             Ui.selectedToolbarBtn (m.state |> State.isSimilarTo st) [ onClick (OnStateChange st) ] icon

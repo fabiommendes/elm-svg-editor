@@ -1,7 +1,6 @@
 module Shape.View exposing (..)
 
 import Attributes as SA
-import Config exposing (Params)
 import Element
 import Geometry exposing (fromPoint, point)
 import Geometry.CtxPoint exposing (CtxPoint, pointCtx)
@@ -15,6 +14,7 @@ import Msg
 import Shape.Type exposing (..)
 import Svg as S exposing (Attribute, Svg)
 import Svg.Attributes as SA
+import Svg.Editor.Config exposing (Config)
 import Types exposing (..)
 import Util exposing (flip, iff)
 
@@ -27,11 +27,11 @@ type alias Msg =
     Msg.Msg
 
 
-view : Params -> Element -> Svg Msg
+view : Config -> Element -> Svg Msg
 view cfg elem =
     case elem.shape of
         PointModel _ ->
-            viewAsPoint cfg elem.group elem.model.label elem.isSelected (SA.rootElement "point" elem) (point ( 0, 0 ))
+            viewAsPoint cfg elem.group elem.figure.label elem.isSelected (SA.rootElement "point" elem) (point ( 0, 0 ))
 
         LineModel shape ->
             let
@@ -75,7 +75,7 @@ view cfg elem =
             S.image attrs []
 
 
-viewAsPoint : Params -> Maybe GroupInfo -> String -> Bool -> List (Attribute Msg) -> Geometry.Point -> Svg Msg
+viewAsPoint : Config -> Maybe GroupInfo -> String -> Bool -> List (Attribute Msg) -> Geometry.Point -> Svg Msg
 viewAsPoint cfg group name isSelected attrs pt =
     case ( group, name ) of
         ( Just { index, label }, _ ) ->
@@ -132,7 +132,7 @@ labels attrs elem =
         indexLabel idx =
             S.text_ (SA.class "group-index" :: attrs) [ S.text (String.fromInt (idx + 1)) ]
     in
-    case ( elem.group, elem.model.label, elem.isSelected ) of
+    case ( elem.group, elem.figure.label, elem.isSelected ) of
         ( Just { index, label }, "", True ) ->
             [ indexLabel index, S.text_ (SA.class "label" :: attrs) [ S.text ("(" ++ label ++ ")") ] ]
 

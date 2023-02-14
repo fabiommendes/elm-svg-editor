@@ -1,7 +1,7 @@
-module Shape.Any exposing
+module Shape exposing
     ( line, point, text, image
     , andThen, map, moveInside
-    , connect, endConnection, mapShape, mapShapeId, removeInside, replaceConst, unwrap
+    , connect, endConnection, mapShape, mapShapeId, removeInside, replaceConst, unwrap, canConnect
     )
 
 {-|
@@ -78,7 +78,7 @@ line data =
         (LineModel
             { vertices = List.map (Point2d.translateBy (Vector2d.reverse head) >> purePoint) tail
             , duplicateLast = True
-            , fill = Closed
+            , fill = Open
             }
         )
         |> Figure.move head
@@ -158,10 +158,10 @@ removeInside sub fig =
 
 
 connect : Element -> Element -> Maybe Figure
-connect ({ model } as target) src =
+connect ({ figure } as target) src =
     let
         shift =
-            Vector2d.minus model.translation src.model.translation
+            Vector2d.minus figure.translation src.figure.translation
     in
     case ( target.shape, src.shape ) of
         ( LineModel ln, PointModel _ ) ->
@@ -174,10 +174,10 @@ connect ({ model } as target) src =
                     pointLocal |> distanceFrom origin |> inMeters
             in
             if distance <= 1.0e-3 then
-                Just target.model
+                Just target.figure
 
             else
-                Just { model | shape = LineModel { ln | vertices = ln.vertices ++ [ pointLocal ] } }
+                Just { figure | shape = LineModel { ln | vertices = ln.vertices ++ [ pointLocal ] } }
 
         ( PointModel _, _ ) ->
             let
@@ -212,3 +212,14 @@ endConnection elem scene =
 
         _ ->
             scene
+
+
+canConnect : Figure -> Bool
+canConnect =
+    .shape
+        >> unwrap
+            { line = \_ -> False
+            , text = \_ -> False
+            , point = \_ -> True
+            , image = \_ -> False
+            }

@@ -28,8 +28,8 @@ viewBox bb =
 
 
 dragRoot : Element -> List (Attribute Msg)
-dragRoot { key, model } =
-    if model.editable && model.editable then
+dragRoot { key, figure } =
+    if figure.editable && figure.editable then
         SA.class "drag-root" :: touch ( key, [] )
 
     else
@@ -38,7 +38,7 @@ dragRoot { key, model } =
 
 dragChild : SubKey -> Element -> List (Attribute Msg)
 dragChild subKey parent =
-    if parent.model.editable && parent.model.editable then
+    if parent.figure.editable && parent.figure.editable then
         SA.class "drag-child" :: touch ( parent.key, subKey )
 
     else
@@ -56,8 +56,8 @@ click id =
 
 
 styles : Element -> List (Attribute msg)
-styles { model } =
-    model.style |> List.map (\{ attr, value } -> toAttribute attr value)
+styles { figure } =
+    figure.style |> List.map (\{ attr, value } -> toAttribute attr value)
 
 
 classes : String -> Element -> Attribute msg
@@ -97,7 +97,7 @@ transformFrom scale angle translation =
 
 transformElement : Element -> Attribute msg
 transformElement fig =
-    transformFrom fig.model.scale fig.model.rotation fig.model.translation
+    transformFrom fig.figure.scale fig.figure.rotation fig.figure.translation
 
 
 trans : String -> List Float -> String

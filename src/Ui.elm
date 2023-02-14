@@ -1,7 +1,7 @@
 module Ui exposing (..)
 
 import BoundingBox2d as BBox
-import Config exposing (Config)
+import Svg.Editor.Config exposing (Config)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
@@ -17,12 +17,12 @@ import Types exposing (..)
 controls : Config -> Html Msg
 controls cfg =
     div [ class "relative" ]
-        [ if cfg.params.zoomControls then
+        [ if cfg.zoomControls then
             zoomButtons
 
           else
             Html.nothing
-        , if cfg.params.panControls then
+        , if cfg.panControls then
             panButtons
 
           else
