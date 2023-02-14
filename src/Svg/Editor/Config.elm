@@ -1,11 +1,16 @@
 module Svg.Editor.Config exposing
-    ( Config
-    , config, controls, groups, init, pointRadius, sceneId
+    ( Config, init
+    , config, controls, groups, pointRadius, sceneId
     )
 
 {-| Global application configuration
 
-@docs Config
+@docs Config, init
+
+
+## Custom config
+
+@docs config, controls, groups, pointRadius, sceneId
 
 -}
 
