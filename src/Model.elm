@@ -2,8 +2,8 @@ module Model exposing (..)
 
 import BoundingBox2d
 import Draggable
-import Figure exposing (Figure)
 import Geometry exposing (BBox, Point, Vector, point, vector)
+import Internal.Types exposing (Config(..))
 import Point2d
 import Quantity as Q
 import Scene exposing (Scene)
@@ -45,15 +45,15 @@ focusTo bbox m =
     { m | scale = newScale, bbox = bbox }
 
 
-init : Model
-init =
+init : Config -> Model
+init (Cfg cfg) =
     { scenes = UndoList.fresh Scene.init
     , drag = Draggable.init
     , error = Nothing
-    , state = StandardEditor
+    , state = cfg.initialState
     , scale = 1.0
     , translation = vector ( 0, 0 )
-    , bbox = BoundingBox2d.from (point ( 0, 0 )) (point ( 20, 20 ))
+    , bbox = BoundingBox2d.from (point ( 0, 0 )) (point ( cfg.shape.width, cfg.shape.height ))
     }
 
 
@@ -73,7 +73,7 @@ changeState st m =
                                 |> Maybe.map (flip Shape.endConnection s)
                                 |> Maybe.withDefault s
                         )
-                    |> withState st
+                    |> (\m_ -> { m_ | state = st })
 
             _ ->
                 { m | state = st }
@@ -87,11 +87,6 @@ withState st m =
 withError : String -> Model -> Model
 withError st m =
     { m | error = Just st }
-
-
-withFigures : String -> List Figure -> Model -> Model
-withFigures prefix figs =
-    updateScene (Scene.insertManyAs prefix figs)
 
 
 clearError : Model -> Model

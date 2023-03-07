@@ -1,6 +1,6 @@
 module Svg.Editor.Config exposing
     ( Config, init
-    , config, controls, groups, pointRadius, sceneId
+    , config, controls, groups, pointRadius, sceneId, editable, shape, readOnly
     )
 
 {-| Global application configuration
@@ -10,45 +10,48 @@ module Svg.Editor.Config exposing
 
 ## Custom config
 
-@docs config, controls, groups, pointRadius, sceneId
+@docs config, controls, groups, pointRadius, sceneId, editable, shape, readOnly
 
 -}
 
 import Draggable
 import Draggable.Events as DE
 import Geometry exposing (Vector, vector)
-import Lens as L
-import Monocle.Lens as L
+import Internal.Types exposing (Config(..))
 import Msg exposing (Msg(..))
 import State exposing (State(..))
 import Types exposing (Key, Label, SubKey)
+import Util exposing (iff)
 
 
 {-| The config object. Usually should be created using init or the config utilitiy function
 -}
 type alias Config =
-    { pointRadius : Float
-    , zoomControls : Bool
-    , panControls : Bool
-    , panWithTouch : Bool
-    , groups : List Label
-    , sceneId : String
-    , drag : Draggable.Config ( Key, SubKey ) Msg
-    }
+    Internal.Types.Config
 
 
 {-| Default config
 -}
 init : Config
 init =
-    { pointRadius = 0.5
-    , zoomControls = True
-    , panControls = True
-    , panWithTouch = True
-    , groups = []
-    , sceneId = "SCENE-EDITOR"
-    , drag = makeDragConfig OnDragBy OnSelectFigure
-    }
+    Cfg
+        { pointRadius = 0.5
+        , zoomControls = True
+        , panControls = True
+        , panWithTouch = True
+        , groups = []
+        , sceneId = "SCENE-EDITOR"
+        , shape = { width = 20, height = 20 }
+        , edit = True
+        , drag = makeDragConfig OnDragBy OnSelectFigure
+        , initialState = StandardEditor
+        , styleFontSize = 0.4
+        , styleLineWidth = 0.12
+        , styleLineWidthSelected = 0.2
+        , stylePrimaryColor = "white"
+        , styleConstrastColor = "black"
+        , styleSelectedColor = "rgb(255, 174, 0)"
+        }
 
 
 {-| Create a custom config from a list of properties,
@@ -75,8 +78,8 @@ have numbers identifying each element.
 
 -}
 groups : List Label -> Config -> Config
-groups =
-    L.groups.set
+groups value (Cfg cfg) =
+    Cfg { cfg | groups = value }
 
 
 {-| Change the default scene id.
@@ -85,22 +88,50 @@ This is necessary if two scenes are present in the same screen. Each scene must 
 
 -}
 sceneId : String -> Config -> Config
-sceneId id cfg =
-    { cfg | sceneId = id }
+sceneId id (Cfg cfg) =
+    Cfg { cfg | sceneId = id }
 
 
 {-| Radius of points, when rendered as circles.
 -}
 pointRadius : Float -> Config -> Config
-pointRadius r cfg =
-    { cfg | pointRadius = r }
+pointRadius value (Cfg cfg) =
+    Cfg { cfg | pointRadius = value }
 
 
 {-| Enable/disable zoom and pan controls in the UI
 -}
 controls : { zoom : Bool, pan : Bool, drag : Bool } -> Config -> Config
-controls value cfg =
-    { cfg | zoomControls = value.zoom, panControls = value.pan, panWithTouch = value.drag }
+controls value (Cfg cfg) =
+    Cfg { cfg | zoomControls = value.zoom, panControls = value.pan, panWithTouch = value.drag }
+
+
+{-| Control if editor is editable or not.
+-}
+editable : Bool -> Config -> Config
+editable value (Cfg cfg) =
+    if value then
+        Cfg { cfg | edit = True }
+
+    else
+        Cfg { cfg | edit = False, initialState = ReadOnlyView }
+
+
+{-| Initial shape, (width, height), of the viewing area.
+
+Scale is in meters.
+
+-}
+shape : ( Float, Float ) -> Config -> Config
+shape ( width, height ) (Cfg cfg) =
+    Cfg { cfg | shape = { width = width, height = height } }
+
+
+{-| Initialize editor in a read-only state if boolean is true.
+-}
+readOnly : Bool -> Config -> Config
+readOnly ctrl (Cfg cfg) =
+    Cfg { cfg | initialState = iff ctrl ReadOnlyView StandardEditor }
 
 
 makeDragConfig : (Vector -> Msg) -> (Key -> SubKey -> Msg) -> Draggable.Config ( Key, SubKey ) Msg

@@ -19,32 +19,28 @@ type alias Angle =
     Angle.Angle
 
 
-type alias LengthUnit =
-    Meters
-
-
 type alias Coordinates =
     ()
 
 
 type alias Point =
-    Point2d.Point2d LengthUnit Coordinates
+    Point2d.Point2d Meters Coordinates
 
 
 type alias Vector =
-    Vector2d.Vector2d LengthUnit Coordinates
+    Vector2d.Vector2d Meters Coordinates
 
 
 type alias Line =
-    Polyline2d.Polyline2d LengthUnit Coordinates
+    Polyline2d.Polyline2d Meters Coordinates
 
 
 type alias Circle =
-    Circle2d.Circle2d LengthUnit Coordinates
+    Circle2d.Circle2d Meters Coordinates
 
 
 type alias BBox =
-    BoundingBox2d.BoundingBox2d LengthUnit Coordinates
+    BoundingBox2d.BoundingBox2d Meters Coordinates
 
 
 {-| Create a angle from float value, in degrees
@@ -94,9 +90,3 @@ line =
 fromLine : Line -> List ( Float, Float )
 fromLine =
     Polyline2d.vertices >> List.map fromPoint
-
-
-
----
---- Geometric operations
----

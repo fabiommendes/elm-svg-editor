@@ -5,80 +5,17 @@
 
 body {
     --navbar-height: 4rem;
-    --color-primary: white;
-    --color-contrast: black;
-    --color-selected: rgb(255, 174, 0);
-    --default-font-size: 1;
     background: white;
 }
 
-.min-h-screen.with-navbar {
-    min-height: calc(100vh - var(--navbar-height));
-}
 
-.navbar {
-    padding-left: calc(45% - 16rem);
-    padding-right: calc(45% - 16rem);
-}
 
-.invisible {
-    opacity: 0;
-}
-
-.scene {
-    stroke-linecap: round;
-    stroke-linejoin: round;
-}
-
-.point-figure,
-.line-figure .point {
-    fill: var(--color-primary);
-    stroke: var(--color-contrast);
-    stroke-width: 0.05;
-    transition: fill stroke-width stroke-opacity 250ms;
-}
-
-.line-figure .point {
-    filter: brightness(150%)
-}
-
-.point-figure .group-index,
-.point .group-index,
-.point-figure .group-label,
-.point .group-label,
-.label {
-    fill: var(--color-contrast);
-    stroke: none;
-    font-size: 0.4;
-    font-weight: bold;
-}
-
-.point-figure .group-index,
-.point .group-index {
-    text-anchor: middle;
-    transform: translate(0, 0.15px);
-}
-
-.point-figure .label,
-.point .label,
-.label {
-    transform: translate(0.0px, 0.55px);
-    fill: var(--color-selected);
-}
-
-.point-figure.selected-figure,
-.line-figure.selected-figure .point {
-    fill: var(--color-selected);
-    stroke-width: 0.1;
-    stroke-opacity: 0.5;
-
-}
-
-.point-figure.selected-figure circle {
+/* 
+.point.selected circle {
     filter: blur(0.015px);
 }
 
-.image-figure {
+.image {
     transition: opacity 500ms;
 }
 
@@ -87,90 +24,27 @@ body {
     filter: contrast(1.25) blur(0.05px);
 }
 
-.line-figure {
-    fill: none;
-    stroke: var(--color-primary);
-    stroke-width: 0.15;
-}
 
-.line-figure .background {
-    stroke: var(--color-contrast);
-    filter: blur(0.05px);
-    stroke-width: 0.25;
-}
-
-.line-figure.selected-figure .line-closed {
-    fill: var(--color-selected);
-}
-
-.line-figure .line-closed {
-    fill: var(--color-primary);
-}
-
-.line-figure.selected-figure {
-    stroke: var(--color-selected);
-}
-
-.line-figure .point {
-    opacity: 0;
-}
-
-.line-figure .last-point {
-    opacity: 1;
-}
-
-.line-figure.selected-figure .point {
-    opacity: 0.5;
-    transition: opacity 250ms, filter 250ms;
-    transition-delay: 400ms, 0ms;
-}
-
-.line-figure.selected-figure .last-point {
-    opacity: 1.0;
-}
-
-.line-figure.selected-figure .point:nth-of-type(1) {
-    transition-delay: 0ms, 0ms;
-}
-
-.line-figure.selected-figure .point:nth-of-type(2) {
-    transition-delay: 100ms, 0ms;
-}
-
-.line-figure.selected-figure .point:nth-of-type(3) {
-    transition-delay: 200ms, 0ms;
-}
-
-.line-figure.selected-figure .point:nth-of-type(4) {
-    transition-delay: 300ms, 0ms;
-}
-
-
-.line-figure.selected-figure .selected-point {
-    opacity: 1;
-    transition-delay: 0s !important;
-    filter: brightness(2) blur(0);
-}
-
-
-.line-figure .handle {
+.line .handle {
     fill: #aaa;
 }
 
-.text-figure {
+.text {
     fill: var(--color-primary);
     font-size: 0.5;
 }
 
-.text-figure .background {
+.text .background {
     stroke: var(--color-contrast);
     stroke-width: 0.15;
 }
 
-.text-figure.selected-figure .background {
+.text.selected .background {
     stroke-width: 0.25;
 }
 
-.text-figure.selected-figure {
+.text.selected {
     fill: var(--color-selected)
 }
+
+*/

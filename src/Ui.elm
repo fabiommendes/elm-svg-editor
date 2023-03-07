@@ -1,11 +1,11 @@
 module Ui exposing (..)
 
 import BoundingBox2d as BBox
-import Svg.Editor.Config exposing (Config)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
 import Html.Extra as Html
+import Internal.Types exposing (Config(..))
 import Material.Icons as I
 import Material.Icons.Types exposing (Coloring(..))
 import Msg exposing (Msg(..))
@@ -15,7 +15,7 @@ import Types exposing (..)
 {-| Zoom and pan controls
 -}
 controls : Config -> Html Msg
-controls cfg =
+controls (Cfg cfg) =
     div [ class "relative" ]
         [ if cfg.zoomControls then
             zoomButtons
@@ -77,28 +77,6 @@ panButtons =
             ]
         ]
 
-
-navbar : Html msg
-navbar =
-    let
-        icon i =
-            i 20 Inherit
-    in
-    div
-        [ class "navbar shadow-lg bg-primary primary-content"
-        ]
-        [ div [ class "flex-none pl-3" ] [ icon I.menu ]
-        , div
-            [ class "flex-1" ]
-            [ a
-                [ class "btn btn-ghost normal-case text-xl"
-                , class "hover:text-white"
-                , href "/"
-                ]
-                [ text "croq.app" ]
-            ]
-        , div [ class "flex-none px-3" ] [ icon I.more_vert ]
-        ]
 
 
 toolbarBtn : List (Attribute msg) -> (number -> Coloring -> Html msg) -> Html msg

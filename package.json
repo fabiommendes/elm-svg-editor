@@ -19,7 +19,8 @@
   },
   "homepage": "https://github.com/fabiommendes/svg-editor#readme",
   "dependencies": {
-    "elix": "^15.0.1"
+    "elix": "^15.0.1",
+    "list-selectors": "^2.0.1"
   },
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.8",

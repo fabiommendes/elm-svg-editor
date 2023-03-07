@@ -65,14 +65,14 @@ classes name elem =
     SA.class
         << String.join " "
     <|
-        ("key-" ++ showKey elem.key)
-            :: (name ++ "-figure")
+        ("key_" ++ showKey elem.key)
+            :: name
             :: (if elem.isSelected then
                     if elem.subKey == [] then
-                        [ "selected-figure selected-root" ]
+                        [ "selected" ]
 
                     else
-                        [ "selected-figure selected-child" ]
+                        [ "selected selected-child" ]
 
                 else
                     []

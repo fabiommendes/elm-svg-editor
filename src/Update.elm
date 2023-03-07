@@ -3,7 +3,6 @@ module Update exposing (..)
 import BaseTypes exposing (Direction(..))
 import BoundingBox2d
 import Browser.Dom
-import Svg.Editor.Config exposing (Config)
 import Decode
 import Draggable
 import Encode
@@ -11,6 +10,7 @@ import Figure
 import File
 import File.Download
 import File.Select
+import Internal.Types exposing (Config(..))
 import Json.Decode
 import Json.Encode
 import Length exposing (inMeters)
@@ -32,7 +32,7 @@ update cfg msg_ m =
 
 
 update_ : Config -> Msg -> State -> Model -> ( Model, Cmd Msg )
-update_ cfg msg_ state_ m =
+update_ (Cfg cfg) msg_ state_ m =
     let
         return m_ =
             ( m_, Cmd.none )
@@ -55,7 +55,7 @@ update_ cfg msg_ state_ m =
                 reducer msg ( m_, cmds ) =
                     let
                         ( mNext, cmd ) =
-                            update cfg msg m_
+                            update (Cfg cfg) msg m_
                     in
                     ( mNext, cmd :: cmds )
             in
@@ -103,7 +103,7 @@ update_ cfg msg_ state_ m =
             case m |> M.onScene S.selectedFullKey of
                 Just ( key, [] ) ->
                     if key == backgroundKey && m.state == State.ReadOnlyView then
-                        update cfg
+                        update (Cfg cfg)
                             (OnChangeViewBox "mouse-drag"
                                 (\bb ->
                                     bb
@@ -235,7 +235,7 @@ update_ cfg msg_ state_ m =
         ( OnKeyPress Delete, _ ) ->
             case m |> M.onScene S.selectedKey of
                 Just key ->
-                    update cfg (OnFigureDiscard key) m
+                    update (Cfg cfg) (OnFigureDiscard key) m
 
                 Nothing ->
                     return m
@@ -247,19 +247,19 @@ update_ cfg msg_ state_ m =
                         updater _ =
                             Shape.removeInside elem.subKey elem.figure
                     in
-                    m |> update cfg (OnFigureUpdate "delete-item" updater elem.key)
+                    m |> update (Cfg cfg) (OnFigureUpdate "delete-item" updater elem.key)
 
                 Nothing ->
                     return m
 
         ( OnKeyPress Undo, _ ) ->
-            update cfg OnUndo m
+            update (Cfg cfg) OnUndo m
 
         ( OnKeyPress Redo, _ ) ->
-            update cfg OnRedo m
+            update (Cfg cfg) OnRedo m
 
         ( OnKeyPress arrow, _ ) ->
-            update cfg (Msg.panArrow arrow) m
+            update (Cfg cfg) (Msg.panArrow arrow) m
 
         ( OnUndo, _ ) ->
             return (M.undo m)

@@ -2,7 +2,6 @@ module View exposing (..)
 
 import Attributes as A
 import BaseTypes exposing (Direction(..))
-import Svg.Editor.Config exposing (Config)
 import Element exposing (Element)
 import Geometry exposing (BBox, point)
 import Group exposing (GroupInfo)
@@ -11,6 +10,7 @@ import Html.Attributes as HA exposing (..)
 import Html.Events exposing (onClick, onInput)
 import Html.Events.Extra.Pointer as Pointer
 import Html.Extra as Html
+import Internal.Types exposing (Config(..))
 import Lens exposing (editable)
 import Material.Icons as I
 import Material.Icons.Round as IR
@@ -24,6 +24,7 @@ import Shape
 import Shape.Toolbar
 import Shape.View
 import State exposing (State(..))
+import String.Interpolate
 import Svg as S
 import Svg.Attributes as SA
 import Toolbars
@@ -32,37 +33,151 @@ import Ui
 import Util exposing (iff)
 
 
+sceneStyleVariables : Config -> String
+sceneStyleVariables (Cfg cfg) =
+    String.Interpolate.interpolate """
+:scope .scene {
+    --font-size: {0};
+    --figure-color: {1};
+    --figure-color-contrast: {2};
+    --figure-color-selected: {3};
+    --line-width: {4};
+}
+:scope .selected {
+    --line-width: {5};
+}
+"""
+        [ cfg.styleFontSize |> String.fromFloat
+        , cfg.stylePrimaryColor
+        , cfg.styleConstrastColor
+        , cfg.styleSelectedColor
+        , cfg.styleLineWidth |> String.fromFloat
+        , cfg.styleLineWidthSelected |> String.fromFloat
+        ]
+
+
+sceneStyleFixed : () -> String
+sceneStyleFixed _ =
+    """
+/* GENERIC AND SEMANTIC STYLES */
+:scope .scene {
+    font-size: var(--font-size);
+}
+:scope .scene path {
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+:scope .selected {
+    --figure-color: var(--figure-color-selected);
+}
+:scope .closed {
+    fill: var(--figure-color);
+}
+
+
+/* LINES */
+:scope .line {
+    fill: none;
+    stroke: var(--figure-color);
+    stroke-width: var(--line-width);
+}
+:scope .line path.background,
+:scope .line.background {
+    stroke: var(--figure-color-contrast);
+    filter: blur(0.05px);
+    stroke-width: calc(var(--line-width) * 1.75);
+}
+
+
+/* POINTS */
+:scope .point {
+    fill: var(--figure-color);
+    stroke: var(--figure-color-contrast);
+    stroke-width: calc(var(--line-width) / 3);
+    transition: fill stroke-width stroke-opacity 250ms;
+}
+
+
+/* POINTS INSIDE LINES */
+:scope .line .point {
+    fill-opacity: 0.6;
+    filter: brightness(125%)
+}
+:scope .line:not(.selected) .point {
+    opacity: 0.0;
+}
+:scope .line.selected .point {
+    transition: opacity 250ms, filter 250ms;
+    transition-delay: 400ms, 0ms;
+}
+:scope .line.selected .point.selected-child {
+    fill-opacity: 1 !important;
+    transition-delay: 0s;
+    filter: brightness(2) blur(0);
+}
+
+
+/* POINT SELECTION ANIMATION */
+.line.selected .point:nth-of-type(1) { transition-delay: 0ms, 0ms; }
+.line.selected .point:nth-of-type(2) { transition-delay: 100ms, 0ms; }
+.line.selected .point:nth-of-type(3) { transition-delay: 200ms, 0ms; }
+.line.selected .point:nth-of-type(4) { transition-delay: 300ms, 0ms; }
+
+/* LABELS */
+:scope .group-label,
+:scope .group-index,
+:scope .label {
+    fill: var(--figure-color-contrast);
+    stroke: none;
+    font-weight: bold;
+}
+:scope .group-index {
+    text-anchor: middle;
+    transform: translate(0, 0.15px);
+}
+:scope .label {
+    transform: translate(0.0px, 0.55px);
+    fill: var(--figure-color) !important;
+}
+"""
+
+
 view : Config -> Model -> Html Msg
-view cfg m =
+view (Cfg cfg) m =
     let
         selected =
             Scene.getSelected (Model.scene m)
-    in
-    div
-        [ class "bg-base w-100"
-        , attribute "data-theme" "lemonade"
-        ]
-        [ Ui.navbar
-        , toolbar m
-        , div [ class "max-w-xl m-auto" ] <|
-            case m.error of
-                Just err ->
-                    [ pre [ HA.style "font-size" "0.7rem" ] [ text err ] ]
 
-                Nothing ->
-                    [ main_ [] [ viewScene cfg m.state m.bbox (Model.scene m) ]
-                    , Maybe.unpack notSelectedContext (contextToolbar (Model.scene m)) selected
-                    ]
-        ]
+        ( topBar, bottomBar ) =
+            if cfg.edit then
+                ( toolbar m
+                , Maybe.unpack notSelectedContext (contextToolbar (Model.scene m)) selected
+                )
+
+            else
+                ( Html.nothing, Html.nothing )
+    in
+    div [] <|
+        case m.error of
+            Just err ->
+                [ topBar
+                , pre [ HA.style "font-size" "0.7rem" ] [ text err ]
+                ]
+
+            Nothing ->
+                [ topBar
+                , main_ [] [ viewScene (Cfg cfg) m.state m.bbox (Model.scene m) ]
+                , bottomBar
+                ]
 
 
 viewScene : Config -> State -> BBox -> Scene -> Html Msg
-viewScene cfg state bbox data =
+viewScene (Cfg cfg) state bbox data =
     let
         elementsSvg =
             Scene.elements data
                 |> List.filter (.figure >> .visible)
-                |> List.map (Shape.View.view cfg)
+                |> List.map (Shape.View.view (Cfg cfg))
 
         mapMsg f =
             List.map (S.map f)
@@ -82,7 +197,12 @@ viewScene cfg state bbox data =
             mapMsg (Msg.changeDragMsgsTo Msg.NoOp)
     in
     div [ HA.class "container bg-slate-500", HA.class "scene", HA.id cfg.sceneId ]
-        [ S.svg
+        [ node "style"
+            []
+            [ text (sceneStyleVariables (Cfg cfg))
+            , text (sceneStyleFixed ())
+            ]
+        , S.svg
             (SA.width "100%" :: SA.class "scene" :: A.viewBox bbox :: pointerEvents state cfg.panWithTouch)
             (case state of
                 ReadOnlyView ->
@@ -94,7 +214,7 @@ viewScene cfg state bbox data =
                 _ ->
                     elementsSvg
             )
-        , Ui.controls cfg
+        , Ui.controls (Cfg cfg)
         ]
 
 

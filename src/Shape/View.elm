@@ -9,12 +9,12 @@ import Geometry.SvgPath exposing (ghostLinePath, pathD)
 import Group exposing (GroupInfo)
 import Html as H
 import Html.Extra as H
+import Internal.Types exposing (Config(..))
 import List.Extra as List
 import Msg
 import Shape.Type exposing (..)
 import Svg as S exposing (Attribute, Svg)
 import Svg.Attributes as SA
-import Svg.Editor.Config exposing (Config)
 import Types exposing (..)
 import Util exposing (flip, iff)
 
@@ -28,10 +28,10 @@ type alias Msg =
 
 
 view : Config -> Element -> Svg Msg
-view cfg elem =
+view (Cfg cfg) elem =
     case elem.shape of
         PointModel _ ->
-            viewAsPoint cfg elem.group elem.figure.label elem.isSelected (SA.rootElement "point" elem) (point ( 0, 0 ))
+            viewAsPoint (Cfg cfg) elem.group elem.figure.label elem.isSelected (SA.rootElement "point" elem) (point ( 0, 0 ))
 
         LineModel shape ->
             let
@@ -46,8 +46,8 @@ view cfg elem =
                                     j - 1
 
                                 attrs =
-                                    SA.class (iff (i == subKey) "point selected-point" "point")
-                                        :: SA.class ("key-" ++ String.fromInt i)
+                                    SA.class (iff (i == subKey) "point selected-child" "point")
+                                        :: SA.class ("key_" ++ String.fromInt i)
                                         :: SA.dragChild [ i ] elem
                             in
                             circle cfg.pointRadius point attrs []
@@ -76,7 +76,7 @@ view cfg elem =
 
 
 viewAsPoint : Config -> Maybe GroupInfo -> String -> Bool -> List (Attribute Msg) -> Geometry.Point -> Svg Msg
-viewAsPoint cfg group name isSelected attrs pt =
+viewAsPoint (Cfg cfg) group name isSelected attrs pt =
     case ( group, name ) of
         ( Just { index, label }, _ ) ->
             S.g attrs
@@ -162,7 +162,7 @@ linePaths attrs shape =
 
         foregroundClass =
             if shape.fill == Closed then
-                "foreground line-closed"
+                "foreground closed"
 
             else
                 "foreground"
