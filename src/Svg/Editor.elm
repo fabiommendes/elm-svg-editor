@@ -4,6 +4,7 @@ module Svg.Editor exposing
     , defaulConfig, init, subscriptions, update, view, cmd
     , withFigures, image, line, point, text
     , editable, grow, move, visible, withLabel, withStyle
+    , load, save, select
     )
 
 {-| Basic types
@@ -30,11 +31,18 @@ module Svg.Editor exposing
 
 @docs editable, grow, move, visible, withLabel, withStyle
 
+
+## Persistence
+
+@docs load, save, select
+
 -}
 
+import Encode
 import Figure exposing (Figure)
 import Geometry as G
 import Html exposing (Html)
+import Json.Encode
 import Model
 import Msg
 import Scene
@@ -215,3 +223,27 @@ withStyle =
 -------------------------------------------------------------------------------
 --- Change editor
 -------------------------------------------------------------------------------
+
+
+{-| Load scene from json data
+-}
+load : String -> Model -> Model
+load st (M model) =
+    M (Update.loadScene st model)
+
+
+{-| Save scene to json
+-}
+save : Model -> String
+save (M model) =
+    Json.Encode.encode 2 (Encode.scene (Model.scene model))
+
+
+{-| Select element with the given key.
+
+Invalid keys clear the current selection
+
+-}
+select : Key -> Model -> Model
+select key (M model) =
+    M (model |> Model.updateScene (Scene.select ( key, [] )))

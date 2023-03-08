@@ -30,14 +30,14 @@ vertices pt =
 -}
 movePoint : Int -> Vector -> Line -> Figure -> Figure
 movePoint i delta shape fig =
-    if i == -1 then
+    if i == 0 then
         { fig
             | translation = Vector2d.sum [ fig.translation, delta ]
             , shape = LineModel { shape | vertices = shape.vertices |> List.map (translateBy (Vector2d.reverse delta)) }
         }
 
     else
-        { fig | shape = LineModel { shape | vertices = shape.vertices |> List.updateAt i (translateBy delta) } }
+        { fig | shape = LineModel { shape | vertices = shape.vertices |> List.updateAt (i - 1) (translateBy delta) } }
 
 
 {-| Add new point in the i-th position
@@ -48,7 +48,7 @@ insertMiddlePoint i line =
         ( before, after ) =
             (pointCtx ( 0, 0 ) :: line.vertices)
                 |> pairs line.fill
-                |> List.splitAt (i + 1)
+                |> List.splitAt i
 
         before_ =
             before |> List.drop 1 |> List.map Tuple.first

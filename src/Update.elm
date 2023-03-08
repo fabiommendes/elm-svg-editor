@@ -130,14 +130,14 @@ update_ (Cfg cfg) msg_ state_ m =
                     ( Just target, Just dest ) ->
                         case Shape.connect target dest of
                             Just changed ->
-                                onScene (S.put k changed >> S.select ( k, [] ))
+                                onScene (S.put k changed >> S.selectUnsafe ( k, [] ))
 
                             _ ->
                                 return m
 
                     _ ->
                         m
-                            |> M.updateScene (S.select ( key, subKey ))
+                            |> M.updateScene (S.selectUnsafe ( key, subKey ))
                             |> return
 
         ( OnSelectFigure key _, Connecting Nothing ) ->
@@ -155,7 +155,7 @@ update_ (Cfg cfg) msg_ state_ m =
                             ( k, scn ) =
                                 S.insert target.figure (M.scene m)
                         in
-                        Just <| S.select ( k, [] ) scn
+                        Just <| S.selectUnsafe ( k, [] ) scn
 
                     else
                         Nothing
@@ -171,7 +171,7 @@ update_ (Cfg cfg) msg_ state_ m =
                     return m
 
         ( OnSelectFigure key subKey, _ ) ->
-            onScene <| S.select ( key, subKey )
+            onScene <| S.selectUnsafe ( key, subKey )
 
         ( OnFigureCreate fig, _ ) ->
             onScene <| S.insert fig >> Tuple.second
@@ -216,15 +216,7 @@ update_ (Cfg cfg) msg_ state_ m =
             ( m, File.toString file |> Task.perform OnUploadProcessed )
 
         ( OnUploadProcessed st, _ ) ->
-            case Json.Decode.decodeString Decode.scene st of
-                Ok scene ->
-                    m
-                        |> M.pushScene scene
-                        |> M.clearError
-                        |> return
-
-                Err err ->
-                    return { m | error = Just <| Json.Decode.errorToString err }
+            return <| loadScene st m
 
         ( OnClickAt pt, _ ) ->
             return (M.notifyClick pt m)
@@ -266,3 +258,15 @@ update_ (Cfg cfg) msg_ state_ m =
 
         ( OnRedo, _ ) ->
             return (M.redo m)
+
+
+loadScene : String -> Model -> Model
+loadScene st m =
+    case Json.Decode.decodeString Decode.scene st of
+        Ok scene ->
+            m
+                |> M.pushScene scene
+                |> M.clearError
+
+        Err err ->
+            { m | error = Just <| Json.Decode.errorToString err }

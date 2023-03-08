@@ -36,26 +36,34 @@ view (Cfg cfg) elem =
         LineModel shape ->
             let
                 subKey =
-                    elem.subKey |> List.getAt 0 |> Maybe.withDefault -1
+                    elem.subKey |> List.getAt 0 |> Maybe.withDefault 0
 
                 points =
                     flip List.indexedMap (pointCtx ( 0, 0 ) :: shape.vertices) <|
-                        \j { point } ->
+                        \i { point } ->
                             let
-                                i =
-                                    j - 1
-
                                 attrs =
                                     SA.class (iff (i == subKey) "point selected-child" "point")
-                                        :: SA.class ("key_" ++ String.fromInt i)
+                                        :: SA.class ("child::" ++ String.fromInt i)
                                         :: SA.dragChild [ i ] elem
                             in
                             circle cfg.pointRadius point attrs []
+
+                dbg =
+                    Debug.log "elem" elem
+
+                newPointHandles =
+                    if elem.isSelected && elem.subKey /= [] then
+                        newPoints subKey shape
+
+                    else
+                        []
             in
             S.g (SA.classes "line" elem :: SA.transformElement elem :: SA.styles elem) <|
                 List.concat
                     [ linePaths (SA.dragRoot elem) shape
                     , points
+                    , newPointHandles
                     , labels [] elem
                     ]
 
@@ -104,6 +112,14 @@ viewAsPoint (Cfg cfg) group name isSelected attrs pt =
                   else
                     H.nothing
                 ]
+
+
+newPoints idx path =
+    let
+        db =
+            Debug.log "idx" idx
+    in
+    []
 
 
 circle : Float -> Geometry.Point -> List (Attribute msg) -> List (Svg msg) -> Svg msg
