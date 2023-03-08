@@ -29,11 +29,28 @@ toolbar ({ figure } as elem) =
             [ Ui.toolbarBtn [ action "add-point" (Line.withValidSubkey elem.subKey Line.insertMiddlePoint) ] I.add
             , Ui.toolbarBtn [ action "remove-point" (Line.withValidSubkey elem.subKey Line.removePoint) ] I.remove
             , H.span [ HA.class "px-2" ] [ H.text "|" ]
-            , Ui.toolbarBtn [ action "close-line" (L.fill.set Closed) ] I.pentagon
-            , Ui.toolbarBtn [ action "open-line" (L.fill.set Open) ] I.show_chart
-            , Ui.toolbarBtn [ action "left-line" (L.fill.set Left) ] I.stacked_line_chart
-            , Ui.toolbarBtn [ action "right-line" (L.fill.set Right), HA.style "transform" "scaleX(-1)" ] I.stacked_line_chart
+            , lineFillToggle action shape
             ]
 
         _ ->
             []
+
+
+lineFillToggle : (Description -> (Line -> Line) -> H.Attribute Msg) -> Line -> Html Msg
+lineFillToggle action shape =
+    let
+        do name fill =
+            Ui.toolbarBtn [ action name (L.fill.set fill) ] I.border_style
+    in
+    case shape.fill of
+        Open ->
+            do "close-line" Closed
+
+        Closed ->
+            do "left-line" Left
+
+        Left ->
+            do "right-line" Right
+
+        Right ->
+            do "open-line" Open

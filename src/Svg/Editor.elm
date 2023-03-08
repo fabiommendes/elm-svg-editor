@@ -5,6 +5,7 @@ module Svg.Editor exposing
     , withFigures, image, line, point, text
     , editable, grow, move, visible, withLabel, withStyle
     , load, save, select
+    , selectSubKey
     )
 
 {-| Basic types
@@ -43,6 +44,7 @@ import Figure exposing (Figure)
 import Geometry as G
 import Html exposing (Html)
 import Json.Encode
+import Lens as L
 import Model
 import Msg
 import Scene
@@ -247,3 +249,15 @@ Invalid keys clear the current selection
 select : Key -> Model -> Model
 select key (M model) =
     M (model |> Model.updateScene (Scene.select ( key, [] )))
+
+
+{-| Select sub-key of the current element
+-}
+selectSubKey : SubKey -> Model -> Model
+selectSubKey sub (M model) =
+    model
+        |> Model.updateScene
+            (\s ->
+                s |> L.selected.set (s.selected |> Maybe.map (\( k, _ ) -> ( k, sub )))
+            )
+        |> M

@@ -3,15 +3,17 @@ module Shape.View exposing (..)
 import Attributes as SA
 import Element
 import Geometry exposing (fromPoint, point)
-import Geometry.CtxPoint exposing (CtxPoint, pointCtx)
-import Geometry.Paths exposing (smooth, smooth2)
+import Geometry.CtxPoint exposing (CtxPoint, midpoint, pointCtx)
+import Geometry.Paths exposing (smooth, smooth2, triple)
 import Geometry.SvgPath exposing (ghostLinePath, pathD)
 import Group exposing (GroupInfo)
 import Html as H
+import Html.Events exposing (onClick)
 import Html.Extra as H
 import Internal.Types exposing (Config(..))
 import List.Extra as List
-import Msg
+import Msg exposing (Msg(..))
+import Shape.Line exposing (insertPointAt)
 import Shape.Type exposing (..)
 import Svg as S exposing (Attribute, Svg)
 import Svg.Attributes as SA
@@ -49,12 +51,9 @@ view (Cfg cfg) elem =
                             in
                             circle cfg.pointRadius point attrs []
 
-                dbg =
-                    Debug.log "elem" elem
-
                 newPointHandles =
                     if elem.isSelected && elem.subKey /= [] then
-                        newPoints subKey shape
+                        newPoints (Cfg cfg) subKey shape elem
 
                     else
                         []
@@ -62,8 +61,8 @@ view (Cfg cfg) elem =
             S.g (SA.classes "line" elem :: SA.transformElement elem :: SA.styles elem) <|
                 List.concat
                     [ linePaths (SA.dragRoot elem) shape
-                    , points
                     , newPointHandles
+                    , points
                     , labels [] elem
                     ]
 
@@ -114,12 +113,36 @@ viewAsPoint (Cfg cfg) group name isSelected attrs pt =
                 ]
 
 
-newPoints idx path =
-    let
-        db =
-            Debug.log "idx" idx
-    in
-    []
+newPoints : Config -> Int -> Line -> Element -> List (Svg Msg)
+newPoints (Cfg cfg) idx line elem =
+    case triple idx line.fill (pointCtx ( 0, 0 ) :: line.vertices) of
+        Just ( p1, p2, p3 ) ->
+            let
+                pre =
+                    midpoint p1 p2
+
+                post =
+                    midpoint p2 p3
+
+                update pt i _ =
+                    Just (insertPointAt i pt line elem.figure)
+
+                attrs pt i =
+                    [ SA.class "point"
+                    , SA.style "fill-opacity: 0.25"
+                    , onClick <|
+                        Batch
+                            [ OnFigureUpdate "new-point" (update pt i) elem.key
+                            , OnSelectFigure elem.key [ i + 1 ]
+                            ]
+                    ]
+            in
+            [ circle (cfg.pointRadius * 1.5) pre.point (attrs pre idx) []
+            , circle (cfg.pointRadius * 1.5) post.point (attrs post (idx + 1)) []
+            ]
+
+        Nothing ->
+            []
 
 
 circle : Float -> Geometry.Point -> List (Attribute msg) -> List (Svg msg) -> Svg msg

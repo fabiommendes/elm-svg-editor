@@ -1,5 +1,6 @@
 module Shape.Line exposing
     ( insertMiddlePoint
+    , insertPointAt
     , movePoint
     , removePoint
     , vertices
@@ -8,12 +9,13 @@ module Shape.Line exposing
 
 import Figure exposing (Figure)
 import Geometry exposing (Point, Vector)
-import Geometry.CtxPoint exposing (midpoint, pointCtx, translateBy)
+import Geometry.CtxPoint exposing (CtxPoint, midpoint, pointCtx, translateBy)
 import Geometry.Paths exposing (pairs)
 import Lens as L
 import List.Extra as List
 import Monocle.Lens as L
 import Msg exposing (Msg(..))
+import Point2d
 import Shape.Type exposing (Any(..), Fill(..), Line)
 import Types exposing (..)
 import Vector2d
@@ -64,11 +66,34 @@ insertMiddlePoint i line =
     L.vertices.set (before_ ++ after_) line
 
 
+{-| Add new point in the i-th position
+-}
+insertPointAt : Int -> CtxPoint -> Line -> Figure -> Figure
+insertPointAt i pt line fig =
+    if i == 0 then
+        let
+            delta =
+                Vector2d.from Point2d.origin pt.point
+        in
+        movePoint 0 delta { line | vertices = pointCtx ( 0, 0 ) :: line.vertices } fig
+
+    else
+        let
+            ( before, after ) =
+                (pointCtx ( 0, 0 ) :: line.vertices)
+                    |> List.splitAt i
+
+            line_ =
+                L.vertices.set (List.drop 1 before ++ (pt :: after)) line
+        in
+        { fig | shape = LineModel line_ }
+
+
 {-| Remove the i-th point from line
 -}
 removePoint : Int -> Line -> Line
 removePoint i =
-    L.modify L.vertices (List.removeAt i)
+    L.modify L.vertices (List.removeAt (i - 1))
 
 
 {-| Compute transformation with point, if subkey is valid

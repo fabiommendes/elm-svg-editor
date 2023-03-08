@@ -5,6 +5,7 @@ import Geometry exposing (vector)
 import Geometry.CtxPoint as PointExt exposing (CtxPoint, pointCtx)
 import Length exposing (inMeters, meters)
 import Lens exposing (vertices)
+import List.Extra as List
 import Shape.Type exposing (Fill(..))
 import Vector2d
 
@@ -189,3 +190,33 @@ pairsClosing pts =
                     pairsWithExtrapolation vertices
     in
     do (List.head pts) pts
+
+
+triple : Int -> Fill -> List CtxPoint -> Maybe ( CtxPoint, CtxPoint, CtxPoint )
+triple idx fill points =
+    case ( idx, fill, List.drop (idx - 1) points ) of
+        ( 0, Closed, pt :: post :: rest ) ->
+            List.last rest |> Maybe.map (\pre -> ( pre, pt, post ))
+
+        ( 0, _, pt :: post :: _ ) ->
+            let
+                pre =
+                    pt |> PointExt.translateBy (Vector2d.from post.point pt.point)
+            in
+            Just ( pre, pt, post )
+
+        ( _, _, pre :: pt :: post :: _ ) ->
+            Just ( pre, pt, post )
+
+        ( _, Closed, [ pre, pt ] ) ->
+            List.head points |> Maybe.map (\post -> ( pre, pt, post ))
+
+        ( _, Open, [ pre, pt ] ) ->
+            let
+                post =
+                    pt |> PointExt.translateBy (Vector2d.from pre.point pt.point)
+            in
+            Just ( pre, pt, post )
+
+        _ ->
+            Nothing
