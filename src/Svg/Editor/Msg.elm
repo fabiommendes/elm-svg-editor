@@ -1,4 +1,13 @@
-module Svg.Editor.Msg exposing (..)
+module Svg.Editor.Msg exposing (getSelectionMsg)
+
+{-| Intercept and introspect messages
+
+
+## Message queries
+
+@docs getSelectionMsg
+
+-}
 
 import Msg exposing (Msg(..))
 import Types exposing (Key, SubKey)

@@ -4,8 +4,7 @@ module Svg.Editor exposing
     , defaulConfig, init, subscriptions, update, view, cmd
     , withFigures, image, line, point, text
     , editable, grow, move, visible, withLabel, withStyle
-    , load, save, select
-    , selectSubKey
+    , load, save, select, selectSubKey
     )
 
 {-| Basic types
@@ -35,7 +34,7 @@ module Svg.Editor exposing
 
 ## Persistence
 
-@docs load, save, select
+@docs load, save, select, selectSubKey
 
 -}
 
