@@ -202,27 +202,11 @@ text =
 
 figure : Decoder Figure
 figure =
-    let
-        style =
-            list string
-                |> andThen
-                    (\xs ->
-                        case xs of
-                            [ a, b ] ->
-                                succeed { attr = a, value = b }
-
-                            _ ->
-                                fail "expect 2 elements"
-                    )
-    in
     succeed Figure
         |> required "label" string
         |> required "scale" float
         |> required "translation" (map vector pair)
         |> required "rotation" (map angle float)
-        |> required "editable" bool
-        |> required "visible" bool
-        |> required "style" (list style)
         |> required "data" shape
 
 

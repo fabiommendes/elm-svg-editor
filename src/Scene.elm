@@ -133,6 +133,8 @@ getSelected s =
                         { key = key
                         , subKey = subKey
                         , isSelected = True
+                        , isVisible = True
+                        , isEditable = True
                         , group = group_
                         , figure = fig
                         , shape = fig.shape
@@ -410,31 +412,25 @@ orderWithKey key lst =
 
 makeElement : Scene -> Key -> Maybe GroupInfo -> Figure -> Element
 makeElement s key group_ fig =
-    case s.selected of
-        Just ( key_, subKey ) ->
-            if key == key_ then
-                { key = key
-                , subKey = subKey
-                , group = group_
-                , isSelected = True
-                , figure = fig
-                , shape = fig.shape
-                }
+    let
+        ( isSelected_, subKey_ ) =
+            case s.selected of
+                Just ( key_, subKey ) ->
+                    if key == key_ then
+                        ( True, subKey )
 
-            else
-                { key = key
-                , subKey = []
-                , group = group_
-                , isSelected = False
-                , figure = fig
-                , shape = fig.shape
-                }
+                    else
+                        ( False, [] )
 
-        _ ->
-            { key = key
-            , subKey = []
-            , group = group_
-            , isSelected = False
-            , figure = fig
-            , shape = fig.shape
-            }
+                _ ->
+                    ( False, [] )
+    in
+    { key = key
+    , subKey = subKey_
+    , group = group_
+    , isSelected = isSelected_
+    , isEditable = True
+    , isVisible = True
+    , figure = fig
+    , shape = fig.shape
+    }

@@ -3,7 +3,7 @@ module Svg.Editor exposing
     , Meters, Url, Text
     , defaulConfig, init, subscriptions, update, view, cmd
     , withFigures, image, line, point, text
-    , editable, grow, move, visible, withLabel, withStyle
+    , grow, move, withLabel
     , load, save, select, selectSubKey
     )
 
@@ -192,32 +192,11 @@ grow =
     Figure.grow
 
 
-{-| Control if figure is visible or not
--}
-visible : Bool -> Figure -> Figure
-visible =
-    Figure.visible
-
-
-{-| Control if figure is editable or not
--}
-editable : Bool -> Figure -> Figure
-editable =
-    Figure.editable
-
-
 {-| Set figure label
 -}
 withLabel : Label -> Figure -> Figure
 withLabel =
     Figure.setLabel
-
-
-{-| Add style to figure
--}
-withStyle : String -> String -> Figure -> Figure
-withStyle =
-    Figure.addStyle
 
 
 

@@ -109,9 +109,6 @@ figure obj =
         , ( "scale", float obj.scale )
         , ( "translation", pair (fromVector obj.translation) )
         , ( "rotation", float (fromAngle obj.rotation) )
-        , ( "editable", bool obj.editable )
-        , ( "visible", bool obj.visible )
-        , ( "style", list (list string) (obj.style |> List.map (\{ attr, value } -> [ attr, value ])) )
         , ( "data", shape obj.shape )
         ]
 

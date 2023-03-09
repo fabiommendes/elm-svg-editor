@@ -1,8 +1,6 @@
 module Figure exposing
     ( Figure
-    , addStyle
     , andThen
-    , editable
     , grow
     , map
     , move
@@ -10,7 +8,6 @@ module Figure exposing
     , replace
     , rotate
     , setLabel
-    , visible
     )
 
 {-| Generic figure utilities
@@ -30,9 +27,6 @@ type alias Figure =
     , scale : Float
     , translation : Vector
     , rotation : Angle
-    , editable : Bool
-    , visible : Bool
-    , style : List { attr : String, value : String }
     , shape : Any
     }
 
@@ -43,9 +37,6 @@ new data =
     , scale = 1.0
     , translation = vector ( 0, 0 )
     , rotation = angle 0
-    , editable = True
-    , visible = True
-    , style = []
     , shape = data
     }
 
@@ -56,9 +47,6 @@ map f fig =
     , scale = fig.scale
     , translation = fig.translation
     , rotation = fig.rotation
-    , editable = fig.editable
-    , visible = fig.visible
-    , style = fig.style
     , shape = f fig.shape
     }
 
@@ -88,21 +76,6 @@ rotate by fig =
     fig |> rotation.set (Q.sum [ fig.rotation, by ])
 
 
-visible : Bool -> Figure -> Figure
-visible =
-    L.visible.set
-
-
-editable : Bool -> Figure -> Figure
-editable =
-    L.editable.set
-
-
 setLabel : Label -> Figure -> Figure
 setLabel text =
     label.set text
-
-
-addStyle : String -> String -> Figure -> Figure
-addStyle attr value =
-    L.modify style ((::) { attr = attr, value = value })

@@ -9,7 +9,6 @@ import Html.Events exposing (onClick)
 import Length exposing (inMeters)
 import Msg exposing (Msg(..))
 import Quantity as Q
-import Style exposing (toAttribute)
 import Svg.Attributes as SA
 import Types exposing (..)
 
@@ -28,8 +27,8 @@ viewBox bb =
 
 
 dragRoot : Element -> List (Attribute Msg)
-dragRoot { key, figure } =
-    if figure.editable && figure.editable then
+dragRoot { key, isEditable, isVisible } =
+    if isEditable && isVisible then
         SA.class "drag-root" :: touch ( key, [] )
 
     else
@@ -38,7 +37,7 @@ dragRoot { key, figure } =
 
 dragChild : SubKey -> Element -> List (Attribute Msg)
 dragChild subKey parent =
-    if parent.figure.editable && parent.figure.editable then
+    if parent.isEditable && parent.isEditable then
         SA.class "drag-child" :: touch ( parent.key, subKey )
 
     else
@@ -53,11 +52,6 @@ touch id =
 click : ( Key, SubKey ) -> List (Attribute Msg)
 click id =
     [ Draggable.mouseTrigger id OnDragMsg ]
-
-
-styles : Element -> List (Attribute msg)
-styles { figure } =
-    figure.style |> List.map (\{ attr, value } -> toAttribute attr value)
 
 
 classes : String -> Element -> Attribute msg
@@ -109,10 +103,7 @@ rootElement : String -> Element -> List (Attribute Msg)
 rootElement name elem =
     classes name elem
         :: transformElement elem
-        :: List.concat
-            [ dragRoot elem
-            , styles elem
-            ]
+        :: dragRoot elem
 
 
 childPart : SubKey -> String -> Element -> List (Attribute Msg)
@@ -120,7 +111,4 @@ childPart sub name fig =
     classes name fig
         :: transformElement fig
         :: SA.class "child"
-        :: List.concat
-            [ dragChild sub fig
-            , styles fig
-            ]
+        :: dragChild sub fig

@@ -11,13 +11,11 @@ import Html.Events exposing (onClick, onInput)
 import Html.Events.Extra.Pointer as Pointer
 import Html.Extra as Html
 import Internal.Types exposing (Config(..))
-import Lens exposing (editable)
 import Material.Icons as I
 import Material.Icons.Round as IR
 import Material.Icons.Types exposing (Coloring(..))
 import Maybe.Extra as Maybe
 import Model exposing (Model)
-import Monocle.Lens as L
 import Msg exposing (Msg(..))
 import Scene exposing (Scene)
 import Shape
@@ -176,7 +174,6 @@ viewScene (Cfg cfg) state bbox data =
     let
         elementsSvg =
             Scene.elements data
-                |> List.filter (.figure >> .visible)
                 |> List.map (Shape.View.view (Cfg cfg))
 
         mapMsg f =
@@ -226,9 +223,6 @@ notSelectedContext _ =
 contextToolbar : Scene -> Element -> Html Msg
 contextToolbar scene elem =
     let
-        updateFigureMsg msg updater =
-            selectedMsg (OnFigureUpdate msg (\_ -> Just (updater elem.figure)))
-
         selectedMsg msg =
             onClick (msg elem.key)
 
@@ -270,9 +264,6 @@ contextToolbar scene elem =
                     , button [ class (iff isLast "btn btn-disabled" "btn btn-active"), action Up ] [ text "+" ]
                     ]
                 ]
-
-        lockButtonAttrs =
-            [ updateFigureMsg "editable.toggle" <| L.modify editable not ]
     in
     div []
         [ div [ class "shadow-lg bg-slate-900 text-white z-10" ]
@@ -284,7 +275,6 @@ contextToolbar scene elem =
                     [ Ui.toolbarBtn [ selectedMsg (OnFigureChangeOrder Up) ] IR.move_up
                     , Ui.toolbarBtn [ selectedMsg (OnFigureChangeOrder Down) ] IR.move_down
                     , Ui.toolbarBtn [ selectedMsg OnFigureDiscard ] I.delete
-                    , Ui.selectedToolbarBtn (not elem.figure.editable) lockButtonAttrs I.lock
                     ]
                 ]
             ]

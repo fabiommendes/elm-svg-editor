@@ -17,6 +17,8 @@ type alias Element =
     , subKey : SubKey
     , group : Maybe GroupInfo
     , isSelected : Bool
+    , isEditable : Bool
+    , isVisible : Bool
     , figure : Figure
     , shape : Any
     }
@@ -32,6 +34,8 @@ map f ({ figure } as elem) =
     , subKey = elem.subKey
     , group = elem.group
     , isSelected = elem.isSelected
+    , isEditable = elem.isEditable
+    , isVisible = elem.isVisible
     , figure = new
     , shape = new.shape
     }

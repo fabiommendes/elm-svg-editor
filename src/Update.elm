@@ -145,7 +145,7 @@ update_ (Cfg cfg) msg_ state_ m =
                 scene elem =
                     let
                         target =
-                            { elem | figure = elem.figure |> Figure.editable True }
+                            { elem | figure = elem.figure  }
                     in
                     if key == backgroundKey then
                         Nothing

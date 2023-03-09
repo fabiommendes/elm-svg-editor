@@ -25,7 +25,6 @@ withExample m =
         |> withFigures "obj"
             [ image 15 "https://i.imgur.com/RyBdN56.jpeg"
                 |> move ( 1, 1 )
-                |> editable False
             , line [ ( 3, 3 ), ( 5, 5 ), ( 10, 2 ), ( 5, 10 ) ]
             ]
         |> select ( "obj", 1 )

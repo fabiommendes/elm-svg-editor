@@ -58,7 +58,7 @@ view (Cfg cfg) elem =
                     else
                         []
             in
-            S.g (SA.classes "line" elem :: SA.transformElement elem :: SA.styles elem) <|
+            S.g [ SA.classes "line" elem, SA.transformElement elem ] <|
                 List.concat
                     [ linePaths (SA.dragRoot elem) shape
                     , newPointHandles
