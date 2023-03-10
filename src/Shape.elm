@@ -1,7 +1,7 @@
 module Shape exposing
     ( line, point, text, image
     , andThen, map, moveInside
-    , connect, endConnection, mapShape, mapShapeId, removeInside, replaceConst, unwrap, canConnect
+    , canConnect, connect, endConnection, mapShape, mapShapeId, removeInside, replaceConst, unwrap
     )
 
 {-|
@@ -29,7 +29,6 @@ import BaseTypes exposing (Direction(..))
 import Element exposing (Element)
 import Figure exposing (Figure)
 import Geometry as G exposing (Vector)
-import Geometry.CtxPoint as CtxPoint exposing (distanceFrom, origin, purePoint)
 import Length exposing (inMeters)
 import List.Extra as List
 import Point2d
@@ -76,7 +75,7 @@ line data =
     in
     Figure.new
         (LineModel
-            { vertices = List.map (Point2d.translateBy (Vector2d.reverse head) >> purePoint) tail
+            { vertices = List.map (Point2d.translateBy (Vector2d.reverse head)) tail
             , duplicateLast = True
             , fill = Open
             }
@@ -167,11 +166,10 @@ connect ({ figure } as target) src =
         ( LineModel ln, PointModel _ ) ->
             let
                 pointLocal =
-                    purePoint (G.pointVec shift)
-                        |> CtxPoint.from src.key
+                    G.pointVec shift
 
                 distance =
-                    pointLocal |> distanceFrom origin |> inMeters
+                    pointLocal |> Point2d.distanceFrom Point2d.origin |> inMeters
             in
             if distance <= 1.0e-3 then
                 Just target.figure
@@ -201,15 +199,14 @@ connect ({ figure } as target) src =
 endConnection : Element -> Scene -> Scene
 endConnection elem scene =
     case elem.shape of
-        LineModel ln ->
-            let
-                keys =
-                    ln.vertices
-                        |> List.filterMap (.ctx >> .from)
-            in
-            scene
-                |> Scene.moveFrom keys Down elem.key
-
+        -- LineModel ln ->
+        --     let
+        --         keys =
+        --             ln.vertices
+        --                 |> List.filterMap (.ctx >> .from)
+        --     in
+        --     scene
+        --         |> Scene.moveFrom keys Down elem.key
         _ ->
             scene
 

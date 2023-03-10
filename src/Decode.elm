@@ -3,8 +3,7 @@ module Decode exposing (..)
 import BoundingBox2d
 import Dict
 import Figure exposing (Figure)
-import Geometry as G exposing (BBox, angle, point, vector)
-import Geometry.CtxPoint exposing (CtxPoint, Props)
+import Geometry exposing (BBox, angle, point, vector)
 import Group exposing (GroupData)
 import Json.Decode exposing (..)
 import Json.Decode.Pipeline exposing (..)
@@ -21,6 +20,11 @@ pair =
     succeed Tuple.pair
         |> required "x" float
         |> required "y" float
+
+
+pt : Decoder Geometry.Point
+pt =
+    pair |> map Geometry.point
 
 
 key : Decoder Key
@@ -140,21 +144,10 @@ line : Decoder Shape.Line
 line =
     withType "line" <|
         (succeed Shape.Line
-            |> required "vertices" (list pointExt)
+            |> required "vertices" (list pt)
             |> optional "duplicate_last" bool False
             |> optional "fill" lineFill Shape.Open
         )
-
-
-pointExt : Decoder CtxPoint
-pointExt =
-    map2 CtxPoint
-        (succeed Props
-            |> optional "back" bool False
-            |> optional "breakLine" bool False
-            |> optional "from" (maybe key) Nothing
-        )
-        (map G.point pair)
 
 
 lineFill : Decoder Shape.Fill

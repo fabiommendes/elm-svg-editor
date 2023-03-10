@@ -9,7 +9,6 @@ module Shape.Line exposing
 
 import Figure exposing (Figure)
 import Geometry exposing (Point, Vector)
-import Geometry.CtxPoint exposing (CtxPoint, midpoint, pointCtx, translateBy)
 import Geometry.Paths exposing (pairs)
 import Lens as L
 import List.Extra as List
@@ -19,13 +18,14 @@ import Point2d
 import Shape.Type exposing (Any(..), Fill(..), Line)
 import Types exposing (..)
 import Vector2d
+import Geometry exposing (point)
 
 
 {-| Extract vertices as points
 -}
 vertices : Line -> List Point
 vertices pt =
-    pt.vertices |> List.map .point
+    pt.vertices
 
 
 {-| Move the i-th internal point by the given displacement
@@ -35,11 +35,11 @@ movePoint i delta shape fig =
     if i == 0 then
         { fig
             | translation = Vector2d.sum [ fig.translation, delta ]
-            , shape = LineModel { shape | vertices = shape.vertices |> List.map (translateBy (Vector2d.reverse delta)) }
+            , shape = LineModel { shape | vertices = shape.vertices |> List.map (Point2d.translateBy (Vector2d.reverse delta)) }
         }
 
     else
-        { fig | shape = LineModel { shape | vertices = shape.vertices |> List.updateAt (i - 1) (translateBy delta) } }
+        { fig | shape = LineModel { shape | vertices = shape.vertices |> List.updateAt (i - 1) (Point2d.translateBy delta) } }
 
 
 {-| Add new point in the i-th position
@@ -48,7 +48,7 @@ insertMiddlePoint : Int -> Line -> Line
 insertMiddlePoint i line =
     let
         ( before, after ) =
-            (pointCtx ( 0, 0 ) :: line.vertices)
+            (point ( 0, 0 ) :: line.vertices)
                 |> pairs line.fill
                 |> List.splitAt i
 
@@ -58,7 +58,7 @@ insertMiddlePoint i line =
         after_ =
             case after of
                 ( pt1, pt2 ) :: rest ->
-                    pt1 :: midpoint pt1 pt2 :: List.map Tuple.first rest
+                    pt1 :: Point2d.midpoint pt1 pt2 :: List.map Tuple.first rest
 
                 _ ->
                     []
@@ -68,19 +68,19 @@ insertMiddlePoint i line =
 
 {-| Add new point in the i-th position
 -}
-insertPointAt : Int -> CtxPoint -> Line -> Figure -> Figure
+insertPointAt : Int -> Point -> Line -> Figure -> Figure
 insertPointAt i pt line fig =
     if i == 0 then
         let
             delta =
-                Vector2d.from Point2d.origin pt.point
+                Vector2d.from Point2d.origin pt
         in
-        movePoint 0 delta { line | vertices = pointCtx ( 0, 0 ) :: line.vertices } fig
+        movePoint 0 delta { line | vertices = point ( 0, 0 ) :: line.vertices } fig
 
     else
         let
             ( before, after ) =
-                (pointCtx ( 0, 0 ) :: line.vertices)
+                (point ( 0, 0 ) :: line.vertices)
                     |> List.splitAt i
 
             line_ =

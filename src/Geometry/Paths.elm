@@ -1,16 +1,16 @@
 module Geometry.Paths exposing (..)
 
 import Direction2d
-import Geometry exposing (vector)
-import Geometry.CtxPoint as PointExt exposing (CtxPoint, pointCtx)
+import Geometry exposing (Point, point, vector)
 import Length exposing (inMeters, meters)
 import Lens exposing (vertices)
 import List.Extra as List
+import Point2d
 import Shape.Type exposing (Fill(..))
 import Vector2d
 
 
-smooth2 : Int -> List CtxPoint -> List CtxPoint
+smooth2 : Int -> List Point -> List Point
 smooth2 nIter lst =
     if nIter <= 0 then
         lst
@@ -19,7 +19,7 @@ smooth2 nIter lst =
         smooth2 (nIter - 1) (smoothOnce2 lst)
 
 
-smoothOnce2 : List CtxPoint -> List CtxPoint
+smoothOnce2 : List Point -> List Point
 smoothOnce2 lst =
     let
         run prev pts =
@@ -30,19 +30,19 @@ smoothOnce2 lst =
                 ( Just ptBefore, pt :: ptAfter :: rest ) ->
                     let
                         directionBefore =
-                            Vector2d.from pt.point ptBefore.point
+                            Vector2d.from pt ptBefore
 
                         directionAfter =
-                            Vector2d.from pt.point ptAfter.point
+                            Vector2d.from pt ptAfter
 
                         smoothingFactor =
                             0.15
 
                         before =
-                            pt |> PointExt.translateBy (Vector2d.scaleBy smoothingFactor directionBefore)
+                            pt |> Point2d.translateBy (Vector2d.scaleBy smoothingFactor directionBefore)
 
                         after =
-                            pt |> PointExt.translateBy (Vector2d.scaleBy smoothingFactor directionAfter)
+                            pt |> Point2d.translateBy (Vector2d.scaleBy smoothingFactor directionAfter)
                     in
                     before :: after :: run (Just pt) (ptAfter :: rest)
 
@@ -52,7 +52,7 @@ smoothOnce2 lst =
     run Nothing lst
 
 
-smooth : Int -> List CtxPoint -> List CtxPoint
+smooth : Int -> List Point -> List Point
 smooth nIter lst =
     if nIter <= 0 then
         lst
@@ -61,7 +61,7 @@ smooth nIter lst =
         smooth (nIter - 1) (smoothOnce lst)
 
 
-smoothOnce : List CtxPoint -> List CtxPoint
+smoothOnce : List Point -> List Point
 smoothOnce lst =
     let
         run prev pts =
@@ -75,10 +75,10 @@ smoothOnce lst =
                             0.45
 
                         d0 =
-                            Vector2d.from pt.point ptBefore.point
+                            Vector2d.from pt ptBefore
 
                         d1 =
-                            Vector2d.from pt.point ptAfter.point
+                            Vector2d.from pt ptAfter
 
                         length =
                             min (Vector2d.length d0 |> inMeters) (Vector2d.length d1 |> inMeters) |> meters
@@ -93,10 +93,10 @@ smoothOnce lst =
                             Vector2d.interpolateFrom d0_ d1_ 0.5 |> Vector2d.scaleBy (smoothingFactor / 2)
 
                         before =
-                            pt |> PointExt.translateBy (Vector2d.scaleBy smoothingFactor d0_ |> Vector2d.minus middle)
+                            pt |> Point2d.translateBy (Vector2d.scaleBy smoothingFactor d0_ |> Vector2d.minus middle)
 
                         after =
-                            pt |> PointExt.translateBy (Vector2d.scaleBy smoothingFactor d1_ |> Vector2d.minus middle)
+                            pt |> Point2d.translateBy (Vector2d.scaleBy smoothingFactor d1_ |> Vector2d.minus middle)
                     in
                     before :: pt :: after :: run (Just pt) (ptAfter :: rest)
 
@@ -106,11 +106,11 @@ smoothOnce lst =
     run Nothing lst
 
 
-ghostLine : Float -> List CtxPoint -> List CtxPoint
+ghostLine : Float -> List Point -> List Point
 ghostLine factor line =
     let
         direction f x y =
-            Direction2d.from x.point y.point
+            Direction2d.from x y
                 |> Maybe.map
                     (Direction2d.perpendicularTo
                         >> Direction2d.toVector
@@ -119,7 +119,7 @@ ghostLine factor line =
                 |> Maybe.withDefault Vector2d.zero
 
         fromSegment2 f x y =
-            x |> PointExt.translateBy (direction f x y)
+            x |> Point2d.translateBy (direction f x y)
 
         fromSegment3 f x y z =
             let
@@ -129,9 +129,9 @@ ghostLine factor line =
                 d2 =
                     direction f y z
             in
-            y |> PointExt.translateBy (Vector2d.sum [ d1, d2 ] |> Vector2d.scaleTo (meters <| abs f))
+            y |> Point2d.translateBy (Vector2d.sum [ d1, d2 ] |> Vector2d.scaleTo (meters <| abs f))
 
-        do : Maybe CtxPoint -> List CtxPoint -> List CtxPoint
+        do : Maybe Point -> List Point -> List Point
         do start pts =
             case ( start, pts ) of
                 ( Nothing, x :: y :: rest ) ->
@@ -146,10 +146,10 @@ ghostLine factor line =
                 _ ->
                     []
     in
-    do Nothing (pointCtx ( 0, 0 ) :: line)
+    do Nothing (point ( 0, 0 ) :: line)
 
 
-pairs : Fill -> List CtxPoint -> List ( CtxPoint, CtxPoint )
+pairs : Fill -> List Point -> List ( Point, Point )
 pairs fill =
     case fill of
         Closed ->
@@ -159,23 +159,23 @@ pairs fill =
             pairsWithExtrapolation
 
 
-pairsWithExtrapolation : List CtxPoint -> List ( CtxPoint, CtxPoint )
+pairsWithExtrapolation : List Point -> List ( Point, Point )
 pairsWithExtrapolation vertices =
     case vertices of
         [ pt1, pt2 ] ->
-            [ ( pt1, pt2 ), ( pt2, pt2 |> PointExt.translateBy (Vector2d.from pt1.point pt2.point) ) ]
+            [ ( pt1, pt2 ), ( pt2, pt2 |> Point2d.translateBy (Vector2d.from pt1 pt2) ) ]
 
         pt1 :: pt2 :: rest ->
             ( pt1, pt2 ) :: pairsWithExtrapolation (pt2 :: rest)
 
         [ pt1 ] ->
-            [ ( pt1, pt1 |> PointExt.translateBy (vector ( 0, 0.5 )) ) ]
+            [ ( pt1, pt1 |> Point2d.translateBy (vector ( 0, 0.5 )) ) ]
 
         [] ->
             []
 
 
-pairsClosing : List CtxPoint -> List ( CtxPoint, CtxPoint )
+pairsClosing : List Point -> List ( Point, Point )
 pairsClosing pts =
     let
         do first vertices =
@@ -192,7 +192,7 @@ pairsClosing pts =
     do (List.head pts) pts
 
 
-triple : Int -> Fill -> List CtxPoint -> Maybe ( CtxPoint, CtxPoint, CtxPoint )
+triple : Int -> Fill -> List Point -> Maybe ( Point, Point, Point )
 triple idx fill points =
     case ( idx, fill, List.drop (idx - 1) points ) of
         ( 0, Closed, pt :: post :: rest ) ->
@@ -201,7 +201,7 @@ triple idx fill points =
         ( 0, _, pt :: post :: _ ) ->
             let
                 pre =
-                    pt |> PointExt.translateBy (Vector2d.from post.point pt.point)
+                    pt |> Point2d.translateBy (Vector2d.from post pt)
             in
             Just ( pre, pt, post )
 
@@ -214,7 +214,7 @@ triple idx fill points =
         ( _, Open, [ pre, pt ] ) ->
             let
                 post =
-                    pt |> PointExt.translateBy (Vector2d.from pre.point pt.point)
+                    pt |> Point2d.translateBy (Vector2d.from pre pt)
             in
             Just ( pre, pt, post )
 

@@ -3,7 +3,6 @@ module Encode exposing (..)
 import Dict
 import Figure exposing (Figure)
 import Geometry exposing (..)
-import Geometry.CtxPoint exposing (CtxPoint)
 import Group
 import Json.Decode as D
 import Json.Encode exposing (..)
@@ -31,6 +30,11 @@ pair ( x, y ) =
         [ ( "x", float x )
         , ( "y", float y )
         ]
+
+
+pt : Point -> Value
+pt =
+    fromPoint >> pair
 
 
 key : Key -> Value
@@ -67,19 +71,9 @@ line : Shape.Line -> Value
 line obj =
     object
         [ ( "type", string "line" )
-        , ( "vertices", list pointExt obj.vertices )
+        , ( "vertices", list pt obj.vertices )
         , ( "duplicate_last", bool obj.duplicateLast )
         ]
-
-
-pointExt : CtxPoint -> Value
-pointExt pt =
-    pair (fromPoint pt.point)
-        |> extendObject
-            [ ( "back", bool pt.ctx.back )
-            , ( "breakLine", bool pt.ctx.breakLine )
-            , ( "from", pt.ctx.from |> Maybe.unwrap null key )
-            ]
 
 
 point : Shape.Point -> Value

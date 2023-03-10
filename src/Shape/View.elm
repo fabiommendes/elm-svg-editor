@@ -3,7 +3,6 @@ module Shape.View exposing (..)
 import Attributes as SA
 import Element
 import Geometry exposing (fromPoint, point)
-import Geometry.CtxPoint exposing (CtxPoint, midpoint, pointCtx)
 import Geometry.Paths exposing (smooth, smooth2, triple)
 import Geometry.SvgPath exposing (ghostLinePath, pathD)
 import Group exposing (GroupInfo)
@@ -13,6 +12,7 @@ import Html.Extra as H
 import Internal.Types exposing (Config(..))
 import List.Extra as List
 import Msg exposing (Msg(..))
+import Point2d
 import Shape.Line exposing (insertPointAt)
 import Shape.Type exposing (..)
 import Svg as S exposing (Attribute, Svg)
@@ -41,8 +41,8 @@ view (Cfg cfg) elem =
                     elem.subKey |> List.getAt 0 |> Maybe.withDefault 0
 
                 points =
-                    flip List.indexedMap (pointCtx ( 0, 0 ) :: shape.vertices) <|
-                        \i { point } ->
+                    flip List.indexedMap (point ( 0, 0 ) :: shape.vertices) <|
+                        \i point ->
                             let
                                 attrs =
                                     SA.class (iff (i == subKey) "point selected-child" "point")
@@ -115,14 +115,14 @@ viewAsPoint (Cfg cfg) group name isSelected attrs pt =
 
 newPoints : Config -> Int -> Line -> Element -> List (Svg Msg)
 newPoints (Cfg cfg) idx line elem =
-    case triple idx line.fill (pointCtx ( 0, 0 ) :: line.vertices) of
+    case triple idx line.fill (point ( 0, 0 ) :: line.vertices) of
         Just ( p1, p2, p3 ) ->
             let
                 pre =
-                    midpoint p1 p2
+                    Point2d.midpoint p1 p2
 
                 post =
-                    midpoint p2 p3
+                    Point2d.midpoint p2 p3
 
                 update pt i _ =
                     Just (insertPointAt i pt line elem.figure)
@@ -137,8 +137,8 @@ newPoints (Cfg cfg) idx line elem =
                             ]
                     ]
             in
-            [ circle (cfg.pointRadius * 1.5) pre.point (attrs pre idx) []
-            , circle (cfg.pointRadius * 1.5) post.point (attrs post (idx + 1)) []
+            [ circle (cfg.pointRadius * 1.5) pre (attrs pre idx) []
+            , circle (cfg.pointRadius * 1.5) post (attrs post (idx + 1)) []
             ]
 
         Nothing ->
@@ -195,7 +195,7 @@ linePaths attrs shape =
             SA.d (pathD (shape.fill == Closed) line)
 
         line =
-            (pointCtx ( 0, 0 ) :: shape.vertices)
+            (point ( 0, 0 ) :: shape.vertices)
                 |> smooth 1
                 |> smooth2 1
 
@@ -210,7 +210,7 @@ linePaths attrs shape =
         ++ [ S.path (dAttribute :: SA.class foregroundClass :: attrs) [] ]
 
 
-ghostLinePaths : Fill -> List CtxPoint -> List (Svg msg)
+ghostLinePaths : Fill -> List Geometry.Point -> List (Svg msg)
 ghostLinePaths fill line =
     let
         ghostPath delta =

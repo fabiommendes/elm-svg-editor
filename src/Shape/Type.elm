@@ -1,6 +1,6 @@
 module Shape.Type exposing (..)
 
-import Geometry.CtxPoint exposing (CtxPoint)
+import Geometry
 
 
 type alias Point =
@@ -37,7 +37,7 @@ type Fill
 
 
 type alias Line =
-    { vertices : List CtxPoint
+    { vertices : List Geometry.Point
     , duplicateLast : Bool
     , fill : Fill
     }
