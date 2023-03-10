@@ -7,6 +7,7 @@ import Group
 import Json.Decode as D
 import Json.Encode exposing (..)
 import List.Extra as List
+import List.GraphList as GE
 import List.NonEmpty as NE
 import Maybe.Extra as Maybe
 import Scene exposing (Scene)
@@ -33,8 +34,14 @@ pair ( x, y ) =
         ]
 
 
+nonEmpty : (a -> Value) -> NE.NonEmpty a -> Value
 nonEmpty dec xs =
     NE.toList xs |> list dec
+
+
+graphList : (a -> Value) -> GE.GraphList () a -> Value
+graphList dec xs =
+    GE.toList xs |> list dec
 
 
 pt : Point -> Value
@@ -76,7 +83,7 @@ line : Shape.Line -> Value
 line obj =
     object
         [ ( "type", string "line" )
-        , ( "vertices", nonEmpty pt obj.vertices )
+        , ( "vertices", graphList pt obj.vertices )
         ]
 
 

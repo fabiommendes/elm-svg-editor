@@ -28,10 +28,13 @@ module List.GraphList exposing
     , maximum
     , member
     , minimum
+    , noEdge
     , pair
     , product
+    , pushEnd
     , reduce
     , reduceEdges
+    , removeAt
     , repeat
     , reverse
     , splitWhenChange
@@ -41,6 +44,7 @@ module List.GraphList exposing
     , toList
     , toPairs
     , toSegments
+    , updateAt, insertAt
     )
 
 {-| A list of Segments.
@@ -531,3 +535,58 @@ splitWhenChange f ((S x (NonEmpty ( edge, y ) ps)) as full) =
                         flush a e b acc :: do sentNext ( b, eNext, next ) [] rest
     in
     L.withDefault full <| do (f edge) ( x, edge, y ) [] ps
+
+
+updateAt : Int -> (a -> a) -> GraphList edge a -> GraphList edge a
+updateAt i f (S x ps) =
+    if i <= 0 then
+        S (f x) ps
+
+    else
+        S x (L.updateAt (i - 1) (Tuple.mapSecond f) ps)
+
+
+{-| Remove the element at an index from a list. Return the original list if the index is out of range or if the resulting list would be empty
+-}
+removeAt : Int -> GraphList edge a -> GraphList edge a
+removeAt i ((S x ((NonEmpty ( _, y ) ps) as pairs)) as full) =
+    if i == 0 then
+        case ps of
+            [] ->
+                full
+
+            ( e, z ) :: qs ->
+                S y (NonEmpty ( e, z ) qs)
+
+    else
+        S x (L.removeAt (i - 1) pairs)
+
+
+{-| Remove the element at an index from a list. Return the original list if the index is out of range or if the resulting list would be empty
+-}
+insertAt : Int -> edge -> a -> GraphList edge a -> GraphList edge a
+insertAt i ee xx (S x ps) =
+    if i <= 0 then
+        S xx (L.cons ( ee, x ) ps)
+
+    else
+        S x (L.insertAt (i - 1) ( ee, xx ) ps)
+
+
+pushEnd : (a -> a -> edge) -> a -> GraphList edge a -> GraphList edge a
+pushEnd f xx (S x (NonEmpty ( e, y ) ps)) =
+    let
+        do last qs =
+            case qs of
+                [] ->
+                    [ ( f last xx, xx ) ]
+
+                ( e2, y2 ) :: rest ->
+                    ( e2, y2 ) :: do y2 rest
+    in
+    S x (NonEmpty ( e, y ) (do y ps))
+
+
+noEdge : a -> a -> ()
+noEdge _ _ =
+    ()

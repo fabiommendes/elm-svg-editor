@@ -1,7 +1,7 @@
 module Shape.Type exposing (..)
 
 import Geometry
-import List.NonEmpty exposing (NonEmpty)
+import List.GraphList exposing (GraphList)
 
 
 type alias Point =
@@ -38,7 +38,7 @@ type Fill
 
 
 type alias Line =
-    { vertices : NonEmpty Geometry.Point
+    { vertices : GraphList () Geometry.Point
     , fill : Fill
     }
 

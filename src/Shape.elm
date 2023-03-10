@@ -31,7 +31,7 @@ import Figure exposing (Figure)
 import Geometry as G exposing (Vector)
 import Length exposing (inMeters)
 import List.Extra as List
-import List.NonEmpty as NE
+import List.GraphList as GE
 import Point2d
 import Scene exposing (Scene)
 import Shape.Line
@@ -77,15 +77,20 @@ line data =
         displacement =
             G.vector head
 
+        pointList =
+            G.point head
+                :: List.map (Point2d.translateBy (Vector2d.reverse displacement)) tail
+
         points =
-            List.map (Point2d.translateBy (Vector2d.reverse displacement)) tail
+            case GE.fromList (\_ _ -> ()) pointList of
+                Just pts ->
+                    pts
+
+                Nothing ->
+                    GE.pair () (G.point ( 0, 0 )) (G.point head)
     in
     Figure.new
-        (LineModel
-            { vertices = NE.create (G.point head) points
-            , fill = Open
-            }
-        )
+        (LineModel { vertices = points, fill = Open })
         |> Figure.move displacement
 
 
@@ -181,7 +186,7 @@ connect ({ figure } as target) src =
                 Just target.figure
 
             else
-                Just { figure | shape = LineModel { ln | vertices = NE.append ln.vertices (NE.singleton pointLocal) } }
+                Just { figure | shape = LineModel { ln | vertices = GE.pushEnd (\_ _ -> ()) pointLocal ln.vertices } }
 
         ( PointModel _, _ ) ->
             let

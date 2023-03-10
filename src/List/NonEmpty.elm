@@ -7,7 +7,7 @@ module List.NonEmpty exposing
     , sort, sortBy, sortWith
     , isEmpty, head, tail, partition, unzip
     , length, all, any, minimum, maximum, sum, product, member, reverse, toList
-    , generate, uncons, updateAt, withDefault, withExample, removeAt
+    , generate, removeAt, uncons, updateAt, withDefault, withExample, insertAt
     )
 
 {-| A list with at least one element
@@ -52,6 +52,7 @@ module List.NonEmpty exposing
 -}
 
 import List.Extra as List
+import List.Util
 
 
 {-| A list of a\`s with at least 2 elements.
@@ -451,3 +452,14 @@ removeAt i (NonEmpty x xs) =
 
     else
         NonEmpty x (List.removeAt (i - 1) xs)
+
+
+{-| Insert element at given position.
+-}
+insertAt : Int -> a -> NonEmpty a -> NonEmpty a
+insertAt i elem (NonEmpty x xs) =
+    if i <= 0 then
+        NonEmpty elem (x :: xs)
+
+    else
+        NonEmpty x (List.Util.insertAt (i - 1) elem xs)

@@ -2,13 +2,13 @@ module Decode exposing (..)
 
 import BoundingBox2d
 import Dict
-import Encode exposing (nonEmpty)
 import Figure exposing (Figure)
 import Geometry exposing (BBox, angle, point, vector)
 import Group exposing (GroupData)
 import Json.Decode exposing (..)
 import Json.Decode.Pipeline exposing (..)
 import Length exposing (meters)
+import List.GraphList as GE
 import List.NonEmpty as NE
 import Msg exposing (KeyBoardCommands(..), Msg(..))
 import Scene exposing (Scene)
@@ -35,6 +35,20 @@ nonEmpty dec =
         |> andThen
             (\xs ->
                 case NE.fromList xs of
+                    Just ne ->
+                        succeed ne
+
+                    Nothing ->
+                        fail "empty list"
+            )
+
+
+graphList : Decoder a -> Decoder (GE.GraphList () a)
+graphList dec =
+    list dec
+        |> andThen
+            (\xs ->
+                case GE.fromList (\_ _ -> ()) xs of
                     Just ne ->
                         succeed ne
 
@@ -160,7 +174,7 @@ line : Decoder Shape.Line
 line =
     withType "line" <|
         (succeed Shape.Line
-            |> required "vertices" (nonEmpty pt)
+            |> required "vertices" (graphList pt)
             |> optional "fill" lineFill Shape.Open
         )
 

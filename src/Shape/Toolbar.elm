@@ -26,8 +26,7 @@ toolbar ({ figure } as elem) =
                 action name f =
                     HE.onClick <| OnFigureUpdate name (\_ -> Just <| { figure | shape = LineModel (f shape) }) elem.key
             in
-            [ Ui.toolbarBtn [ action "add-point" (Line.withValidSubkey elem.subKey Line.insertMiddlePoint) ] I.add
-            , Ui.toolbarBtn [ action "remove-point" (Line.withValidSubkey elem.subKey Line.removePoint) ] I.remove
+            [ Ui.toolbarBtn [ action "remove-point" (Line.withValidSubkey elem.subKey Line.removePoint) ] I.remove
             , H.span [ HA.class "px-2" ] [ H.text "|" ]
             , lineFillToggle action shape
             ]
