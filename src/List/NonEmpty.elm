@@ -7,7 +7,7 @@ module List.NonEmpty exposing
     , sort, sortBy, sortWith
     , isEmpty, head, tail, partition, unzip
     , length, all, any, minimum, maximum, sum, product, member, reverse, toList
-    , generate, uncons, withDefault
+    , generate, uncons, updateAt, withDefault, withExample, removeAt
     )
 
 {-| A list with at least one element
@@ -50,6 +50,8 @@ module List.NonEmpty exposing
 @docs length, all, any, minimum, maximum, sum, product, member, reverse, toList
 
 -}
+
+import List.Extra as List
 
 
 {-| A list of a\`s with at least 2 elements.
@@ -105,6 +107,18 @@ withDefault x xs =
     case xs of
         [] ->
             singleton x
+
+        y :: rest ->
+            NonEmpty y rest
+
+
+{-| Create NonEmpty from list, returning example if list is empty.
+-}
+withExample : NonEmpty a -> List a -> NonEmpty a
+withExample ne xs =
+    case xs of
+        [] ->
+            ne
 
         y :: rest ->
             NonEmpty y rest
@@ -412,3 +426,28 @@ generate f (NonEmpty x xs) =
                     f last y :: do y ys
     in
     do x xs
+
+
+updateAt : Int -> (a -> a) -> NonEmpty a -> NonEmpty a
+updateAt i f (NonEmpty x xs) =
+    if i <= 0 then
+        NonEmpty (f x) xs
+
+    else
+        NonEmpty x (List.updateAt (i - 1) f xs)
+
+
+{-| Remove the element at an index from a list. Return the original list if the index is out of range or if the resulting list would be empty
+-}
+removeAt : Int -> NonEmpty a -> NonEmpty a
+removeAt i (NonEmpty x xs) =
+    if i == 0 then
+        case xs of
+            [] ->
+                NonEmpty x xs
+
+            y :: ys ->
+                NonEmpty y ys
+
+    else
+        NonEmpty x (List.removeAt (i - 1) xs)

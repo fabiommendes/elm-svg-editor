@@ -31,6 +31,7 @@ import Figure exposing (Figure)
 import Geometry as G exposing (Vector)
 import Length exposing (inMeters)
 import List.Extra as List
+import List.NonEmpty as NE
 import Point2d
 import Scene exposing (Scene)
 import Shape.Line
@@ -71,16 +72,21 @@ line data =
         ( head, tail ) =
             List.uncons data
                 |> Maybe.withDefault ( ( 0, 0 ), [] )
-                |> Tuple.mapBoth G.vector (List.map G.point)
+                |> Tuple.mapSecond (List.map G.point)
+
+        displacement =
+            G.vector head
+
+        points =
+            List.map (Point2d.translateBy (Vector2d.reverse displacement)) tail
     in
     Figure.new
         (LineModel
-            { vertices = List.map (Point2d.translateBy (Vector2d.reverse head)) tail
-            , duplicateLast = True
+            { vertices = NE.create (G.point head) points
             , fill = Open
             }
         )
-        |> Figure.move head
+        |> Figure.move displacement
 
 
 image : Float -> String -> Figure
@@ -175,7 +181,7 @@ connect ({ figure } as target) src =
                 Just target.figure
 
             else
-                Just { figure | shape = LineModel { ln | vertices = ln.vertices ++ [ pointLocal ] } }
+                Just { figure | shape = LineModel { ln | vertices = NE.append ln.vertices (NE.singleton pointLocal) } }
 
         ( PointModel _, _ ) ->
             let

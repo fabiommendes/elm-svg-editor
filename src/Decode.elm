@@ -2,12 +2,14 @@ module Decode exposing (..)
 
 import BoundingBox2d
 import Dict
+import Encode exposing (nonEmpty)
 import Figure exposing (Figure)
 import Geometry exposing (BBox, angle, point, vector)
 import Group exposing (GroupData)
 import Json.Decode exposing (..)
 import Json.Decode.Pipeline exposing (..)
 import Length exposing (meters)
+import List.NonEmpty as NE
 import Msg exposing (KeyBoardCommands(..), Msg(..))
 import Scene exposing (Scene)
 import Shape.Type as Shape
@@ -25,6 +27,20 @@ pair =
 pt : Decoder Geometry.Point
 pt =
     pair |> map Geometry.point
+
+
+nonEmpty : Decoder a -> Decoder (NE.NonEmpty a)
+nonEmpty dec =
+    list dec
+        |> andThen
+            (\xs ->
+                case NE.fromList xs of
+                    Just ne ->
+                        succeed ne
+
+                    Nothing ->
+                        fail "empty list"
+            )
 
 
 key : Decoder Key
@@ -144,8 +160,7 @@ line : Decoder Shape.Line
 line =
     withType "line" <|
         (succeed Shape.Line
-            |> required "vertices" (list pt)
-            |> optional "duplicate_last" bool False
+            |> required "vertices" (nonEmpty pt)
             |> optional "fill" lineFill Shape.Open
         )
 

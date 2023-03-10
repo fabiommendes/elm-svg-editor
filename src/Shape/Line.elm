@@ -12,20 +12,20 @@ import Geometry exposing (Point, Vector)
 import Geometry.Paths exposing (pairs)
 import Lens as L
 import List.Extra as List
+import List.NonEmpty as NE
 import Monocle.Lens as L
 import Msg exposing (Msg(..))
 import Point2d
 import Shape.Type exposing (Any(..), Fill(..), Line)
 import Types exposing (..)
 import Vector2d
-import Geometry exposing (point)
 
 
 {-| Extract vertices as points
 -}
 vertices : Line -> List Point
 vertices pt =
-    pt.vertices
+    pt.vertices |> NE.toList
 
 
 {-| Move the i-th internal point by the given displacement
@@ -35,11 +35,11 @@ movePoint i delta shape fig =
     if i == 0 then
         { fig
             | translation = Vector2d.sum [ fig.translation, delta ]
-            , shape = LineModel { shape | vertices = shape.vertices |> List.map (Point2d.translateBy (Vector2d.reverse delta)) }
+            , shape = LineModel { shape | vertices = shape.vertices |> NE.map (Point2d.translateBy (Vector2d.reverse delta)) }
         }
 
     else
-        { fig | shape = LineModel { shape | vertices = shape.vertices |> List.updateAt (i - 1) (Point2d.translateBy delta) } }
+        { fig | shape = LineModel { shape | vertices = shape.vertices |> NE.updateAt (i - 1) (Point2d.translateBy delta) } }
 
 
 {-| Add new point in the i-th position
@@ -48,7 +48,7 @@ insertMiddlePoint : Int -> Line -> Line
 insertMiddlePoint i line =
     let
         ( before, after ) =
-            (point ( 0, 0 ) :: line.vertices)
+            vertices line
                 |> pairs line.fill
                 |> List.splitAt i
 
@@ -62,8 +62,14 @@ insertMiddlePoint i line =
 
                 _ ->
                     []
+
+        data =
+            before_
+                ++ after_
+                |> NE.fromList
+                |> Maybe.withDefault line.vertices
     in
-    L.vertices.set (before_ ++ after_) line
+    L.vertices.set data line
 
 
 {-| Add new point in the i-th position
@@ -75,25 +81,29 @@ insertPointAt i pt line fig =
             delta =
                 Vector2d.from Point2d.origin pt
         in
-        movePoint 0 delta { line | vertices = point ( 0, 0 ) :: line.vertices } fig
+        movePoint 0 delta line fig
 
     else
         let
             ( before, after ) =
-                (point ( 0, 0 ) :: line.vertices)
-                    |> List.splitAt i
+                vertices line |> List.splitAt i
+
+            pts =
+                (List.drop 1 before ++ (pt :: after))
+                    |> NE.fromList
+                    |> Maybe.withDefault line.vertices
 
             line_ =
-                L.vertices.set (List.drop 1 before ++ (pt :: after)) line
+                line |> L.vertices.set pts
         in
         { fig | shape = LineModel line_ }
 
 
-{-| Remove the i-th point from line
+{-| Remove the i-th point from line, if possible
 -}
 removePoint : Int -> Line -> Line
 removePoint i =
-    L.modify L.vertices (List.removeAt (i - 1))
+    L.modify L.vertices (NE.removeAt i)
 
 
 {-| Compute transformation with point, if subkey is valid

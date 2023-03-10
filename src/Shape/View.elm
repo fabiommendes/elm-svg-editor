@@ -13,7 +13,7 @@ import Internal.Types exposing (Config(..))
 import List.Extra as List
 import Msg exposing (Msg(..))
 import Point2d
-import Shape.Line exposing (insertPointAt)
+import Shape.Line exposing (insertPointAt, vertices)
 import Shape.Type exposing (..)
 import Svg as S exposing (Attribute, Svg)
 import Svg.Attributes as SA
@@ -41,7 +41,7 @@ view (Cfg cfg) elem =
                     elem.subKey |> List.getAt 0 |> Maybe.withDefault 0
 
                 points =
-                    flip List.indexedMap (point ( 0, 0 ) :: shape.vertices) <|
+                    flip List.indexedMap (vertices shape) <|
                         \i point ->
                             let
                                 attrs =
@@ -115,7 +115,7 @@ viewAsPoint (Cfg cfg) group name isSelected attrs pt =
 
 newPoints : Config -> Int -> Line -> Element -> List (Svg Msg)
 newPoints (Cfg cfg) idx line elem =
-    case triple idx line.fill (point ( 0, 0 ) :: line.vertices) of
+    case triple idx line.fill (vertices line) of
         Just ( p1, p2, p3 ) ->
             let
                 pre =
@@ -195,7 +195,7 @@ linePaths attrs shape =
             SA.d (pathD (shape.fill == Closed) line)
 
         line =
-            (point ( 0, 0 ) :: shape.vertices)
+            vertices shape
                 |> smooth 1
                 |> smooth2 1
 

@@ -1,6 +1,7 @@
 module Shape.Type exposing (..)
 
 import Geometry
+import List.NonEmpty exposing (NonEmpty)
 
 
 type alias Point =
@@ -37,8 +38,7 @@ type Fill
 
 
 type alias Line =
-    { vertices : List Geometry.Point
-    , duplicateLast : Bool
+    { vertices : NonEmpty Geometry.Point
     , fill : Fill
     }
 

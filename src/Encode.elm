@@ -7,6 +7,7 @@ import Group
 import Json.Decode as D
 import Json.Encode exposing (..)
 import List.Extra as List
+import List.NonEmpty as NE
 import Maybe.Extra as Maybe
 import Scene exposing (Scene)
 import Shape
@@ -30,6 +31,10 @@ pair ( x, y ) =
         [ ( "x", float x )
         , ( "y", float y )
         ]
+
+
+nonEmpty dec xs =
+    NE.toList xs |> list dec
 
 
 pt : Point -> Value
@@ -71,8 +76,7 @@ line : Shape.Line -> Value
 line obj =
     object
         [ ( "type", string "line" )
-        , ( "vertices", list pt obj.vertices )
-        , ( "duplicate_last", bool obj.duplicateLast )
+        , ( "vertices", nonEmpty pt obj.vertices )
         ]
 
 
